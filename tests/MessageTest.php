@@ -271,6 +271,16 @@ class MessageTest extends TestCase
         self::assertSame('’é€௵ဪ‱', Psr7\Message::bodySummary($message));
     }
 
+    public function testMessageBodySummaryWithComfortableUTF8Characters(): void
+    {
+        $message = new Psr7\Response(200, [], '必填性规则校验失败，此字段为必填项');
+        $wellformed = '必填性规则校验失 (truncated...)';
+        // One chinese character is three bytes in the utf8 character range.
+        self::assertSame($wellformed, Psr7\Message::bodySummary($message, 24));
+        self::assertSame($wellformed, Psr7\Message::bodySummary($message, 25));
+        self::assertSame($wellformed, Psr7\Message::bodySummary($message, 26));
+    }
+
     public function testMessageBodySummaryWithSpecialUTF8CharactersAndLargeBody(): void
     {
         $message = new Psr7\Response(200, [], '🤦🏾‍♀️');
