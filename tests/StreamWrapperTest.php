@@ -6,6 +6,7 @@ namespace GuzzleHttp\Tests\Psr7;
 
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\StreamWrapper;
+use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 
@@ -186,5 +187,16 @@ class StreamWrapperTest extends TestCase
 
         $stream->rewind();
         self::assertXmlStringEqualsXmlString('<?xml version="1.0"?><foo />', (string) $stream);
+    }
+
+    public function testWrappedNullSizedStreamStaysNullSized(): void
+    {
+        $nullSizedStream = new Psr7\PumpStream(function () { return ''; });
+        $this->assertNull($nullSizedStream->getSize());
+
+        $resource = StreamWrapper::getResource($nullSizedStream);
+        $stream = Utils::streamFor($resource);
+
+        $this->assertNull($stream->getSize());
     }
 }

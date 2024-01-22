@@ -136,10 +136,14 @@ final class StreamWrapper
      *   ctime: int,
      *   blksize: int,
      *   blocks: int
-     * }
+     * }|false
      */
-    public function stream_stat(): array
+    public function stream_stat()
     {
+        if ($this->stream->getSize() === null) {
+            return false;
+        }
+
         static $modeMap = [
             'r' => 33060,
             'rb' => 33060,
