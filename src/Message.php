@@ -11,6 +11,11 @@ use Psr\Http\Message\ResponseInterface;
 final class Message
 {
     /**
+     * Default maximum allowed size of the short summary of the message body.
+     */
+    public const BODY_SUMMARY_TRUNCATE_AT = 120;
+
+    /**
      * Returns the string representation of an HTTP message.
      *
      * @param MessageInterface $message Message to convert to a string.
@@ -53,7 +58,7 @@ final class Message
      * @param MessageInterface $message    The message to get the body summary
      * @param int              $truncateAt The maximum allowed size of the summary
      */
-    public static function bodySummary(MessageInterface $message, int $truncateAt = 120): ?string
+    public static function bodySummary(MessageInterface $message, int $truncateAt = self::BODY_SUMMARY_TRUNCATE_AT): ?string
     {
         $body = $message->getBody();
 
