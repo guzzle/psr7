@@ -30,7 +30,7 @@ class UploadedFile implements UploadedFileInterface
 
         return \substr_compare($haystack, $needle, 0, \strlen($needle), false) === 0;
     }
-    
+
     private function getErrorCodeName(int $code): ?string
     {
         foreach (get_defined_constants(true)['Core'] as $name => $codeno) {
