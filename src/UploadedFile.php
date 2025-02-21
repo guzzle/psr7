@@ -23,6 +23,20 @@ class UploadedFile implements UploadedFileInterface
     ];
 
     /**
+     * @param int $code
+     * @return ?string
+     */
+    private function getErrorCodeName(int $code): ?string
+    {
+        foreach (get_defined_constants(true)['Core'] as $name => $codeno) {
+            if ($code === $codeno && str_starts_with($name, 'UPLOAD_ERR_')) {
+                return $name;
+            }
+        }
+        return NULL;
+    }
+
+    /**
      * @var string|null
      */
     private $clientFilename;
@@ -137,7 +151,7 @@ class UploadedFile implements UploadedFileInterface
     private function validateActive(): void
     {
         if (false === $this->isOk()) {
-            throw new RuntimeException('Cannot retrieve stream due to upload error');
+            throw new RuntimeException('Cannot retrieve stream due to upload error ' . $this->error . ': ' . $this->getErrorCodeName($this->error));
         }
 
         if ($this->isMoved()) {
