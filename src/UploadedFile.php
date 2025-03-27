@@ -22,26 +22,6 @@ class UploadedFile implements UploadedFileInterface
         UPLOAD_ERR_EXTENSION,
     ];
 
-    private function str_starts_with(string $haystack, string $needle): bool
-    {
-        if (PHP_MAJOR_VERSION >= 8) {
-            return \str_starts_with($haystack, $needle);
-        }
-
-        return \substr_compare($haystack, $needle, 0, \strlen($needle), false) === 0;
-    }
-
-    private function getErrorCodeName(int $code): ?string
-    {
-        foreach (get_defined_constants(true)['Core'] as $name => $codeno) {
-            if ($code === $codeno && $this->str_starts_with($name, 'UPLOAD_ERR_')) {
-                return $name;
-            }
-        }
-
-        return null;
-    }
-
     /**
      * @var string|null
      */
@@ -157,12 +137,23 @@ class UploadedFile implements UploadedFileInterface
     private function validateActive(): void
     {
         if (false === $this->isOk()) {
-            throw new RuntimeException('Cannot retrieve stream due to upload error '.$this->error.': '.$this->getErrorCodeName($this->error));
+            throw new RuntimeException('Cannot retrieve stream due to upload error '.$this->error.': '.self::getErrorCodeName($this->error));
         }
 
         if ($this->isMoved()) {
             throw new RuntimeException('Cannot retrieve stream after it has already been moved');
         }
+    }
+
+    private static function getErrorCodeName(int $code): ?string
+    {
+        foreach (get_defined_constants(true)['Core'] as $name => $codeno) {
+            if ($code === $codeno && 0 === \substr_compare($name, 'UPLOAD_ERR_', 0, 11)) {
+                return $name;
+            }
+        }
+
+        return null;
     }
 
     public function getStream(): StreamInterface
