@@ -707,6 +707,7 @@ final class MimeType
         'p7a' => 'application/x-pkcs7-signature',
         'p7b' => 'application/x-pkcs7-certificates',
         'p7c' => 'application/pkcs7-mime',
+        'p7e' => 'application/pkcs7-mime',
         'p7m' => 'application/pkcs7-mime',
         'p7r' => 'application/x-pkcs7-certreqresp',
         'p7s' => 'application/pkcs7-signature',
