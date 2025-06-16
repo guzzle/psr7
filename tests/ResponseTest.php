@@ -253,6 +253,14 @@ class ResponseTest extends TestCase
         self::assertSame('bar', $r->getHeaderLine('123'));
     }
 
+    public function testConstructResponseEmptyListHeaderValue(): void
+    {
+        $r = new Response(200, ['Foo' => []]);
+        self::assertSame('', $r->getHeaderLine('Foo'));
+        self::assertSame([], $r->getHeader('Foo'));
+        self::assertSame(['Foo' => []], $r->getHeaders());
+    }
+
     /**
      * @dataProvider invalidHeaderProvider
      */
@@ -266,7 +274,6 @@ class ResponseTest extends TestCase
     public function invalidHeaderProvider(): iterable
     {
         return [
-            ['foo', [], 'Header value can not be an empty array.'],
             ['', '', '"" is not valid header name'],
             ['foo', new \stdClass(),  'Header value must be scalar or null but stdClass provided.'],
         ];
