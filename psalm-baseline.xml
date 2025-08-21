@@ -191,10 +191,6 @@
     <FalsableReturnStatement>
       <code><![CDATA[$contents]]></code>
     </FalsableReturnStatement>
-    <MissingDocblockType>
-      <code><![CDATA[throw $ex;]]></code>
-      <code><![CDATA[throw $ex;]]></code>
-    </MissingDocblockType>
     <PossiblyFalseArgument>
       <code><![CDATA[$ctx]]></code>
       <code><![CDATA[$ctx]]></code>
