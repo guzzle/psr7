@@ -76,7 +76,10 @@ class UploadedFileTest extends TestCase
         $upload = new UploadedFile($stream, 0, UPLOAD_ERR_OK);
         $uploadStream = $upload->getStream();
         $r = new ReflectionProperty($uploadStream, 'filename');
-        $r->setAccessible(true);
+
+        if (PHP_VERSION_ID < 80100) {
+            $r->setAccessible(true);
+        }
 
         self::assertSame($stream, $r->getValue($uploadStream));
     }
