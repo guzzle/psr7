@@ -96,8 +96,8 @@ class StreamWrapperTest extends TestCase
 
     public function testReturnsFalseWhenStreamDoesNotExist(): void
     {
-        $this->expectWarning();
-        fopen('guzzle://foo', 'r');
+        $result = @fopen('guzzle://foo', 'r');
+        self::assertFalse($result);
     }
 
     public function testCanOpenReadonlyStream(): void

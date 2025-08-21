@@ -30,7 +30,7 @@ class UploadedFileTest extends TestCase
         }
     }
 
-    public function invalidStreams()
+    public static function invalidStreams()
     {
         return [
             'null' => [null],
@@ -96,7 +96,7 @@ class UploadedFileTest extends TestCase
         self::assertSame($stream->__toString(), file_get_contents($to));
     }
 
-    public function invalidMovePaths(): iterable
+    public static function invalidMovePaths(): iterable
     {
         return [
             'null' => [null],
@@ -151,7 +151,7 @@ class UploadedFileTest extends TestCase
         $upload->getStream();
     }
 
-    public function nonOkErrorStatus(): iterable
+    public static function nonOkErrorStatus(): iterable
     {
         return [
             'UPLOAD_ERR_INI_SIZE' => [UPLOAD_ERR_INI_SIZE],

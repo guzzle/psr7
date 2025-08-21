@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class HeaderTest extends TestCase
 {
-    public function parseParamsProvider(): array
+    public static function parseParamsProvider(): array
     {
         $res1 = [
             [
@@ -64,7 +64,7 @@ class HeaderTest extends TestCase
         self::assertSame($result, Psr7\Header::parse($header));
     }
 
-    public function normalizeProvider(): array
+    public static function normalizeProvider(): array
     {
         return [
             [

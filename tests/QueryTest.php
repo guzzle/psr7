@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class QueryTest extends TestCase
 {
-    public function parseQueryProvider()
+    public static function parseQueryProvider()
     {
         return [
             // Does not need to parse when the string is empty

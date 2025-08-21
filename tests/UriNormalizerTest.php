@@ -47,7 +47,7 @@ class UriNormalizerTest extends TestCase
         self::assertSame("/$char%2F%5B$char?$char%2F%5B$char", (string) $normalizedUri);
     }
 
-    public function getUnreservedCharacters(): iterable
+    public static function getUnreservedCharacters(): iterable
     {
         $unreservedChars = array_merge(range('a', 'z'), range('A', 'Z'), range(0, 9), ['-', '.', '_', '~']);
 
@@ -67,7 +67,7 @@ class UriNormalizerTest extends TestCase
         self::assertSame($expected, (string) $normalizedUri);
     }
 
-    public function getEmptyPathTestCases(): iterable
+    public static function getEmptyPathTestCases(): iterable
     {
         return [
             ['http://example.org', 'http://example.org/'],
@@ -162,7 +162,7 @@ class UriNormalizerTest extends TestCase
         self::assertSame($expected, $equivalent);
     }
 
-    public function getEquivalentTestCases(): iterable
+    public static function getEquivalentTestCases(): iterable
     {
         return [
             ['http://example.org', 'http://example.org', true],
