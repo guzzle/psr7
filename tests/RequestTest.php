@@ -188,6 +188,14 @@ class RequestTest extends TestCase
         ], $r->getHeaders());
     }
 
+    public function testEmptyListHeaderValue(): void
+    {
+        $r = new Request('GET', 'https://example.com/', ['Foo' => []]);
+        self::assertSame('', $r->getHeaderLine('Foo'));
+        self::assertSame([], $r->getHeader('Foo'));
+        self::assertSame(['Host' => ['example.com'], 'Foo' => []], $r->getHeaders());
+    }
+
     public function testCanGetHeaderAsCsv(): void
     {
         $r = new Request('GET', 'http://foo.com/baz?bar=bam', [
