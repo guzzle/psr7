@@ -114,7 +114,7 @@ class RequestTest extends TestCase
         $r->withMethod($method);
     }
 
-    public function invalidMethodsProvider(): iterable
+    public static function invalidMethodsProvider(): iterable
     {
         return [
             [null],
@@ -217,7 +217,7 @@ class RequestTest extends TestCase
         );
     }
 
-    public function provideHeadersContainingNotAllowedChars(): iterable
+    public static function provideHeadersContainingNotAllowedChars(): iterable
     {
         return [[' key '], ['key '], [' key'], ['key/'], ['key('], ['key\\'], [' ']];
     }
@@ -237,7 +237,7 @@ class RequestTest extends TestCase
         self::assertArrayHasKey($header, $r->getHeaders());
     }
 
-    public function provideHeadersContainsAllowedChar(): iterable
+    public static function provideHeadersContainsAllowedChar(): iterable
     {
         return [
             ['key'],
@@ -323,7 +323,7 @@ class RequestTest extends TestCase
         );
     }
 
-    public function provideHeaderValuesContainingNotAllowedChars(): iterable
+    public static function provideHeaderValuesContainingNotAllowedChars(): iterable
     {
         // Explicit tests for newlines as the most common exploit vector.
         $tests = [

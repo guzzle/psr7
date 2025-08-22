@@ -513,7 +513,7 @@ class UtilsTest extends TestCase
     /**
      * @return list<array{0: string[], 1: array, 2: array}>
      */
-    public function providesCaselessRemoveCases(): array
+    public static function providesCaselessRemoveCases(): array
     {
         return [
             [

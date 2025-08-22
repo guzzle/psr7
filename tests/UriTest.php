@@ -71,7 +71,7 @@ class UriTest extends TestCase
         self::assertSame($input, (string) $uri);
     }
 
-    public function getValidUris(): iterable
+    public static function getValidUris(): iterable
     {
         return [
             ['urn:path-rootless'],
@@ -109,7 +109,7 @@ class UriTest extends TestCase
         new Uri($invalidUri);
     }
 
-    public function getInvalidUris(): iterable
+    public static function getInvalidUris(): iterable
     {
         return [
             // parse_url() requires the host component which makes sense for http(s)
@@ -217,7 +217,7 @@ class UriTest extends TestCase
         self::assertSame($isDefaultPort, Uri::isDefaultPort($uri));
     }
 
-    public function getPortTestCases(): iterable
+    public static function getPortTestCases(): iterable
     {
         return [
             ['http', null, true],
@@ -531,7 +531,7 @@ class UriTest extends TestCase
         self::assertSame('file:///tmp/filename.ext', (string) $uri);
     }
 
-    public function uriComponentsEncodingProvider(): iterable
+    public static function uriComponentsEncodingProvider(): iterable
     {
         $unreserved = 'a-zA-Z0-9.-_~!$&\'()*+,;=:@';
 

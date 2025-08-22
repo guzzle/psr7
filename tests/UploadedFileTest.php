@@ -30,7 +30,7 @@ class UploadedFileTest extends TestCase
         }
     }
 
-    public function invalidStreams()
+    public static function invalidStreams()
     {
         return [
             'null' => [null],
@@ -76,7 +76,10 @@ class UploadedFileTest extends TestCase
         $upload = new UploadedFile($stream, 0, UPLOAD_ERR_OK);
         $uploadStream = $upload->getStream();
         $r = new ReflectionProperty($uploadStream, 'filename');
-        $r->setAccessible(true);
+
+        if (PHP_VERSION_ID < 80100) {
+            $r->setAccessible(true);
+        }
 
         self::assertSame($stream, $r->getValue($uploadStream));
     }
@@ -96,7 +99,7 @@ class UploadedFileTest extends TestCase
         self::assertSame($stream->__toString(), file_get_contents($to));
     }
 
-    public function invalidMovePaths(): iterable
+    public static function invalidMovePaths(): iterable
     {
         return [
             'null' => [null],
@@ -151,7 +154,7 @@ class UploadedFileTest extends TestCase
         $upload->getStream();
     }
 
-    public function nonOkErrorStatus(): iterable
+    public static function nonOkErrorStatus(): iterable
     {
         return [
             'UPLOAD_ERR_INI_SIZE' => [UPLOAD_ERR_INI_SIZE],

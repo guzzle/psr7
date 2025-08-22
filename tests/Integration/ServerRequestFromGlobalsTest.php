@@ -13,6 +13,7 @@ class ServerRequestFromGlobalsTest extends TestCase
         if (false === $this->getServerUri()) {
             self::markTestSkipped();
         }
+
         parent::setUp();
     }
 
@@ -25,7 +26,10 @@ class ServerRequestFromGlobalsTest extends TestCase
         curl_setopt($curl, CURLOPT_POSTFIELDS, 'foobar');
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($curl);
-        curl_close($curl);
+
+        if (PHP_VERSION_ID < 80000) {
+            curl_close($curl);
+        }
 
         self::assertNotFalse($response);
         $data = json_decode($response, true);

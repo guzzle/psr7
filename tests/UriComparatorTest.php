@@ -21,7 +21,7 @@ class UriComparatorTest extends TestCase
         self::assertSame($expected, UriComparator::isCrossOrigin(new Uri($original), new Uri($modified)));
     }
 
-    public function getCrossOriginExamples(): array
+    public static function getCrossOriginExamples(): array
     {
         return [
             ['http://example.com/123', 'http://example.com/', false],

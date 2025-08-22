@@ -199,7 +199,7 @@ parameters:
 			path: src/Header.php
 
 		-
-			message: '#^Parameter \#2 \$character_mask of function trim expects string, mixed given\.$#'
+			message: '#^Parameter \#2 \$characters of function trim expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 3
 			path: src/Header.php
@@ -277,7 +277,7 @@ parameters:
 			path: src/Message.php
 
 		-
-			message: '#^Parameter \#2 \$str of function explode expects string, mixed given\.$#'
+			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Message.php
@@ -397,6 +397,12 @@ parameters:
 			path: src/ServerRequest.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/ServerRequest.php
+
+		-
 			message: '#^Parameter \#1 \$authority of static method GuzzleHttp\\Psr7\\ServerRequest\:\:extractHostAndPortFromAuthority\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -406,12 +412,6 @@ parameters:
 			message: '#^Parameter \#1 \$host of method GuzzleHttp\\Psr7\\Uri\:\:withHost\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 3
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#1 \$input of function array_keys expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: src/ServerRequest.php
 
 		-
@@ -439,7 +439,7 @@ parameters:
 			path: src/ServerRequest.php
 
 		-
-			message: '#^Parameter \#2 \$str of function explode expects string, mixed given\.$#'
+			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/ServerRequest.php
@@ -559,7 +559,7 @@ parameters:
 			path: src/Uri.php
 
 		-
-			message: '#^Parameter \#1 \$str of function rawurlencode expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$string of function rawurlencode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Uri.php
@@ -577,13 +577,13 @@ parameters:
 			path: src/UriNormalizer.php
 
 		-
-			message: '#^Parameter \#1 \$str of function rawurldecode expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$string of function rawurldecode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/UriNormalizer.php
 
 		-
-			message: '#^Parameter \#1 \$str of function strtoupper expects string, mixed given\.$#'
+			message: '#^Parameter \#1 \$string of function strtoupper expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/UriNormalizer.php
@@ -649,13 +649,7 @@ parameters:
 			path: src/Utils.php
 
 		-
-			message: '#^PHPDoc tag @var with type object is not subtype of native type object\.$#'
-			identifier: varTag.nativeType
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#1 \$input of function array_keys expects array, mixed given\.$#'
+			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Utils.php
