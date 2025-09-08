@@ -29,6 +29,9 @@ trait MessageTrait
         return $this->protocol;
     }
 
+    /**
+     * @return static
+     */
     public function withProtocolVersion($version): MessageInterface
     {
         if ($this->protocol === $version) {
@@ -69,6 +72,9 @@ trait MessageTrait
         return implode(', ', $this->getHeader($header));
     }
 
+    /**
+     * @return static
+     */
     public function withHeader($header, $value): MessageInterface
     {
         $this->assertHeader($header);
@@ -85,6 +91,9 @@ trait MessageTrait
         return $new;
     }
 
+    /**
+     * @return static
+     */
     public function withAddedHeader($header, $value): MessageInterface
     {
         $this->assertHeader($header);
@@ -103,6 +112,9 @@ trait MessageTrait
         return $new;
     }
 
+    /**
+     * @return static
+     */
     public function withoutHeader($header): MessageInterface
     {
         $normalized = strtolower($header);
@@ -128,6 +140,9 @@ trait MessageTrait
         return $this->stream;
     }
 
+    /**
+     * @return static
+     */
     public function withBody(StreamInterface $body): MessageInterface
     {
         if ($body === $this->stream) {
