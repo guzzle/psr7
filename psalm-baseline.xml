@@ -71,11 +71,6 @@
   </file>
   <file src="src/MessageTrait.php">
     <LessSpecificImplementedReturnType>
-      <code><![CDATA[MessageInterface]]></code>
-      <code><![CDATA[MessageInterface]]></code>
-      <code><![CDATA[MessageInterface]]></code>
-      <code><![CDATA[MessageInterface]]></code>
-      <code><![CDATA[MessageInterface]]></code>
       <code><![CDATA[array]]></code>
       <code><![CDATA[array]]></code>
     </LessSpecificImplementedReturnType>
