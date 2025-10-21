@@ -434,6 +434,7 @@ final class MimeType
         'jar' => 'application/java-archive',
         'jardiff' => 'application/x-java-archive-diff',
         'java' => 'text/x-java-source',
+        'jfif' => 'image/jpeg',
         'jhc' => 'image/jphc',
         'jisp' => 'application/vnd.jisp',
         'jls' => 'image/jls',
