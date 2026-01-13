@@ -47,13 +47,10 @@ class StreamDecoratorTraitTest extends TestCase
         $s->expects(self::once())
             ->method('read')
             ->willThrowException(new \RuntimeException('foo'));
-        $msg = '';
-        set_error_handler(function (int $errNo, string $str) use (&$msg): void {
-            $msg = $str;
-        });
-        echo new Str($s);
-        restore_error_handler();
-        self::assertStringContainsString('foo', $msg);
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessageMatches('/foo/');
+        (string) new Str($s);
     }
 
     public function testToString(): void

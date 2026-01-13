@@ -113,16 +113,8 @@ class FnStreamTest extends TestCase
             },
         ]);
 
-        $errors = [];
-        set_error_handler(function (int $errorNumber, string $errorMessage) use (&$errors): void {
-            $errors[] = ['number' => $errorNumber, 'message' => $errorMessage];
-        });
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('GuzzleHttp\Psr7\FnStream::__toString exception:');
         (string) $a;
-
-        restore_error_handler();
-
-        self::assertCount(1, $errors);
-        self::assertSame(E_USER_ERROR, $errors[0]['number']);
-        self::assertStringStartsWith('GuzzleHttp\Psr7\FnStream::__toString exception:', $errors[0]['message']);
     }
 }

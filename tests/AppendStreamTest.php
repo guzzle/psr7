@@ -197,19 +197,9 @@ class AppendStreamTest extends TestCase
         $a = new AppendStream([$s]);
         self::assertFalse($a->eof());
 
-        $errors = [];
-        set_error_handler(static function (int $errorNumber, string $errorMessage) use (&$errors): bool {
-            $errors[] = ['number' => $errorNumber, 'message' => $errorMessage];
-
-            return true;
-        });
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('GuzzleHttp\Psr7\AppendStream::__toString exception:');
         (string) $a;
-
-        restore_error_handler();
-
-        self::assertCount(1, $errors);
-        self::assertSame(E_USER_ERROR, $errors[0]['number']);
-        self::assertStringStartsWith('GuzzleHttp\Psr7\AppendStream::__toString exception:', $errors[0]['message']);
     }
 
     public function testReturnsEmptyMetadata(): void

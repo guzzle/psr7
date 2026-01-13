@@ -90,16 +90,8 @@ class PumpStreamTest extends TestCase
         });
         self::assertInstanceOf(PumpStream::class, $p);
 
-        $errors = [];
-        set_error_handler(function (int $errorNumber, string $errorMessage) use (&$errors): void {
-            $errors[] = ['number' => $errorNumber, 'message' => $errorMessage];
-        });
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('GuzzleHttp\Psr7\PumpStream::__toString exception:');
         (string) $p;
-
-        restore_error_handler();
-
-        self::assertCount(1, $errors);
-        self::assertSame(E_USER_ERROR, $errors[0]['number']);
-        self::assertStringStartsWith('GuzzleHttp\Psr7\PumpStream::__toString exception:', $errors[0]['message']);
     }
 }
