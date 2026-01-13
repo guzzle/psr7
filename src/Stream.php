@@ -86,7 +86,7 @@ class Stream implements StreamInterface
             if (\PHP_VERSION_ID >= 70400) {
                 throw $e;
             }
-            trigger_error(sprintf('%s::__toString exception: %s', self::class, (string) $e), E_USER_ERROR);
+            throw new \Error(sprintf('%s::__toString exception: %s', self::class, (string) $e));
 
             return '';
         }
