@@ -111,6 +111,36 @@ class ResponseTest extends TestCase
         self::assertSame('1000', $r->getProtocolVersion());
     }
 
+    /**
+     * @dataProvider extendedStatusCodeProvider
+     */
+    public function testCanConstructWithExtendedStatusCodes(int $code): void
+    {
+        $r = new Response($code);
+        self::assertSame($code, $r->getStatusCode());
+        self::assertSame('', $r->getReasonPhrase());
+    }
+
+    /**
+     * @dataProvider extendedStatusCodeProvider
+     */
+    public function testWithStatusAcceptsExtendedStatusCodes(int $code): void
+    {
+        $r = (new Response())->withStatus($code, 'Custom Reason');
+        self::assertSame($code, $r->getStatusCode());
+        self::assertSame('Custom Reason', $r->getReasonPhrase());
+    }
+
+    public static function extendedStatusCodeProvider(): iterable
+    {
+        return [
+            [600],
+            [700],
+            [800],
+            [999],
+        ];
+    }
+
     public function testWithStatusCodeAndNoReason(): void
     {
         $r = (new Response())->withStatus(201);
@@ -371,7 +401,7 @@ class ResponseTest extends TestCase
     public function testConstructResponseWithInvalidRangeStatusCode($invalidValues): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Status code must be an integer value between 1xx and 5xx.');
+        $this->expectExceptionMessage('Status code must be an integer value between 1xx and 9xx.');
         new Response($invalidValues);
     }
 
@@ -384,14 +414,14 @@ class ResponseTest extends TestCase
     {
         $response = new Response();
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Status code must be an integer value between 1xx and 5xx.');
+        $this->expectExceptionMessage('Status code must be an integer value between 1xx and 9xx.');
         $response->withStatus($invalidValues);
     }
 
     public static function invalidStatusCodeRangeProvider(): iterable
     {
         return [
-            [600],
+            [1000],
             [99],
         ];
     }
