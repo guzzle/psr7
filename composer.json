@@ -50,7 +50,7 @@
         }
     ],
     "require": {
-        "php": "^7.2.5 || ^8.0",
+        "php": "^7.4 || ^8.0",
         "psr/http-factory": "^1.0",
         "psr/http-message": "^1.1 || ^2.0",
         "ralouphie/getallheaders": "^3.0"
