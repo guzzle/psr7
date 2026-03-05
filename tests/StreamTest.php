@@ -161,6 +161,20 @@ class StreamTest extends TestCase
         $stream->close();
     }
 
+    public function testDetachNonSeekableStreamAndClearProperties(): void
+    {
+        $handle = popen('echo foo', 'r');
+        $stream = new Stream($handle);
+        self::assertFalse($stream->isSeekable());
+        $detached = $stream->detach();
+        self::assertIsResource($detached);
+        self::assertNull($stream->detach());
+
+        $this->assertStreamStateAfterClosedOrDetached($stream);
+
+        pclose($detached);
+    }
+
     public function testCloseResourceAndClearProperties(): void
     {
         $handle = fopen('php://temp', 'r');
