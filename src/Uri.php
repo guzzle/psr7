@@ -51,7 +51,7 @@ class Uri implements UriInterface, \JsonSerializable
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
      */
     private const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
-    private const QUERY_SEPARATORS_REPLACEMENT = ['=' => '%3D', '&' => '%26'];
+    private const QUERY_SEPARATORS_REPLACEMENT = ['=' => '%3D', '&' => '%26', '+' => '%2B'];
 
     /** @var string Uri scheme. */
     private $scheme = '';

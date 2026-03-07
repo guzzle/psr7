@@ -390,6 +390,17 @@ class UriTest extends TestCase
         self::assertSame('E%3Dmc%5e2=ein%26stein', $uri->getQuery(), 'Encoded key/value do not get double-encoded');
     }
 
+    public function testWithQueryValueEncodesPlusSign(): void
+    {
+        $uri = new Uri();
+        $uri = Uri::withQueryValue($uri, 'a+b', 'c+d');
+        self::assertSame('a%2Bb=c%2Bd', $uri->getQuery(), 'Plus signs in key and value get encoded to %2B');
+
+        $uri = new Uri();
+        $uri = Uri::withQueryValue($uri, 'query', 'a+b c');
+        self::assertSame('query=a%2Bb%20c', $uri->getQuery(), 'Plus sign is encoded distinctly from space');
+    }
+
     public function testWithoutQueryValueHandlesEncoding(): void
     {
         // It also tests that the case of the percent-encoding does not matter,
