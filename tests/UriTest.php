@@ -714,10 +714,19 @@ class UriTest extends TestCase
         $uri = new Uri('https://[2a00:f48:1008::212:183:10]');
         self::assertSame('[2a00:f48:1008::212:183:10]', $uri->getHost());
 
+        $uri = new Uri('https://[2A00:F48:1008::212:183:10]');
+        self::assertSame('[2a00:f48:1008::212:183:10]', $uri->getHost());
+
         $uri = new Uri('http://[2a00:f48:1008::212:183:10]:56?foo=bar');
         self::assertSame('[2a00:f48:1008::212:183:10]', $uri->getHost());
         self::assertSame(56, $uri->getPort());
         self::assertSame('foo=bar', $uri->getQuery());
+
+        $uri = new Uri('https://[2a00:F48:1008::212:183:10]/path?foo=bar#frag');
+        self::assertSame('[2a00:f48:1008::212:183:10]', $uri->getHost());
+        self::assertSame('/path', $uri->getPath());
+        self::assertSame('foo=bar', $uri->getQuery());
+        self::assertSame('frag', $uri->getFragment());
     }
 
     public function testJsonSerializable(): void
