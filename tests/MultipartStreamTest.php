@@ -329,7 +329,7 @@ class MultipartStreamTest extends TestCase
     public function testThrowsWhenFilenameUsedWithArrayContents(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+        $this->expectExceptionMessage("The 'filename' and 'headers' options cannot be used when 'contents' is an array");
 
         new MultipartStream([
             [
@@ -343,7 +343,7 @@ class MultipartStreamTest extends TestCase
     public function testThrowsWhenHeadersUsedWithArrayContents(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+        $this->expectExceptionMessage("The 'filename' and 'headers' options cannot be used when 'contents' is an array");
 
         new MultipartStream([
             [
@@ -378,7 +378,7 @@ class MultipartStreamTest extends TestCase
     public function testThrowsWhenZeroFilenameUsedWithArrayContents(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+        $this->expectExceptionMessage("The 'filename' and 'headers' options cannot be used when 'contents' is an array");
 
         new MultipartStream([
             [
@@ -434,7 +434,7 @@ class MultipartStreamTest extends TestCase
     public function testThrowsWhenNullFilenameKeyExistsWithArrayContents(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+        $this->expectExceptionMessage("The 'filename' and 'headers' options cannot be used when 'contents' is an array");
 
         new MultipartStream([
             [
@@ -448,7 +448,7 @@ class MultipartStreamTest extends TestCase
     public function testThrowsWhenEmptyHeadersKeyExistsWithArrayContents(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+        $this->expectExceptionMessage("The 'filename' and 'headers' options cannot be used when 'contents' is an array");
 
         new MultipartStream([
             [
@@ -498,7 +498,7 @@ class MultipartStreamTest extends TestCase
     public function testThrowsWhenNameIsNotStringOrInt(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("'name' key must be a string or integer");
+        $this->expectExceptionMessage("The 'name' key must be a string or integer");
 
         new MultipartStream([
             [
