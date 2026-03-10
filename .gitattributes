@@ -1,6 +1,7 @@
 .editorconfig          export-ignore
 .gitattributes         export-ignore
 /.github/              export-ignore
+/hack/                 export-ignore
 .gitignore             export-ignore
 .php-cs-fixer.dist.php export-ignore
 /Makefile              export-ignore
