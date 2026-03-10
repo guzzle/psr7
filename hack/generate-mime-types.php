@@ -9,19 +9,93 @@ $db = json_decode(file_get_contents($dbPath), true);
 
 // 2. Build extension -> mime-type map
 $mimeTypes = [];
+$mimeTypeSources = [];
 foreach ($db as $mimeType => $data) {
     if (!isset($data['extensions'])) {
         continue;
     }
+    $source = $data['source'] ?? null;
     foreach ($data['extensions'] as $ext) {
-        // First mime-type wins (don't overwrite)
+        // IANA source wins over non-IANA, otherwise first wins
         if (!isset($mimeTypes[$ext])) {
             $mimeTypes[$ext] = $mimeType;
+            $mimeTypeSources[$ext] = $source;
+        } elseif ($source === 'iana' && $mimeTypeSources[$ext] !== 'iana') {
+            $mimeTypes[$ext] = $mimeType;
+            $mimeTypeSources[$ext] = $source;
         }
     }
 }
 
-// 3. Sort alphabetically by extension
+// 3. Apply overrides (extensions not in mime-db or where we prefer a different type)
+$overrides = [
+    '7zip' => 'application/x-7z-compressed',
+    'ac3' => 'audio/ac3',
+    'ai' => 'application/illustrator',
+    'au' => 'audio/x-au',
+    'bpmn' => 'application/octet-stream',
+    'brf' => 'application/braille',
+    'cdr' => 'application/cdr',
+    'class' => 'application/octet-stream',
+    'csr' => 'application/octet-stream',
+    'dmn' => 'application/octet-stream',
+    'dst' => 'application/octet-stream',
+    'f4v' => 'video/mp4',
+    'gpg' => 'application/gpg-keys',
+    'gzip' => 'application/gzip',
+    'indd' => 'application/x-indesign',
+    'jfif' => 'image/jpeg',
+    'js' => 'application/javascript',
+    'kdb' => 'application/octet-stream',
+    'lha' => 'application/octet-stream',
+    'lzh' => 'application/octet-stream',
+    'm3u' => 'text/plain',
+    'm4a' => 'audio/x-m4a',
+    'm4u' => 'application/vnd.mpegurl',
+    'mp4' => 'video/mp4',
+    'ndjson' => 'application/x-ndjson',
+    'p7a' => 'application/x-pkcs7-signature',
+    'p7e' => 'application/pkcs7-mime',
+    'pem' => 'application/x-x509-user-cert',
+    'pgp' => 'application/pgp',
+    'phar' => 'application/octet-stream',
+    'php3' => 'application/x-httpd-php',
+    'php4' => 'application/x-httpd-php',
+    'phps' => 'application/x-httpd-php-source',
+    'phtml' => 'application/x-httpd-php',
+    'ppa' => 'application/vnd.ms-powerpoint',
+    'ppt' => 'application/powerpoint',
+    'psd' => 'application/x-photoshop',
+    'pv' => 'application/octet-stream',
+    'pxf' => 'application/octet-stream',
+    'ra' => 'audio/x-realaudio',
+    'rm' => 'audio/x-pn-realaudio',
+    'rsa' => 'application/x-pkcs7',
+    'rtf' => 'text/rtf',
+    'rv' => 'video/vnd.rn-realvideo',
+    'sea' => 'application/octet-stream',
+    'smi' => 'application/smil',
+    'smil' => 'application/smil',
+    'sst' => 'application/octet-stream',
+    'tgz' => 'application/x-tar',
+    'vlc' => 'application/videolan',
+    'wbxml' => 'application/wbxml',
+    'wmlc' => 'application/wmlc',
+    'word' => 'application/msword',
+    'xl' => 'application/excel',
+    'z' => 'application/x-compress',
+    'zsh' => 'text/x-scriptzsh',
+];
+foreach ($overrides as $ext => $mimeType) {
+    if (!isset($mimeTypes[$ext])) {
+        echo "ADD: $ext => $mimeType\n";
+    } elseif ($mimeTypes[$ext] !== $mimeType) {
+        echo "CHANGE: $ext from {$mimeTypes[$ext]} to $mimeType\n";
+    }
+    $mimeTypes[$ext] = $mimeType;
+}
+
+// 4. Sort alphabetically by extension
 ksort($mimeTypes, SORT_STRING);
 
 // 4. Generate PHP code
