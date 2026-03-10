@@ -29,6 +29,7 @@ foreach ($db as $mimeType => $data) {
 
 // 3. Apply overrides (extensions not in mime-db or where we prefer a different type)
 $overrides = [
+    '3gpp' => 'video/3gpp',
     '7zip' => 'application/x-7z-compressed',
     'ac3' => 'audio/ac3',
     'bpmn' => 'application/octet-stream',
@@ -45,6 +46,8 @@ $overrides = [
     'kdb' => 'application/octet-stream',
     'mp4' => 'video/mp4',
     'mpp' => 'application/vnd.ms-project',
+    'mpg4' => 'video/mp4',
+    'mts' => 'video/mp2t',
     'ndjson' => 'application/x-ndjson',
     'p7a' => 'application/x-pkcs7-signature',
     'p7e' => 'application/pkcs7-mime',
@@ -65,16 +68,12 @@ $overrides = [
     'tgz' => 'application/gzip',
     'word' => 'application/msword',
     'xl' => 'application/vnd.ms-excel',
+    'xsl' => 'application/xslt+xml',
     'z' => 'application/x-compress',
     'zsh' => 'text/x-scriptzsh',
 ];
 
 foreach ($overrides as $ext => $mimeType) {
-    if (!isset($mimeTypes[$ext])) {
-        echo "ADD: $ext => $mimeType\n";
-    } elseif ($mimeTypes[$ext] !== $mimeType) {
-        echo "CHANGE: $ext from {$mimeTypes[$ext]} to $mimeType\n";
-    }
     $mimeTypes[$ext] = $mimeType;
 }
 
