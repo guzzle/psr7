@@ -127,6 +127,387 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testExpandsNestedArrayContents(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'foo',
+                'contents' => [
+                    ['key' => 'bar'],
+                    ['key' => 'baz'],
+                ],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"foo[0][key]\"\r\n",
+            "Content-Length: 3\r\n",
+            "\r\n",
+            "bar\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"foo[1][key]\"\r\n",
+            "Content-Length: 3\r\n",
+            "\r\n",
+            "baz\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testExpandsFlatArrayContents(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'tags',
+                'contents' => ['php', 'guzzle', 'psr7'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"tags[0]\"\r\n",
+            "Content-Length: 3\r\n",
+            "\r\n",
+            "php\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"tags[1]\"\r\n",
+            "Content-Length: 6\r\n",
+            "\r\n",
+            "guzzle\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"tags[2]\"\r\n",
+            "Content-Length: 4\r\n",
+            "\r\n",
+            "psr7\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testExpandsAssociativeArrayContents(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'user',
+                'contents' => ['name' => 'John', 'email' => 'john@example.com'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"user[name]\"\r\n",
+            "Content-Length: 4\r\n",
+            "\r\n",
+            "John\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"user[email]\"\r\n",
+            "Content-Length: 16\r\n",
+            "\r\n",
+            "john@example.com\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testExpandsDeeplyNestedArrayContents(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'data',
+                'contents' => [
+                    'level1' => [
+                        'level2' => [
+                            'level3' => 'deep',
+                        ],
+                    ],
+                ],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"data[level1][level2][level3]\"\r\n",
+            "Content-Length: 4\r\n",
+            "\r\n",
+            "deep\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testExpandsEmptyArrayContents(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'empty',
+                'contents' => [],
+            ],
+        ], 'boundary');
+
+        $expected = "--boundary--\r\n";
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testExpandsArrayContentsWithMixedScalarTypes(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'mixed',
+                'contents' => [
+                    'int' => 42,
+                    'float' => 3.14,
+                    'bool_true' => true,
+                    'bool_false' => false,
+                    'string' => 'hello',
+                ],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"mixed[int]\"\r\n",
+            "Content-Length: 2\r\n",
+            "\r\n",
+            "42\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"mixed[float]\"\r\n",
+            "Content-Length: 4\r\n",
+            "\r\n",
+            "3.14\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"mixed[bool_true]\"\r\n",
+            "Content-Length: 1\r\n",
+            "\r\n",
+            "1\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"mixed[bool_false]\"\r\n",
+            "\r\n",
+            "\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"mixed[string]\"\r\n",
+            "Content-Length: 5\r\n",
+            "\r\n",
+            "hello\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testExpandsArrayContentsWithNumericStringKeys(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'items',
+                'contents' => ['10' => 'ten', '20' => 'twenty'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"items[10]\"\r\n",
+            "Content-Length: 3\r\n",
+            "\r\n",
+            "ten\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"items[20]\"\r\n",
+            "Content-Length: 6\r\n",
+            "\r\n",
+            "twenty\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testThrowsWhenFilenameUsedWithArrayContents(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+
+        new MultipartStream([
+            [
+                'name' => 'foo',
+                'contents' => ['bar' => 'baz'],
+                'filename' => 'test.txt',
+            ],
+        ]);
+    }
+
+    public function testThrowsWhenHeadersUsedWithArrayContents(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+
+        new MultipartStream([
+            [
+                'name' => 'foo',
+                'contents' => ['bar' => 'baz'],
+                'headers' => ['X-Custom' => 'value'],
+            ],
+        ]);
+    }
+
+    public function testExpandsArrayContentsWithZeroName(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => '0',
+                'contents' => ['a' => 'value'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"0[a]\"\r\n",
+            "Content-Length: 5\r\n",
+            "\r\n",
+            "value\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testThrowsWhenZeroFilenameUsedWithArrayContents(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+
+        new MultipartStream([
+            [
+                'name' => 'foo',
+                'contents' => ['bar' => 'baz'],
+                'filename' => '0',
+            ],
+        ]);
+    }
+
+    public function testExpandsArrayContentsWithNestedEmptyBranches(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'data',
+                'contents' => ['a' => [], 'b' => 'value'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"data[b]\"\r\n",
+            "Content-Length: 5\r\n",
+            "\r\n",
+            "value\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testExpandsArrayContentsWithEmptyStringName(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => '',
+                'contents' => ['a' => 'value'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"[a]\"\r\n",
+            "Content-Length: 5\r\n",
+            "\r\n",
+            "value\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testThrowsWhenNullFilenameKeyExistsWithArrayContents(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+
+        new MultipartStream([
+            [
+                'name' => 'foo',
+                'contents' => ['bar' => 'baz'],
+                'filename' => null,
+            ],
+        ]);
+    }
+
+    public function testThrowsWhenEmptyHeadersKeyExistsWithArrayContents(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("'filename' and 'headers' options cannot be used when 'contents' is an array");
+
+        new MultipartStream([
+            [
+                'name' => 'foo',
+                'contents' => ['bar' => 'baz'],
+                'headers' => [],
+            ],
+        ]);
+    }
+
+    public function testExpandsArrayContentsWithStreamLeaves(): void
+    {
+        $fileStream = Psr7\FnStream::decorate(Psr7\Utils::streamFor('file contents'), [
+            'getMetadata' => static function (): string {
+                return '/path/to/document.pdf';
+            },
+        ]);
+
+        $b = new MultipartStream([
+            [
+                'name' => 'files',
+                'contents' => [
+                    'doc' => $fileStream,
+                    'note' => 'plain text',
+                ],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"files[doc]\"; filename=\"document.pdf\"\r\n",
+            "Content-Length: 13\r\n",
+            "Content-Type: application/pdf\r\n",
+            "\r\n",
+            "file contents\r\n",
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"files[note]\"\r\n",
+            "Content-Length: 10\r\n",
+            "\r\n",
+            "plain text\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testThrowsWhenNameIsNotStringOrInt(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("'name' key must be a string or integer");
+
+        new MultipartStream([
+            [
+                'name' => ['invalid'],
+                'contents' => 'value',
+            ],
+        ]);
+    }
+
     public function testSerializesFiles(): void
     {
         $f1 = Psr7\FnStream::decorate(Psr7\Utils::streamFor('foo'), [
