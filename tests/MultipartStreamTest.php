@@ -48,6 +48,19 @@ class MultipartStreamTest extends TestCase
         new MultipartStream([['contents' => 'bar']]);
     }
 
+    public function testThrowsWhenNameIsNotStringOrInt(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("The 'name' key must be a string or integer");
+
+        new MultipartStream([
+            [
+                'name' => ['invalid'],
+                'contents' => 'value',
+            ],
+        ]);
+    }
+
     public function testSerializesFields(): void
     {
         $b = new MultipartStream([
@@ -375,6 +388,27 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testExpandsArrayContentsWithIntegerName(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 0,
+                'contents' => ['a' => 'value'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"0[a]\"\r\n",
+            "Content-Length: 5\r\n",
+            "\r\n",
+            "value\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
     public function testThrowsWhenZeroFilenameUsedWithArrayContents(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -493,19 +527,6 @@ class MultipartStreamTest extends TestCase
         ]);
 
         self::assertSame($expected, (string) $b);
-    }
-
-    public function testThrowsWhenNameIsNotStringOrInt(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("The 'name' key must be a string or integer");
-
-        new MultipartStream([
-            [
-                'name' => ['invalid'],
-                'contents' => 'value',
-            ],
-        ]);
     }
 
     public function testSerializesFiles(): void
