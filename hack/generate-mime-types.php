@@ -3,11 +3,9 @@
 
 declare(strict_types=1);
 
-// 1. Load db.json
 $dbPath = __DIR__ . '/../vendor/jshttp/mime-db/db.json';
 $db = json_decode(file_get_contents($dbPath), true);
 
-// 2. Build extension -> mime-type map
 $mimeTypes = [];
 $mimeTypeSources = [];
 foreach ($db as $mimeType => $data) {
@@ -27,7 +25,6 @@ foreach ($db as $mimeType => $data) {
     }
 }
 
-// 3. Apply overrides (extensions not in mime-db or where we prefer a different type)
 $overrides = [
     '3gpp' => 'video/3gpp',
     '7zip' => 'application/x-7z-compressed',
@@ -77,10 +74,8 @@ foreach ($overrides as $ext => $mimeType) {
     $mimeTypes[$ext] = $mimeType;
 }
 
-// 4. Sort alphabetically by extension
 ksort($mimeTypes, SORT_STRING);
 
-// 4. Generate PHP code
 $output = <<<'PHP'
 <?php
 
@@ -124,7 +119,6 @@ $output .= <<<'PHP'
 
 PHP;
 
-// 5. Write output
 file_put_contents(__DIR__ . '/../src/MimeType.php', $output);
 
 echo "Generated src/MimeType.php with " . count($mimeTypes) . " extensions.\n";
