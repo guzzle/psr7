@@ -105,6 +105,10 @@ class Uri implements UriInterface, \JsonSerializable
      */
     private static function parse(string $url)
     {
+        if (self::isPathNoSchemeReference($url)) {
+            return self::parsePathNoSchemeReference($url);
+        }
+
         // If IPv6
         $prefix = '';
         if (preg_match('%^(.*://\[[0-9:a-fA-F]+\])(.*?)$%', $url, $matches)) {
@@ -129,6 +133,39 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return array_map('urldecode', $result);
+    }
+
+    private static function isPathNoSchemeReference(string $url): bool
+    {
+        if ($url === '' || $url[0] === '/' || $url[0] === '?' || $url[0] === '#') {
+            return false;
+        }
+
+        $firstSegment = substr($url, 0, strcspn($url, '/?#'));
+
+        return strpos($firstSegment, ':') === false;
+    }
+
+    /**
+     * @return array{path: string, query?: string, fragment?: string}
+     */
+    private static function parsePathNoSchemeReference(string $url): array
+    {
+        $parts = [];
+
+        if (false !== ($fragmentPosition = strpos($url, '#'))) {
+            $parts['fragment'] = substr($url, $fragmentPosition + 1);
+            $url = substr($url, 0, $fragmentPosition);
+        }
+
+        if (false !== ($queryPosition = strpos($url, '?'))) {
+            $parts['query'] = substr($url, $queryPosition + 1);
+            $url = substr($url, 0, $queryPosition);
+        }
+
+        $parts['path'] = $url;
+
+        return $parts;
     }
 
     public function __toString(): string
