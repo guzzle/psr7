@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Preserve custom request implementations in `Utils::modifyRequest()`
 - Make `Uri::__toString()` side-effect-free
+- Stop adding default `Content-Length` headers to `multipart/form-data` parts to comply with RFC 7578 section 4.8.
 
 ## 2.9.1 - Unreleased
 
