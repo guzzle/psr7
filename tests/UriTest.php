@@ -123,7 +123,7 @@ class UriTest extends TestCase
     /**
      * @dataProvider getPathNoSchemeReferencesWithColonInLaterSegment
      */
-    public function testParsesPathNoSchemeReferenceWithColonInLaterSegment(string $input, string $path, string $query = '', string $fragment = ''): void
+    public function testParsesPathNoSchemeReferenceWithColonInLaterSegment(string $input, string $path, string $query = '', string $fragment = '', ?string $expectedString = null): void
     {
         $uri = new Uri($input);
 
@@ -134,7 +134,8 @@ class UriTest extends TestCase
         self::assertSame($path, $uri->getPath());
         self::assertSame($query, $uri->getQuery());
         self::assertSame($fragment, $uri->getFragment());
-        self::assertSame($input, (string) $uri);
+        self::assertSame($expectedString ?? $input, (string) $uri);
+        self::assertTrue(Uri::isRelativePathReference($uri));
     }
 
     public static function getPathNoSchemeReferencesWithColonInLaterSegment(): iterable
@@ -145,6 +146,9 @@ class UriTest extends TestCase
             ['foo/bar:0?x=1#frag', 'foo/bar:0', 'x=1', 'frag'],
             ['foo/bar:baz?x=y:z#frag:ment', 'foo/bar:baz', 'x=y:z', 'frag:ment'],
             ['./foo:0', './foo:0'],
+            ['foo/bar:0/baz?q=a:b&r=c#h:i', 'foo/bar:0/baz', 'q=a:b&r=c', 'h:i'],
+            ['caf%C3%A9/foo:1', 'caf%C3%A9/foo:1'],
+            ['café/foo:1', 'caf%C3%A9/foo:1', '', '', 'caf%C3%A9/foo:1'],
         ];
     }
 
@@ -173,6 +177,7 @@ class UriTest extends TestCase
             ['?q=foo:0', '', '', '', null, '', 'q=foo:0', ''],
             ['#foo:0', '', '', '', null, '', '', 'foo:0'],
             ['https://example.com/foo:0', 'https', 'example.com', 'example.com', null, '/foo:0', '', ''],
+            ['//host/foo:bar', '', 'host', 'host', null, '/foo:bar', '', ''],
         ];
     }
 
