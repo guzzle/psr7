@@ -115,72 +115,6 @@ parameters:
 			path: src/FnStream.php
 
 		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:detach\(\) should return resource\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:eof\(\) should return bool but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:getContents\(\) should return string but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:getSize\(\) should return int\|null but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:isReadable\(\) should return bool but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:isSeekable\(\) should return bool but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:isWritable\(\) should return bool but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:read\(\) should return string but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:tell\(\) should return int but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\FnStream\:\:write\(\) should return int but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/FnStream.php
-
-		-
-			message: '#^Trying to invoke mixed but it''s not a callable\.$#'
-			identifier: callable.nonCallable
-			count: 16
-			path: src/FnStream.php
-
-		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
 			count: 1
@@ -191,24 +125,6 @@ parameters:
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Header.php
-
-		-
-			message: '#^Parameter \#1 \$values of static method GuzzleHttp\\Psr7\\Header\:\:splitList\(\) expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Header.php
-
-		-
-			message: '#^Parameter \#2 \$characters of function trim expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: src/Header.php
-
-		-
-			message: '#^Parameter \#1 \$method of class GuzzleHttp\\Psr7\\ServerRequest constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/HttpFactory.php
 
 		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
@@ -229,24 +145,6 @@ parameters:
 			path: src/LimitStream.php
 
 		-
-			message: '#^Binary operation "\." between ''Invalid response…'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Binary operation "\." between ''http\://''\|''https\://'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Cannot access offset 0 on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Message.php
-
-		-
 			message: '#^PHPDoc tag @var with type array\<array\> is not subtype of native type list\<array\<string\>\>\.$#'
 			identifier: varTag.nativeType
 			count: 1
@@ -256,36 +154,6 @@ parameters:
 			message: '#^Parameter \#1 \$haystack of function substr_count expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#2 \$headers of class GuzzleHttp\\Psr7\\Response constructor expects array\<array\<string\>\|string\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#2 \$headers of static method GuzzleHttp\\Psr7\\Message\:\:parseRequestUri\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#2 \$subject of function preg_match expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
 			path: src/Message.php
 
 		-
@@ -301,52 +169,10 @@ parameters:
 			path: src/Message.php
 
 		-
-			message: '#^Parameter \#3 \$body of class GuzzleHttp\\Psr7\\Response constructor expects Psr\\Http\\Message\\StreamInterface\|resource\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#3 \$headers of class GuzzleHttp\\Psr7\\Request constructor expects array\<array\<string\>\|string\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#4 \$body of class GuzzleHttp\\Psr7\\Request constructor expects Psr\\Http\\Message\\StreamInterface\|resource\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
-			count: 1
-			path: src/Message.php
-
-		-
 			message: '#^Variable \$headerLines in PHPDoc tag @var does not match assigned variable \$count\.$#'
 			identifier: varTag.differentVariable
 			count: 1
 			path: src/Message.php
-
-		-
-			message: '#^Parameter \#1 \$resource of static method GuzzleHttp\\Psr7\\Utils\:\:streamFor\(\) expects bool\|\(callable\(\)\: mixed\)\|float\|int\|Iterator\|Psr\\Http\\Message\\StreamInterface\|resource\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/MultipartStream.php
-
-		-
-			message: '#^Parameter \#3 \$filename of method GuzzleHttp\\Psr7\\MultipartStream\:\:createElement\(\) expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/MultipartStream.php
-
-		-
-			message: '#^Parameter \#4 \$headers of method GuzzleHttp\\Psr7\\MultipartStream\:\:createElement\(\) expects array\<string\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/MultipartStream.php
 
 		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
@@ -367,38 +193,14 @@ parameters:
 			path: src/PumpStream.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: src/Query.php
-
-		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 3
+			count: 1
 			path: src/Query.php
-
-		-
-			message: '#^Cannot access offset int\|string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 2
-			path: src/ServerRequest.php
 
 		-
 			message: '#^Method GuzzleHttp\\Psr7\\ServerRequest\:\:normalizeNestedFileSpec\(\) should return array\<Psr\\Http\\Message\\UploadedFileInterface\> but returns array\<int\|string, array\<Psr\\Http\\Message\\UploadedFileInterface\>\|Psr\\Http\\Message\\UploadedFileInterface\>\.$#'
 			identifier: return.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/ServerRequest.php
 
@@ -411,7 +213,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$host of method GuzzleHttp\\Psr7\\Uri\:\:withHost\(\) expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 3
+			count: 2
 			path: src/ServerRequest.php
 
 		-
@@ -423,7 +225,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$port of method GuzzleHttp\\Psr7\\Uri\:\:withPort\(\) expects int\|null, mixed given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: src/ServerRequest.php
 
 		-
@@ -433,37 +235,13 @@ parameters:
 			path: src/ServerRequest.php
 
 		-
-			message: '#^Parameter \#1 \$streamOrFile of class GuzzleHttp\\Psr7\\UploadedFile constructor expects Psr\\Http\\Message\\StreamInterface\|resource\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#3 \$headers of class GuzzleHttp\\Psr7\\ServerRequest constructor expects array\<array\<string\>\|string\>, mixed given\.$#'
+			message: '#^Parameter \#2 \$str of function explode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/ServerRequest.php
 
 		-
 			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#4 \$clientFilename of class GuzzleHttp\\Psr7\\UploadedFile constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#5 \$clientMediaType of class GuzzleHttp\\Psr7\\UploadedFile constructor expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/ServerRequest.php
@@ -493,32 +271,8 @@ parameters:
 			path: src/Stream.php
 
 		-
-			message: '#^Cannot access offset ''stream'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/StreamWrapper.php
-
-		-
-			message: '#^Cannot access offset string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/StreamWrapper.php
-
-		-
 			message: '#^Method GuzzleHttp\\Psr7\\StreamWrapper\:\:getResource\(\) should return resource but returns resource\|false\.$#'
 			identifier: return.type
-			count: 1
-			path: src/StreamWrapper.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\StreamWrapper\:\:stream_stat\(\) should return array\{dev\: int, ino\: int, mode\: int, nlink\: int, uid\: int, gid\: int, rdev\: int, size\: int, \.\.\.\}\|false but returns array\{dev\: 0, ino\: 0, mode\: mixed, nlink\: 0, uid\: 0, gid\: 0, rdev\: 0, size\: int, \.\.\.\}\.$#'
-			identifier: return.type
-			count: 1
-			path: src/StreamWrapper.php
-
-		-
-			message: '#^Property GuzzleHttp\\Psr7\\StreamWrapper\:\:\$stream \(Psr\\Http\\Message\\StreamInterface\) does not accept mixed\.$#'
-			identifier: assign.propertyType
 			count: 1
 			path: src/StreamWrapper.php
 
@@ -559,12 +313,6 @@ parameters:
 			path: src/Uri.php
 
 		-
-			message: '#^Parameter \#1 \$string of function rawurlencode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Uri.php
-
-		-
 			message: '#^Parameter \#1 \$path of method Psr\\Http\\Message\\UriInterface\:\:withPath\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 3
@@ -577,70 +325,10 @@ parameters:
 			path: src/UriNormalizer.php
 
 		-
-			message: '#^Parameter \#1 \$string of function rawurldecode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/UriNormalizer.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strtoupper expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/UriNormalizer.php
-
-		-
 			message: '#^Strict comparison using \=\=\= between '''' and non\-falsy\-string will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
 			count: 1
 			path: src/UriResolver.php
-
-		-
-			message: '#^Binary operation "\+" between mixed and array results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Binary operation "\." between ''\:'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Binary operation "\.\=" between mixed and non\-falsy\-string results in an error\.$#'
-			identifier: assignOp.invalid
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Cannot access offset ''Host'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Cannot call method getHost\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Cannot call method getPort\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Cannot call method getScheme\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Cannot call method withQuery\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Utils.php
 
 		-
 			message: '#^Method GuzzleHttp\\Psr7\\Utils\:\:tryGetContents\(\) should return string but returns string\|false\.$#'
@@ -649,86 +337,8 @@ parameters:
 			path: src/Utils.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#1 \$keys of static method GuzzleHttp\\Psr7\\Utils\:\:caselessRemove\(\) expects array\<int\|string\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#1 \$method of class GuzzleHttp\\Psr7\\Request constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#1 \$method of class GuzzleHttp\\Psr7\\ServerRequest constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
 			message: '#^Parameter \#1 \$source of class GuzzleHttp\\Psr7\\PumpStream constructor expects callable\(int\)\: \(string\|false\|null\), Closure\(\)\: mixed given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#2 \$uri of class GuzzleHttp\\Psr7\\Request constructor expects Psr\\Http\\Message\\UriInterface\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#2 \$uri of class GuzzleHttp\\Psr7\\ServerRequest constructor expects Psr\\Http\\Message\\UriInterface\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#3 \$headers of class GuzzleHttp\\Psr7\\Request constructor expects array\<array\<string\>\|string\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#3 \$headers of class GuzzleHttp\\Psr7\\ServerRequest constructor expects array\<array\<string\>\|string\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#4 \$body of class GuzzleHttp\\Psr7\\Request constructor expects Psr\\Http\\Message\\StreamInterface\|resource\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#4 \$body of class GuzzleHttp\\Psr7\\ServerRequest constructor expects Psr\\Http\\Message\\StreamInterface\|resource\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#5 \$version of class GuzzleHttp\\Psr7\\Request constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Parameter \#5 \$version of class GuzzleHttp\\Psr7\\ServerRequest constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: src/Utils.php
 

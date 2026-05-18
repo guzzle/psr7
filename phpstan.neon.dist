@@ -6,6 +6,6 @@ parameters:
     ignoreErrors:
         -
             identifier: missingType.iterableValue
-    level: max
+    level: 9
     paths:
         - src
