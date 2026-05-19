@@ -145,6 +145,84 @@ class CachingStreamTest extends TestCase
         self::assertSame('tehiing', (string) $this->body);
     }
 
+    public function testDetachReturnsCompleteResourceWithoutPriorRead(): void
+    {
+        $body = new CachingStream(Psr7\Utils::streamFor('Hello world!'));
+
+        $resource = $body->detach();
+
+        self::assertIsResource($resource);
+        self::assertSame(0, ftell($resource));
+
+        $stats = fstat($resource);
+        self::assertIsArray($stats);
+        self::assertSame(11, $stats['size']);
+        self::assertSame('Hello world!', stream_get_contents($resource));
+
+        fclose($resource);
+        $body->close();
+    }
+
+    public function testDetachReturnsCompleteResourceAfterPartialRead(): void
+    {
+        $body = new CachingStream(Psr7\Utils::streamFor('Hello world!'));
+
+        self::assertSame('Hello ', $body->read(6));
+
+        $resource = $body->detach();
+
+        self::assertIsResource($resource);
+        self::assertSame(6, ftell($resource));
+        self::assertSame('world!', stream_get_contents($resource));
+
+        rewind($resource);
+        self::assertSame('Hello world!', stream_get_contents($resource));
+
+        fclose($resource);
+        $body->close();
+    }
+
+    public function testDetachPreservesCachedWritesAndUnreadRemoteBytes(): void
+    {
+        $body = new CachingStream(Psr7\Utils::streamFor('testing'));
+
+        self::assertSame('te', $body->read(2));
+        self::assertSame(2, $body->write('hi'));
+        $body->seek(0);
+
+        $resource = $body->detach();
+
+        self::assertIsResource($resource);
+        self::assertSame(0, ftell($resource));
+        self::assertSame('tehiing', stream_get_contents($resource));
+
+        fclose($resource);
+        $body->close();
+    }
+
+    public function testDetachReturnsNullAfterDetach(): void
+    {
+        $body = new CachingStream(Psr7\Utils::streamFor('testing'));
+
+        $resource = $body->detach();
+
+        self::assertIsResource($resource);
+        fclose($resource);
+
+        self::assertNull($body->detach());
+
+        $body->close();
+    }
+
+    public function testDetachReturnsNullAfterClose(): void
+    {
+        $body = new CachingStream(Psr7\Utils::streamFor('testing'));
+
+        $body->close();
+
+        self::assertNull($body->detach());
+    }
+
     public function testSkipsOverwrittenBytes(): void
     {
         $decorated = Psr7\Utils::streamFor(
