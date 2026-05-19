@@ -156,7 +156,7 @@ class CachingStreamTest extends TestCase
 
         $stats = fstat($resource);
         self::assertIsArray($stats);
-        self::assertSame(11, $stats['size']);
+        self::assertSame(strlen('Hello world!'), $stats['size']);
         self::assertSame('Hello world!', stream_get_contents($resource));
 
         fclose($resource);
