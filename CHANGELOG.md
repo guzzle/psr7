@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.10.0 - Unreleased
 
+### Fixed
+
+- Harden `ServerRequest::fromGlobals()` against malformed `$_SERVER` values
+
 ### Changed
 
 - Preserve custom request implementations in `Utils::modifyRequest()`
