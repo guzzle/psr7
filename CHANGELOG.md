@@ -16,9 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Preserve custom request implementations in `Utils::modifyRequest()`
+- Preserve custom URI implementations in `UriResolver::resolve()`
 - Make `Uri::__toString()` side-effect-free
 
-## 2.9.1 - Unreleased
+## 2.9.1 - 2026-05-19
 
 ### Fixed
 

@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\FnStream;
 use GuzzleHttp\Psr7\NoSeekStream;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
 
 class UtilsTest extends TestCase
 {
@@ -541,6 +542,92 @@ class UtilsTest extends TestCase
         self::assertSame('1', $modified->getHeaderLine('X-Test'));
     }
 
+    public function testModifyRequestPreservesProvidedUriImplementation(): void
+    {
+        $uri = self::customUri('http://www.example.com/path');
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'uri' => $uri,
+        ]);
+
+        self::assertSame($uri, $modified->getUri());
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('http://www.example.com/path', (string) $modified->getUri());
+    }
+
+    public function testModifyRequestPreservesProvidedUriImplementationWhenChangingQuery(): void
+    {
+        $uri = self::customUri('http://www.example.com/path');
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'uri' => $uri,
+            'query' => 'a=b',
+        ]);
+
+        self::assertSame(get_class($uri), get_class($modified->getUri()));
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('http://www.example.com/path?a=b', (string) $modified->getUri());
+    }
+
+    public function testModifyRequestPreservesExistingUriImplementationWhenChangingQuery(): void
+    {
+        $uri = self::customUri('http://example.com/path');
+        $request = new Psr7\Request('GET', $uri);
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'query' => 'a=b',
+        ]);
+
+        self::assertSame(get_class($uri), get_class($modified->getUri()));
+        self::assertSame('http://example.com/path?a=b', (string) $modified->getUri());
+        self::assertSame('', $uri->getQuery());
+    }
+
+    public function testModifyRequestPreservesProvidedStreamImplementationForBody(): void
+    {
+        $body = self::customStream('payload');
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'body' => $body,
+        ]);
+
+        self::assertSame($body, $modified->getBody());
+        self::assertSame('payload', (string) $modified->getBody());
+    }
+
+    public function testModifyRequestPreservesRequestUriAndBodyImplementationsTogether(): void
+    {
+        $request = self::customRequest('GET', self::customUri('http://example.com/original'));
+        $uri = self::customUri('http://www.example.com/path');
+        $body = self::customStream('payload');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'method' => 'POST',
+            'uri' => $uri,
+            'query' => 'a=b',
+            'set_headers' => ['X-Test' => '1'],
+            'body' => $body,
+            'version' => '2',
+        ]);
+
+        self::assertSame(get_class($request), get_class($modified));
+        self::assertSame(get_class($uri), get_class($modified->getUri()));
+        self::assertSame('POST', $modified->getMethod());
+        self::assertSame('http://www.example.com/path?a=b', (string) $modified->getUri());
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+        self::assertSame($body, $modified->getBody());
+        self::assertSame('payload', (string) $modified->getBody());
+        self::assertSame('2', $modified->getProtocolVersion());
+
+        self::assertSame('GET', $request->getMethod());
+        self::assertSame('http://example.com/original', (string) $request->getUri());
+        self::assertFalse($request->hasHeader('X-Test'));
+    }
+
     public function testModifyRequestConvertsBodyWithStreamFor(): void
     {
         $request = new Psr7\Request('GET', 'http://example.com');
@@ -634,6 +721,28 @@ class UtilsTest extends TestCase
         $modifiedRequest = Psr7\Utils::modifyRequest($request, ['set_headers' => ['baz' => 'qux']]);
 
         self::assertSame(['foo' => 'bar'], $modifiedRequest->getAttributes());
+    }
+
+    private static function customRequest(string $method, UriInterface $uri): Psr7\Request
+    {
+        return new class($method, $uri) extends Psr7\Request {
+        };
+    }
+
+    private static function customUri(string $uri): UriInterface
+    {
+        return new class($uri) extends Psr7\Uri {
+        };
+    }
+
+    private static function customStream(string $contents): StreamInterface
+    {
+        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
+        \fwrite($resource, $contents);
+        \rewind($resource);
+
+        return new class($resource) extends Psr7\Stream {
+        };
     }
 
     /**
