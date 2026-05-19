@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Harden `ServerRequest::fromGlobals()` against malformed `$_SERVER` values
+- Prevent custom stream metadata from affecting internal size handling
 - Preserve custom request implementations in `Utils::modifyRequest()`
 - Preserve custom URI implementations in `UriResolver::resolve()`
 - Make `Uri::__toString()` side-effect-free
