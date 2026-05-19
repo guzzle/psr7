@@ -69,11 +69,16 @@ final class Message
 
         $body->rewind();
         $summary = $body->read($truncateAt);
-        $body->rewind();
 
         if ($size > $truncateAt) {
+            if (preg_match('//u', $summary) !== 1) {
+                $summary = self::trimTrailingIncompleteUtf8Character($summary, $body->read(3));
+            }
+
             $summary .= ' (truncated...)';
         }
+
+        $body->rewind();
 
         // Matches any printable character, including unicode characters:
         // letters, marks, numbers, punctuation, spacing, and separators.
@@ -82,6 +87,60 @@ final class Message
         }
 
         return $summary;
+    }
+
+    /**
+     * Trims a partial UTF-8 character from the end of a truncated string.
+     */
+    private static function trimTrailingIncompleteUtf8Character(string $summary, string $lookahead): string
+    {
+        $length = strlen($summary);
+
+        if ($length === 0) {
+            return $summary;
+        }
+
+        $start = $length - 1;
+
+        while ($start >= 0) {
+            $byte = ord($summary[$start]);
+
+            if ($byte < 0x80 || $byte > 0xBF) {
+                break;
+            }
+
+            --$start;
+        }
+
+        if ($start < 0) {
+            return $summary;
+        }
+
+        $lead = ord($summary[$start]);
+
+        if ($lead >= 0xC2 && $lead <= 0xDF) {
+            $expectedLength = 2;
+        } elseif ($lead >= 0xE0 && $lead <= 0xEF) {
+            $expectedLength = 3;
+        } elseif ($lead >= 0xF0 && $lead <= 0xF4) {
+            $expectedLength = 4;
+        } else {
+            return $summary;
+        }
+
+        $availableLength = $length - $start;
+
+        if ($availableLength >= $expectedLength) {
+            return $summary;
+        }
+
+        $sequence = substr($summary, $start).substr($lookahead, 0, $expectedLength - $availableLength);
+
+        if (strlen($sequence) !== $expectedLength || preg_match('//u', $sequence) !== 1) {
+            return $summary;
+        }
+
+        return substr($summary, 0, $start);
     }
 
     /**
