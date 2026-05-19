@@ -275,7 +275,40 @@ class MessageTest extends TestCase
     {
         $message = new Psr7\Response(200, [], '🤦🏾‍♀️');
         // The first Unicode codepoint of the body has four bytes.
-        self::assertNull(Psr7\Message::bodySummary($message, 3));
+        self::assertSame(' (truncated...)', Psr7\Message::bodySummary($message, 3));
+    }
+
+    public function testMessageBodySummaryTrimsIncompleteUTF8Character(): void
+    {
+        $message = new Psr7\Response(200, [], '必填性规则校验失败，此字段为必填项');
+        $expected = '必填性规则校验失 (truncated...)';
+
+        self::assertSame($expected, Psr7\Message::bodySummary($message, 24));
+        self::assertSame($expected, Psr7\Message::bodySummary($message, 25));
+        self::assertSame($expected, Psr7\Message::bodySummary($message, 26));
+    }
+
+    public function testMessageBodySummaryTrimsIncompleteUTF8CharacterForIssue588Payload(): void
+    {
+        $message = new Psr7\Response(200, [], '{"code":"PARAM_ERROR","detail":{"location":"body","value":""},"message":"输入源“/body/sub_mchid”映射到字段“子商户号/二级商户号”必填性规则校验失败，此字段为必填项"}');
+
+        self::assertSame(
+            '{"code":"PARAM_ERROR","detail":{"location":"body","value":""},"message":"输入源“/body/sub_mchid”映射到字段 (truncated...)',
+            Psr7\Message::bodySummary($message, 120)
+        );
+    }
+
+    public function testMessageBodySummaryRejectsBinaryBody(): void
+    {
+        $message = new Psr7\Response(200, [], "abc\0def");
+
+        self::assertNull(Psr7\Message::bodySummary($message));
+    }
+
+    public function testMessageBodySummaryRejectsInvalidUTF8Body(): void
+    {
+        self::assertNull(Psr7\Message::bodySummary(new Psr7\Response(200, [], "abc\xFFdef"), 4));
+        self::assertNull(Psr7\Message::bodySummary(new Psr7\Response(200, [], "abc\xE2xy"), 4));
     }
 
     public function testMessageBodySummaryWithEmptyBody(): void
