@@ -193,12 +193,6 @@ parameters:
 			path: src/PumpStream.php
 
 		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: src/Query.php
-
-		-
 			message: '#^Method GuzzleHttp\\Psr7\\ServerRequest\:\:normalizeNestedFileSpec\(\) should return array\<Psr\\Http\\Message\\UploadedFileInterface\> but returns array\<int\|string, array\<Psr\\Http\\Message\\UploadedFileInterface\>\|Psr\\Http\\Message\\UploadedFileInterface\>\.$#'
 			identifier: return.type
 			count: 1

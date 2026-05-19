@@ -89,24 +89,22 @@ final class Query
             throw new \InvalidArgumentException('Invalid type');
         }
 
-        $castBool = $treatBoolsAsInts ? static function ($v) { return (int) $v; } : static function ($v) { return $v ? 'true' : 'false'; };
-
         $qs = '';
         foreach ($params as $k => $v) {
             $k = $encoder((string) $k);
             if (!is_array($v)) {
                 $qs .= $k;
-                $v = is_bool($v) ? $castBool($v) : $v;
+                $v = self::normalizeValue($v, $treatBoolsAsInts);
                 if ($v !== null) {
-                    $qs .= '='.$encoder((string) $v);
+                    $qs .= '='.$encoder($v);
                 }
                 $qs .= '&';
             } else {
                 foreach ($v as $vv) {
                     $qs .= $k;
-                    $vv = is_bool($vv) ? $castBool($vv) : $vv;
+                    $vv = self::normalizeValue($vv, $treatBoolsAsInts);
                     if ($vv !== null) {
-                        $qs .= '='.$encoder((string) $vv);
+                        $qs .= '='.$encoder($vv);
                     }
                     $qs .= '&';
                 }
@@ -114,5 +112,29 @@ final class Query
         }
 
         return $qs ? (string) substr($qs, 0, -1) : '';
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private static function normalizeValue($value, bool $treatBoolsAsInts): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $treatBoolsAsInts ? (string) (int) $value : ($value ? 'true' : 'false');
+        }
+
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+
+        if (is_object($value) && method_exists($value, '__toString')) {
+            return $value->__toString();
+        }
+
+        throw new \InvalidArgumentException('Query string values must be scalar, null, or stringable objects');
     }
 }

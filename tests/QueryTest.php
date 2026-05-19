@@ -121,4 +121,60 @@ class QueryTest extends TestCase
         ];
         self::assertEquals('foo=true&bar=false', Psr7\Query::build($data, PHP_QUERY_RFC3986, false));
     }
+
+    public function testBuildAcceptsStringableObjectValue(): void
+    {
+        $value = new class {
+            public function __toString(): string
+            {
+                return 'bar baz';
+            }
+        };
+
+        self::assertSame('foo=bar%20baz', Psr7\Query::build(['foo' => $value]));
+    }
+
+    public function testBuildAcceptsStringableObjectArrayValue(): void
+    {
+        $value = new class {
+            public function __toString(): string
+            {
+                return 'bar';
+            }
+        };
+
+        self::assertSame('foo=bar&foo=baz', Psr7\Query::build(['foo' => [$value, 'baz']]));
+    }
+
+    public function testBuildRejectsNestedArrayValue(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query string values must be scalar, null, or stringable objects');
+
+        Psr7\Query::build(['foo' => ['bar' => ['baz']]]);
+    }
+
+    public function testBuildRejectsNestedListValue(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query string values must be scalar, null, or stringable objects');
+
+        Psr7\Query::build(['foo' => [['bar']]]);
+    }
+
+    public function testBuildRejectsUnsupportedObjectValue(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query string values must be scalar, null, or stringable objects');
+
+        Psr7\Query::build(['foo' => new \stdClass()]);
+    }
+
+    public function testBuildRejectsUnsupportedObjectArrayValue(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query string values must be scalar, null, or stringable objects');
+
+        Psr7\Query::build(['foo' => ['bar', new \stdClass()]]);
+    }
 }

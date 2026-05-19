@@ -4,6 +4,30 @@ Guzzle PSR-7 Upgrade Guide
 2.x to 3.0
 ----------
 
+#### Query Builder Values
+
+`Query::build()` now rejects unsupported values instead of relying on PHP string
+casts. Query values must be scalar, `null`, stringable objects, or flat arrays of
+those values.
+
+Nested arrays, resources, and objects without `__toString()` now throw
+`InvalidArgumentException`.
+
+```php
+// Before: could produce warnings or silently mangle the value.
+Query::build(['filter' => ['name' => ['value']]]);
+
+// After: use explicit query keys for nested query shapes.
+Query::build(['filter[name]' => 'value']);
+```
+
+Flat arrays are still supported for repeated query parameters:
+
+```php
+Query::build(['tag' => ['a', 'b']]);
+// tag=a&tag=b
+```
+
 #### Iterator-backed Streams
 
 `Utils::streamFor()` now validates values yielded by `Iterator` instances before
