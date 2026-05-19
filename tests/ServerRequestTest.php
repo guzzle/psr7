@@ -351,8 +351,20 @@ class ServerRequestTest extends TestCase
                 array_merge($server, ['HTTP_HOST' => '[::1]:8000']),
             ],
             'Invalid host' => [
-                'https://localhost/blog/article.php?id=10&user=foo',
+                'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'a:b']),
+            ],
+            'Host header with newline' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => "www.example.org\n.evil"]),
+            ],
+            'Host header with multiple ports' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'www.example.org:443:8324']),
+            ],
+            'Invalid HTTP_HOST and SERVER_NAME -> fallback to SERVER_ADDR' => [
+                'https://217.112.82.20/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'www.example.org:443:8324', 'SERVER_NAME' => 'bad host']),
             ],
             'Different port with SERVER_PORT' => [
                 'https://www.example.org:8324/blog/article.php?id=10&user=foo',

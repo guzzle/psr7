@@ -81,7 +81,13 @@ class Uri implements UriInterface, \JsonSerializable
             if ($parts === false) {
                 throw new MalformedUriException("Unable to parse URI: $uri");
             }
-            $this->applyParts($parts);
+            try {
+                $this->applyParts($parts);
+            } catch (MalformedUriException $e) {
+                throw $e;
+            } catch (\InvalidArgumentException $e) {
+                throw new MalformedUriException($e->getMessage(), 0, $e);
+            }
         }
     }
 
@@ -390,10 +396,42 @@ class Uri implements UriInterface, \JsonSerializable
     public static function fromParts(array $parts): UriInterface
     {
         $uri = new self();
-        $uri->applyParts($parts);
-        $uri->validateState();
+        try {
+            $uri->applyParts($parts);
+            $uri->validateState();
+        } catch (MalformedUriException $e) {
+            throw $e;
+        } catch (\InvalidArgumentException $e) {
+            throw new MalformedUriException($e->getMessage(), 0, $e);
+        }
 
         return $uri;
+    }
+
+    /**
+     * @throws \InvalidArgumentException If the host is invalid.
+     *
+     * @internal
+     */
+    public static function assertValidHost(string $host): void
+    {
+        if ($host === '') {
+            return;
+        }
+
+        if (preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host)) {
+            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
+        }
+
+        if (strpos($host, '[') !== false || strpos($host, ']') !== false) {
+            self::assertValidIpLiteralHost($host);
+
+            return;
+        }
+
+        if (strpos($host, ':') !== false) {
+            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
+        }
     }
 
     public function getScheme(): string
@@ -604,7 +642,12 @@ class Uri implements UriInterface, \JsonSerializable
             throw new \InvalidArgumentException('Scheme must be a string');
         }
 
-        return \strtr($scheme, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
+        $scheme = \strtr($scheme, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
+        if (preg_match('/[\x00-\x20\x7F]/', $scheme)) {
+            throw new \InvalidArgumentException(sprintf('Invalid scheme: "%s"', $scheme));
+        }
+
+        return $scheme;
     }
 
     /**
@@ -636,7 +679,28 @@ class Uri implements UriInterface, \JsonSerializable
             throw new \InvalidArgumentException('Host must be a string');
         }
 
-        return \strtr($host, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
+        $host = \strtr($host, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
+        self::assertValidHost($host);
+
+        return $host;
+    }
+
+    private static function assertValidIpLiteralHost(string $host): void
+    {
+        if ($host[0] !== '[' || substr($host, -1) !== ']') {
+            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
+        }
+
+        $address = substr($host, 1, -1);
+        if (\filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
+            return;
+        }
+
+        if (preg_match('/^v[0-9a-f]+\.['.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.':]+$/iD', $address)) {
+            return;
+        }
+
+        throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
     }
 
     /**

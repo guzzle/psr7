@@ -191,16 +191,84 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        $uri = 'http://'.$authority;
-        $parts = parse_url($uri);
-        if (!is_array($parts)) {
+        if ($authority === '') {
             return [null, null];
         }
 
-        $host = $parts['host'] ?? null;
-        $port = $parts['port'] ?? null;
+        $host = $authority;
+        $port = null;
+
+        if ($authority[0] === '[') {
+            $closingBracket = strpos($authority, ']');
+            if ($closingBracket === false) {
+                return [null, null];
+            }
+
+            $host = substr($authority, 0, $closingBracket + 1);
+            $remainder = substr($authority, $closingBracket + 1);
+            if ($remainder !== '') {
+                if ($remainder[0] !== ':') {
+                    return [null, null];
+                }
+
+                $port = self::parsePortFromAuthority(substr($remainder, 1));
+                if ($port === null) {
+                    return [null, null];
+                }
+            }
+        } elseif (false !== ($colon = strpos($authority, ':'))) {
+            $host = substr($authority, 0, $colon);
+            $port = self::parsePortFromAuthority(substr($authority, $colon + 1));
+            if ($port === null) {
+                return [null, null];
+            }
+        }
+
+        if ($host === '') {
+            return [null, null];
+        }
+
+        try {
+            Uri::assertValidHost($host);
+        } catch (InvalidArgumentException $e) {
+            return [null, null];
+        }
 
         return [$host, $port];
+    }
+
+    private static function parsePortFromAuthority(string $port): ?int
+    {
+        if ($port === '' || !ctype_digit($port)) {
+            return null;
+        }
+
+        $port = ltrim($port, '0');
+        if ($port === '') {
+            return 0;
+        }
+
+        if (strlen($port) > 5 || (int) $port > 0xFFFF) {
+            return null;
+        }
+
+        return (int) $port;
+    }
+
+    /**
+     * @param mixed $host
+     */
+    private static function withHostFromGlobals(UriInterface $uri, $host): ?UriInterface
+    {
+        if (!is_string($host)) {
+            return null;
+        }
+
+        try {
+            return $uri->withHost($host);
+        } catch (InvalidArgumentException $e) {
+            return null;
+        }
     }
 
     /**
@@ -214,21 +282,34 @@ class ServerRequest extends Request implements ServerRequestInterface
         $uri = $uri->withScheme(!empty($https) && $https !== 'off' ? 'https' : 'http');
 
         $hasPort = false;
+        $hasHost = false;
         $authority = self::getServerParam('HTTP_HOST');
         if ($authority !== null) {
             [$host, $port] = self::extractHostAndPortFromAuthority($authority);
             if ($host !== null) {
-                $uri = $uri->withHost($host);
+                $hostUri = self::withHostFromGlobals($uri, $host);
+                if ($hostUri !== null) {
+                    $uri = $hostUri;
+                    $hasHost = true;
+
+                    if ($port !== null) {
+                        $hasPort = true;
+                        $uri = $uri->withPort($port);
+                    }
+                }
+            }
+        }
+
+        foreach (['SERVER_NAME', 'SERVER_ADDR'] as $serverParam) {
+            if ($hasHost) {
+                continue;
             }
 
-            if ($port !== null) {
-                $hasPort = true;
-                $uri = $uri->withPort($port);
+            $hostUri = self::withHostFromGlobals($uri, self::getServerParam($serverParam));
+            if ($hostUri !== null) {
+                $uri = $hostUri;
+                $hasHost = true;
             }
-        } elseif (($serverName = self::getServerParam('SERVER_NAME')) !== null) {
-            $uri = $uri->withHost($serverName);
-        } elseif (($serverAddr = self::getServerParam('SERVER_ADDR')) !== null) {
-            $uri = $uri->withHost($serverAddr);
         }
 
         $serverPort = self::getServerParam('SERVER_PORT');

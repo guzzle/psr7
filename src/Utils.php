@@ -166,19 +166,23 @@ final class Utils
         if (!isset($changes['uri'])) {
             $uri = $request->getUri();
         } else {
+            /** @var UriInterface */
+            $uri = $changes['uri'];
+
             // Remove the host header if one is on the URI
-            if ($host = $changes['uri']->getHost()) {
+            if ($host = $uri->getHost()) {
+                Uri::assertValidHost($host);
+
                 $changes['set_headers']['Host'] = $host;
 
-                if ($port = $changes['uri']->getPort()) {
+                if ($port = $uri->getPort()) {
                     $standardPorts = ['http' => 80, 'https' => 443];
-                    $scheme = $changes['uri']->getScheme();
+                    $scheme = $uri->getScheme();
                     if (isset($standardPorts[$scheme]) && $port != $standardPorts[$scheme]) {
                         $changes['set_headers']['Host'] .= ':'.$port;
                     }
                 }
             }
-            $uri = $changes['uri'];
         }
 
         if (!empty($changes['remove_headers'])) {
