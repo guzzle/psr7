@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix parsing of relative path references containing a colon in a non-initial path segment
-- Fix `CachingStream::detach()` returning an incomplete resource before the decorated stream has been fully read (#605)
+- Fix `CachingStream::detach()` returning an incomplete resource before the decorated stream has been fully read
 - Fix `Message::bodySummary()` returning `null` when truncating printable UTF-8 bodies inside a multibyte character
 
 ## 2.9.0 - 2026-03-10
