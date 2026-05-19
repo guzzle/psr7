@@ -205,48 +205,6 @@ parameters:
 			path: src/ServerRequest.php
 
 		-
-			message: '#^Parameter \#1 \$authority of static method GuzzleHttp\\Psr7\\ServerRequest\:\:extractHostAndPortFromAuthority\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#1 \$host of method GuzzleHttp\\Psr7\\Uri\:\:withHost\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#1 \$method of class GuzzleHttp\\Psr7\\ServerRequest constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#1 \$port of method GuzzleHttp\\Psr7\\Uri\:\:withPort\(\) expects int\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#1 \$query of method GuzzleHttp\\Psr7\\Uri\:\:withQuery\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#2 \$str of function explode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/ServerRequest.php
-
-		-
 			message: '#^Offset ''size'' on array\{0\: int, 1\: int, 2\: int, 3\: int, 4\: int, 5\: int, 6\: int, 7\: int, \.\.\.\} in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.offset
 			count: 1
@@ -259,22 +217,10 @@ parameters:
 			path: src/Stream.php
 
 		-
-			message: '#^Property GuzzleHttp\\Psr7\\Stream\:\:\$uri \(string\|null\) does not accept mixed\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Stream.php
-
-		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
 			count: 1
 			path: src/Stream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\StreamWrapper\:\:getResource\(\) should return resource but returns resource\|false\.$#'
-			identifier: return.type
-			count: 1
-			path: src/StreamWrapper.php
 
 		-
 			message: '#^Method GuzzleHttp\\Psr7\\UploadedFile\:\:isStringNotEmpty\(\) has parameter \$param with no type specified\.$#'

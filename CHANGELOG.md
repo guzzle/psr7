@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Stop adding default `Content-Length` headers to `multipart/form-data` parts to comply with RFC 7578 section 4.8
 
-## 2.10.0 - Unreleased
+## 2.10.0 - 2026-05-19
 
 ### Changed
 
+- Harden `ServerRequest::fromGlobals()` against malformed `$_SERVER` values
+- Prevent custom stream metadata from affecting internal size handling
+- Throw when `StreamWrapper::getResource()` cannot create a resource
 - Preserve custom request implementations in `Utils::modifyRequest()`
 - Preserve custom URI implementations in `UriResolver::resolve()`
 - Make `Uri::__toString()` side-effect-free

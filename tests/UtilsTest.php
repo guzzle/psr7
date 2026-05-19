@@ -321,6 +321,14 @@ class UtilsTest extends TestCase
         self::assertArrayHasKey('hwm', $s->getMetadata());
     }
 
+    public function testCustomUriMetadataDoesNotAffectStreamSize(): void
+    {
+        $s = Psr7\Utils::streamFor('foo', ['metadata' => ['uri' => []]]);
+
+        self::assertSame([], $s->getMetadata('uri'));
+        self::assertSame(3, $s->getSize());
+    }
+
     public function testCanSetSize(): void
     {
         $s = Psr7\Utils::streamFor('', ['size' => 10]);

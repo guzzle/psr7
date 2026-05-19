@@ -63,7 +63,7 @@ class Stream implements StreamInterface
         $this->seekable = $meta['seekable'];
         $this->readable = (bool) preg_match(self::READABLE_MODES, $meta['mode']);
         $this->writable = (bool) preg_match(self::WRITABLE_MODES, $meta['mode']);
-        $this->uri = $this->getMetadata('uri');
+        $this->uri = $meta['uri'] ?? null;
     }
 
     /**

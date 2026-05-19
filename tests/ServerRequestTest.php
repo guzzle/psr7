@@ -358,9 +358,33 @@ class ServerRequestTest extends TestCase
                 'https://www.example.org:8324/blog/article.php?id=10&user=foo',
                 array_merge($server, ['SERVER_PORT' => '8324']),
             ],
+            'Invalid SERVER_PORT is ignored instead of coerced to zero' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['SERVER_PORT' => 'not-a-port']),
+            ],
+            'Non-string SERVER_PORT is ignored' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['SERVER_PORT' => ['443']]),
+            ],
+            'Non-string HTTP_HOST falls back to SERVER_NAME' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => ['www.example.org']]),
+            ],
+            'Non-string SERVER_NAME falls back to SERVER_ADDR' => [
+                'https://217.112.82.20/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => null, 'SERVER_NAME' => ['www.example.org']]),
+            ],
             'REQUEST_URI missing query string' => [
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['REQUEST_URI' => '/blog/article.php']),
+            ],
+            'Non-string REQUEST_URI is treated as missing' => [
+                'https://www.example.org?id=10&user=foo',
+                array_merge($server, ['REQUEST_URI' => ['bad']]),
+            ],
+            'Non-string QUERY_STRING is treated as missing' => [
+                'https://www.example.org/blog/article.php',
+                array_merge($server, ['REQUEST_URI' => '/blog/article.php', 'QUERY_STRING' => ['bad']]),
             ],
             'Empty server variable' => [
                 'http://localhost',
@@ -459,6 +483,23 @@ class ServerRequestTest extends TestCase
         ];
 
         self::assertEquals($expectedFiles, $server->getUploadedFiles());
+    }
+
+    public function testFromGlobalsDefaultsNonStringMethodAndProtocol(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => ['POST'],
+            'SERVER_PROTOCOL' => ['HTTP/1.1'],
+            'REQUEST_URI' => '/',
+            'SERVER_PORT' => '80',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame('GET', $server->getMethod());
+        self::assertSame('1.1', $server->getProtocolVersion());
     }
 
     public function testUploadedFiles(): void
