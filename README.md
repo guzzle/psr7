@@ -27,6 +27,8 @@ composer require guzzlehttp/psr7
 | 1.x     | EOL (2024-06-30)    | >=5.4,<8.2   |
 | 2.x     | Latest              | >=7.2.5,<8.6 |
 
+See [UPGRADING.md](UPGRADING.md) for notes on upgrading from 1.x to 2.0.
+
 
 ## AppendStream
 
@@ -62,7 +64,7 @@ preferred size of the buffer.
 use GuzzleHttp\Psr7;
 
 // When more than 1024 bytes are in the buffer, it will begin returning
-// false to writes. This is an indication that writers should slow down.
+// 0 to writes. This is an indication that writers should slow down.
 $buffer = new Psr7\BufferStream(1024);
 ```
 
@@ -602,36 +604,6 @@ Determines the mimetype of a file by looking at its extension.
 `public static function fromExtension(string $extension): string|null`
 
 Maps a file extensions to a mimetype.
-
-
-## Upgrading from Function API
-
-The static API was first introduced in 1.7.0, in order to mitigate problems with functions conflicting between global and local copies of the package. The function API was removed in 2.0.0. A migration table has been provided here for your convenience:
-
-| Original Function | Replacement Method |
-|----------------|----------------|
-| `str` | `Message::toString` |
-| `uri_for` | `Utils::uriFor` |
-| `stream_for` | `Utils::streamFor` |
-| `parse_header` | `Header::parse` |
-| `normalize_header` | `Header::normalize` |
-| `modify_request` | `Utils::modifyRequest` |
-| `rewind_body` | `Message::rewindBody` |
-| `try_fopen` | `Utils::tryFopen` |
-| `copy_to_string` | `Utils::copyToString` |
-| `copy_to_stream` | `Utils::copyToStream` |
-| `hash` | `Utils::hash` |
-| `readline` | `Utils::readLine` |
-| `parse_request` | `Message::parseRequest` |
-| `parse_response` | `Message::parseResponse` |
-| `parse_query` | `Query::parse` |
-| `build_query` | `Query::build` |
-| `mimetype_from_filename` | `MimeType::fromFilename` |
-| `mimetype_from_extension` | `MimeType::fromExtension` |
-| `_parse_message` | `Message::parseMessage` |
-| `_parse_request_uri` | `Message::parseRequestUri` |
-| `get_message_body_summary` | `Message::bodySummary` |
-| `_caseless_remove` | `Utils::caselessRemove` |
 
 
 # Additional URI Methods
