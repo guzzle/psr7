@@ -102,6 +102,7 @@ class StreamWrapperTest extends TestCase
 
     /**
      * @runInSeparateProcess
+     *
      * @preserveGlobalState disabled
      */
     public function testGetResourceThrowsWhenFopenFails(): void
