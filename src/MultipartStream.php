@@ -172,14 +172,6 @@ final class MultipartStream implements StreamInterface
                 : "form-data; name=\"{$name}\"";
         }
 
-        // Set a default content-length header if one was no provided
-        $length = self::getHeader($headers, 'content-length');
-        if (!$length) {
-            if ($length = $stream->getSize()) {
-                $headers['Content-Length'] = (string) $length;
-            }
-        }
-
         // Set a default Content-Type if one was not supplied
         $type = self::getHeader($headers, 'content-type');
         if (!$type && ($filename === '0' || $filename)) {
