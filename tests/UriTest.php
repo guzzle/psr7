@@ -117,6 +117,16 @@ class UriTest extends TestCase
             // currently invalid as well but should not according to RFC 3986.
             ['http://'],
             ['urn://host:with:colon'], // host cannot contain ":"
+            ['http://example.com'."\n".'.evil/'],
+            ['http://example.com:80:90/'],
+            ['http://user@example.com:80:90/path'],
+            ['http://[::1]:80:90/'],
+            ['http://[::1'],
+            [' http://a.b/p?q#f'],
+            ['ht tp://example.com'],
+            ['//example.com:80:90'],
+            ['//example.com'."\n".':80'],
+            ['//[::1]:80:90'],
         ];
     }
 
@@ -208,10 +218,66 @@ class UriTest extends TestCase
         (new Uri())->withScheme([]);
     }
 
+    /**
+     * @dataProvider getInvalidSchemes
+     */
+    public function testSchemeMustBeValid(string $scheme): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new Uri())->withScheme($scheme);
+    }
+
+    public static function getInvalidSchemes(): iterable
+    {
+        for ($i = 0; $i <= 0x20; ++$i) {
+            yield 'ascii 0x'.strtoupper(dechex($i)) => ['ht'.chr($i).'tp'];
+        }
+
+        yield 'ascii 0x7F' => ['ht'.chr(0x7F).'tp'];
+    }
+
+    public function testFromPartsRejectsSchemeWithControlCharacter(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        Uri::fromParts(['scheme' => "ht\ntp", 'host' => 'example.com']);
+    }
+
     public function testHostMustHaveCorrectType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         (new Uri())->withHost([]);
+    }
+
+    /**
+     * @dataProvider getInvalidHosts
+     */
+    public function testHostMustBeValid(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new Uri())->withHost($host);
+    }
+
+    public static function getInvalidHosts(): iterable
+    {
+        for ($i = 0; $i <= 0x20; ++$i) {
+            yield 'ascii 0x'.strtoupper(dechex($i)) => ['example'.chr($i).'com'];
+        }
+
+        yield 'ascii 0x7F' => ['example'.chr(0x7F).'com'];
+        yield 'colon' => ['example.com:80'];
+        yield 'path delimiter' => ['example.com/path'];
+        yield 'query delimiter' => ['example.com?query'];
+        yield 'fragment delimiter' => ['example.com#fragment'];
+        yield 'userinfo delimiter' => ['user@example.com'];
+        yield 'backslash' => ['example\\com'];
+        yield 'unbracketed IPv6' => ['::1'];
+        yield 'bracketed IPv6 with port' => ['[::1]:80'];
+        yield 'unterminated bracketed IPv6' => ['[::1'];
+        yield 'unbalanced opening bracket' => ['example[com'];
+        yield 'unbalanced closing bracket' => ['example]com'];
     }
 
     public function testPathMustHaveCorrectType(): void
@@ -499,6 +565,21 @@ class UriTest extends TestCase
 
         self::assertSame('example.com', $uri->getHost());
         self::assertSame('//example.com', (string) $uri);
+    }
+
+    public function testCommonNonDnsHostsStayValid(): void
+    {
+        $uri = (new Uri())->withHost('foo_bar');
+        self::assertSame('foo_bar', $uri->getHost());
+        self::assertSame('//foo_bar', (string) $uri);
+
+        $uri = (new Uri())->withHost('localhost');
+        self::assertSame('localhost', $uri->getHost());
+        self::assertSame('//localhost', (string) $uri);
+
+        $uri = new Uri('http://[v1.fe80]/');
+        self::assertSame('[v1.fe80]', $uri->getHost());
+        self::assertSame('http://[v1.fe80]/', (string) $uri);
     }
 
     public function testPortIsNullIfStandardPortForScheme(): void

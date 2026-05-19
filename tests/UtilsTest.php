@@ -461,6 +461,17 @@ class UtilsTest extends TestCase
         self::assertSame('www.foo.com:8000', (string) $r2->getHeaderLine('host'));
     }
 
+    public function testModifyRequestRejectsInvalidUriHostFromCustomUri(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getHost')->willReturn("foo\nbar");
+        $uri->method('getPort')->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Utils::modifyRequest(new Psr7\Request('GET', '/'), ['uri' => $uri]);
+    }
+
     public function testCanModifyRequestWithCaseInsensitiveHeader(): void
     {
         $r1 = new Psr7\Request('GET', 'http://foo.com', ['User-Agent' => 'foo']);

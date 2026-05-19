@@ -4,6 +4,46 @@ Guzzle PSR-7 Upgrade Guide
 2.x to 3.0
 ----------
 
+#### URI Host and Scheme Validation
+
+URI hosts containing control characters, whitespace, URI delimiters, backslashes,
+ambiguous port separators, or malformed IP-literal brackets are no longer
+accepted. URI schemes containing whitespace or control characters are also no
+longer accepted.
+
+If you previously passed a host and port together to `withHost()`, split them
+between `withHost()` and `withPort()`:
+
+```php
+// 2.x, no longer accepted in 3.0
+$uri = $uri->withHost('example.com:8080');
+
+// 3.0
+$uri = $uri->withHost('example.com')->withPort(8080);
+```
+
+Normal URI strings with ports are still supported:
+
+```php
+$uri = new Uri('https://example.com:8080/path');
+```
+
+Common host forms such as `localhost`, single-label hosts, underscores, Unicode
+hosts, valid IPv6 literals, and normal host and port URI strings remain
+supported.
+
+The stricter validation also applies when a request is created or modified from
+a custom `UriInterface` implementation and its host is used to generate or
+update a `Host` header.
+
+`ServerRequest::getUriFromGlobals()` now ignores malformed `HTTP_HOST` values
+and falls back to `SERVER_NAME`, then `SERVER_ADDR`, then the existing default
+host behavior.
+
+Applications that need to reject malformed inbound `Host` headers should
+validate the request host before calling `getUriFromGlobals()` or inspect the
+original server parameters.
+
 #### Query Builder Values
 
 `Query::build()` now rejects unsupported values instead of relying on PHP string

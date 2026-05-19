@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Hardened URI host and scheme validation. Hosts now reject control characters, whitespace, URI delimiters, backslashes, ambiguous port separators, and malformed IP-literal brackets. Schemes now reject whitespace and control characters.
+- `ServerRequest::getUriFromGlobals()` now ignores malformed `HTTP_HOST` values and uses the existing fallback host sources.
+- Passing a host and port together to `Uri::withHost()` is no longer accepted; use `withHost('example.com')->withPort(8080)` instead.
 - Validate iterator chunks passed to `Utils::streamFor()`
 - Validate unsupported values passed to `Query::build()`
 - Stop adding default `Content-Length` headers to `multipart/form-data` parts to comply with RFC 7578 section 4.8
