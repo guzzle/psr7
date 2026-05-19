@@ -100,6 +100,24 @@ class StreamWrapperTest extends TestCase
         self::assertFalse($result);
     }
 
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetResourceThrowsWhenFopenFails(): void
+    {
+        if (in_array('guzzle', stream_get_wrappers(), true)) {
+            stream_wrapper_unregister('guzzle');
+        }
+
+        self::assertTrue(stream_wrapper_register('guzzle', FailingGuzzleStreamWrapper::class));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to create stream resource');
+
+        StreamWrapper::getResource(Utils::streamFor('foo'));
+    }
+
     public function testCanOpenReadonlyStream(): void
     {
         $stream = $this->createMock(StreamInterface::class);
@@ -198,5 +216,16 @@ class StreamWrapperTest extends TestCase
         $stream = Utils::streamFor($resource);
 
         $this->assertNull($stream->getSize());
+    }
+}
+
+final class FailingGuzzleStreamWrapper
+{
+    /** @var resource */
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath = null): bool
+    {
+        return false;
     }
 }

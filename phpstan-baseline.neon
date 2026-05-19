@@ -223,12 +223,6 @@ parameters:
 			path: src/Stream.php
 
 		-
-			message: '#^Method GuzzleHttp\\Psr7\\StreamWrapper\:\:getResource\(\) should return resource but returns resource\|false\.$#'
-			identifier: return.type
-			count: 1
-			path: src/StreamWrapper.php
-
-		-
 			message: '#^Method GuzzleHttp\\Psr7\\UploadedFile\:\:isStringNotEmpty\(\) has parameter \$param with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
