@@ -1,6 +1,29 @@
 Guzzle PSR-7 Upgrade Guide
 ==========================
 
+2.x to 3.0
+----------
+
+#### Iterator-backed Streams
+
+`Utils::streamFor()` now validates values yielded by `Iterator` instances before
+passing them to the internal `PumpStream`. Scalar values, `null`, and stringable
+objects are converted to string chunks. Arrays, resources, and non-stringable
+objects now throw `UnexpectedValueException`.
+
+Iterator exhaustion is now the only EOF signal for iterator-backed streams.
+Yielding `false` or `null` no longer ends the stream; those values are converted
+to empty string chunks instead. If your iterator yielded `false` or `null` to
+stop streaming, update it to finish iteration instead.
+
+```php
+// Before: yielding false or null could stop an iterator-backed stream early.
+$stream = Utils::streamFor(new ArrayIterator([false, 'body']));
+
+// After: false and null are stream chunks. End the iterator to signal EOF.
+$stream = Utils::streamFor(new ArrayIterator(['body']));
+```
+
 1.x to 2.0
 ----------
 

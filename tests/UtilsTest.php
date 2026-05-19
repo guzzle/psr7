@@ -351,6 +351,61 @@ class UtilsTest extends TestCase
         self::assertSame(9, $p->tell());
     }
 
+    public function testIteratorBasedStreamDoesNotTreatFalseAsEof(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([false, 'x']));
+
+        self::assertSame('x', $stream->getContents());
+    }
+
+    public function testIteratorBasedStreamDoesNotTreatNullAsEof(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([null, 'x']));
+
+        self::assertSame('x', $stream->getContents());
+    }
+
+    public function testIteratorBasedStreamCastsScalarValuesToStrings(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([1, 2.5, true, false, 'x']));
+
+        self::assertSame('12.51x', $stream->getContents());
+    }
+
+    public function testIteratorBasedStreamCastsStringableObjectsToStrings(): void
+    {
+        $value = new class {
+            public function __toString(): string
+            {
+                return 'foo';
+            }
+        };
+
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([$value, 'bar']));
+
+        self::assertSame('foobar', $stream->getContents());
+    }
+
+    public function testIteratorBasedStreamRejectsArrayValues(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([['x']]));
+
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Iterator must yield scalar, null, or stringable values');
+
+        $stream->getContents();
+    }
+
+    public function testIteratorBasedStreamRejectsNonStringableObjects(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([new \stdClass()]));
+
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Iterator must yield scalar, null, or stringable values');
+
+        $stream->getContents();
+    }
+
     public function testConvertsRequestsToStrings(): void
     {
         $request = new Psr7\Request('PUT', 'http://foo.com/hi?123', [

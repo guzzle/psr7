@@ -283,12 +283,6 @@ parameters:
 			path: src/Utils.php
 
 		-
-			message: '#^Parameter \#1 \$source of class GuzzleHttp\\Psr7\\PumpStream constructor expects callable\(int\)\: \(string\|false\|null\), Closure\(\)\: mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Utils.php
-
-		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
 			count: 1

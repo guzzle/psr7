@@ -364,14 +364,22 @@ final class Utils
                 if ($resource instanceof StreamInterface) {
                     return $resource;
                 } elseif ($resource instanceof \Iterator) {
-                    return new PumpStream(function () use ($resource) {
+                    return new PumpStream(function (int $length) use ($resource) {
                         if (!$resource->valid()) {
                             return false;
                         }
                         $result = $resource->current();
                         $resource->next();
 
-                        return $result;
+                        if ($result === null || is_scalar($result)) {
+                            return (string) $result;
+                        }
+
+                        if (is_object($result) && method_exists($result, '__toString')) {
+                            return (string) $result;
+                        }
+
+                        throw new \UnexpectedValueException('Iterator must yield scalar, null, or stringable values');
                     }, $options);
                 } elseif (method_exists($resource, '__toString')) {
                     return self::streamFor((string) $resource, $options);
