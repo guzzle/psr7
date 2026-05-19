@@ -739,6 +739,16 @@ class UriTest extends TestCase
         self::assertNotSame($uri, $uri->withFragment('test'));
     }
 
+    public function testToStringDoesNotAffectLooseComparison(): void
+    {
+        $uri1 = new Uri('http://test.com');
+        $uri2 = new Uri('http://test.com');
+
+        self::assertTrue($uri1 == $uri2);
+        self::assertSame('http://test.com', (string) $uri2);
+        self::assertTrue($uri1 == $uri2);
+    }
+
     public function testExtendingClassesInstantiates(): void
     {
         // The non-standard port triggers a cascade of private methods which
