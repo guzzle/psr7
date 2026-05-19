@@ -375,13 +375,13 @@ final class Utils
                             return (string) $result;
                         }
 
-                        if (is_object($result) && method_exists($result, '__toString')) {
+                        if (is_object($result) && method_exists($result, '__toString') && is_callable([$result, '__toString'])) {
                             return (string) $result;
                         }
 
                         throw new \UnexpectedValueException('Iterator must yield scalar, null, or stringable values');
                     }, $options);
-                } elseif (method_exists($resource, '__toString')) {
+                } elseif (method_exists($resource, '__toString') && is_callable([$resource, '__toString'])) {
                     return self::streamFor((string) $resource, $options);
                 }
                 break;

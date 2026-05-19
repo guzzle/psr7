@@ -301,6 +301,20 @@ class UtilsTest extends TestCase
         self::assertSame('foo', (string) $s);
     }
 
+    public function testFactoryDoesNotCreateFromObjectWithMagicCall(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Utils::streamFor(new class() {
+            /**
+             * @param mixed[] $arguments
+             */
+            public function __call(string $name, array $arguments): void
+            {
+            }
+        });
+    }
+
     public function testCreatePassesThrough(): void
     {
         $s = Psr7\Utils::streamFor('foo');
@@ -399,6 +413,23 @@ class UtilsTest extends TestCase
     public function testIteratorBasedStreamRejectsNonStringableObjects(): void
     {
         $stream = Psr7\Utils::streamFor(new \ArrayIterator([new \stdClass()]));
+
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Iterator must yield scalar, null, or stringable values');
+
+        $stream->getContents();
+    }
+
+    public function testIteratorBasedStreamRejectsObjectWithMagicCall(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([new class() {
+            /**
+             * @param mixed[] $arguments
+             */
+            public function __call(string $name, array $arguments): void
+            {
+            }
+        }]));
 
         $this->expectException(\UnexpectedValueException::class);
         $this->expectExceptionMessage('Iterator must yield scalar, null, or stringable values');
