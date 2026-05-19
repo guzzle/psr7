@@ -494,15 +494,7 @@ class UtilsTest extends TestCase
 
     public function testModifyRequestPreservesConcreteServerRequestSubclass(): void
     {
-        $request = new class(
-            'GET',
-            'http://example.com',
-            [],
-            null,
-            '1.1',
-            ['server' => 'value'],
-            'ctx'
-        ) extends Psr7\ServerRequest {
+        $request = new class('GET', 'http://example.com', [], null, '1.1', ['server' => 'value'], 'ctx') extends Psr7\ServerRequest {
             /** @var string */
             private $context;
 
