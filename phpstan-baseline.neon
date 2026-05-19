@@ -217,12 +217,6 @@ parameters:
 			path: src/Stream.php
 
 		-
-			message: '#^Property GuzzleHttp\\Psr7\\Stream\:\:\$uri \(string\|null\) does not accept mixed\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Stream.php
-
-		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
 			count: 1
