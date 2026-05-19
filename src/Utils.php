@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GuzzleHttp\Psr7;
 
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -195,34 +194,68 @@ final class Utils
             $uri = $uri->withQuery($changes['query']);
         }
 
-        if ($request instanceof ServerRequestInterface) {
-            $new = (new ServerRequest(
-                $changes['method'] ?? $request->getMethod(),
-                $uri,
-                $headers,
-                $changes['body'] ?? $request->getBody(),
-                $changes['version'] ?? $request->getProtocolVersion(),
-                $request->getServerParams()
-            ))
-            ->withParsedBody($request->getParsedBody())
-            ->withQueryParams($request->getQueryParams())
-            ->withCookieParams($request->getCookieParams())
-            ->withUploadedFiles($request->getUploadedFiles());
-
-            foreach ($request->getAttributes() as $key => $value) {
-                $new = $new->withAttribute($key, $value);
+        $hasHost = false;
+        foreach (array_keys($headers) as $header) {
+            if (strtolower((string) $header) === 'host') {
+                $hasHost = true;
+                break;
             }
-
-            return $new;
         }
 
-        return new Request(
-            $changes['method'] ?? $request->getMethod(),
-            $uri,
-            $headers,
-            $changes['body'] ?? $request->getBody(),
-            $changes['version'] ?? $request->getProtocolVersion()
-        );
+        // Match Request::__construct() by adding a Host header when one is not provided.
+        if (!$hasHost && $uri->getHost() !== '') {
+            $host = $uri->getHost();
+
+            if (($port = $uri->getPort()) !== null) {
+                $host .= ':'.$port;
+            }
+
+            $headers = ['Host' => [$host]] + $headers;
+        }
+
+        $new = $request;
+
+        if (isset($changes['method'])) {
+            $new = $new->withMethod($changes['method']);
+        }
+
+        if (isset($changes['uri']) || isset($changes['query'])) {
+            $new = $new->withUri($uri, true);
+        }
+
+        if ($headers !== $new->getHeaders()) {
+            foreach (array_keys($new->getHeaders()) as $header) {
+                /** @var RequestInterface */
+                $new = $new->withoutHeader($header);
+            }
+
+            $addedHeaders = [];
+            foreach ($headers as $header => $value) {
+                $header = (string) $header;
+                $normalized = strtolower($header);
+
+                if (isset($addedHeaders[$normalized])) {
+                    /** @var RequestInterface */
+                    $new = $new->withAddedHeader($addedHeaders[$normalized], $value);
+                } else {
+                    /** @var RequestInterface */
+                    $new = $new->withHeader($header, $value);
+                    $addedHeaders[$normalized] = $header;
+                }
+            }
+        }
+
+        if (isset($changes['body'])) {
+            /** @var RequestInterface */
+            $new = $new->withBody(self::streamFor($changes['body']));
+        }
+
+        if (isset($changes['version'])) {
+            /** @var RequestInterface */
+            $new = $new->withProtocolVersion($changes['version']);
+        }
+
+        return $new;
     }
 
     /**
