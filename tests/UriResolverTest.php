@@ -32,6 +32,90 @@ class UriResolverTest extends TestCase
         self::assertSame($expectedTarget, (string) UriResolver::resolve($baseUri, $targetUri));
     }
 
+    public function testResolveReturnsBaseUriWhenReferenceIsEmpty(): void
+    {
+        $baseUri = self::customUri('https://example.com/a/b');
+
+        self::assertSame($baseUri, UriResolver::resolve($baseUri, new Uri('')));
+    }
+
+    public function testResolvePreservesReferenceUriImplementationWhenReferenceIsAbsolute(): void
+    {
+        $referenceUri = self::customUri('http://other.example/a/../b?x=y#fragment');
+        $targetUri = UriResolver::resolve(new Uri('https://example.com/a/b'), $referenceUri);
+
+        self::assertSame(get_class($referenceUri), get_class($targetUri));
+        self::assertSame('http://other.example/b?x=y#fragment', (string) $targetUri);
+    }
+
+    public function testResolvePreservesReferenceUriImplementationWhenReferenceHasAuthority(): void
+    {
+        $referenceUri = self::customUri('//other.example/a/../b?x=y#fragment');
+        $targetUri = UriResolver::resolve(new Uri('https://example.com/a/b'), $referenceUri);
+
+        self::assertSame(get_class($referenceUri), get_class($targetUri));
+        self::assertSame('https://other.example/b?x=y#fragment', (string) $targetUri);
+    }
+
+    public function testResolvePreservesBaseUriImplementationWhenReferenceInheritsAuthority(): void
+    {
+        $baseUri = self::customUri('https://example.com/a/b/c?old=1#old');
+        $targetUri = UriResolver::resolve($baseUri, new Uri('../d?new=1#new'));
+
+        self::assertSame(get_class($baseUri), get_class($targetUri));
+        self::assertSame('https://example.com/a/d?new=1#new', (string) $targetUri);
+    }
+
+    public function testResolvePreservesBaseUriImplementationWhenReferenceHasAbsolutePath(): void
+    {
+        $baseUri = self::customUri('https://example.com/a/b/c?old=1#old');
+        $targetUri = UriResolver::resolve($baseUri, new Uri('/d/e?new=1#new'));
+
+        self::assertSame(get_class($baseUri), get_class($targetUri));
+        self::assertSame('https://example.com/d/e?new=1#new', (string) $targetUri);
+    }
+
+    public function testResolvePreservesBaseUriImplementationWhenReferenceHasNoPath(): void
+    {
+        $baseUri = self::customUri('https://example.com/a/b/c?old=1#old');
+        $targetUriWithQuery = UriResolver::resolve($baseUri, new Uri('?new=1#new'));
+
+        self::assertSame(get_class($baseUri), get_class($targetUriWithQuery));
+        self::assertSame('https://example.com/a/b/c?new=1#new', (string) $targetUriWithQuery);
+
+        $targetUriWithoutQuery = UriResolver::resolve($baseUri, new Uri('#new'));
+
+        self::assertSame(get_class($baseUri), get_class($targetUriWithoutQuery));
+        self::assertSame('https://example.com/a/b/c?old=1#new', (string) $targetUriWithoutQuery);
+    }
+
+    public function testResolvePreservesBaseUriImplementationWhenBaseHasAuthorityAndEmptyPath(): void
+    {
+        $baseUri = self::customUri('https://example.com');
+        $targetUri = UriResolver::resolve($baseUri, new Uri('a'));
+
+        self::assertSame(get_class($baseUri), get_class($targetUri));
+        self::assertSame('https://example.com/a', (string) $targetUri);
+    }
+
+    public function testResolvePreservesBaseUriImplementationWhenBasePathHasNoSlash(): void
+    {
+        $baseUri = self::customUri('urn:no-slash');
+        $targetUri = UriResolver::resolve($baseUri, new Uri('e'));
+
+        self::assertSame(get_class($baseUri), get_class($targetUri));
+        self::assertSame('urn:e', (string) $targetUri);
+    }
+
+    public function testResolvePreservesReferenceUriImplementationWhenReferenceHasAuthorityAndBaseHasNoScheme(): void
+    {
+        $referenceUri = self::customUri('//other.example/a/../b?x=y#fragment');
+        $targetUri = UriResolver::resolve(new Uri('/'), $referenceUri);
+
+        self::assertSame(get_class($referenceUri), get_class($targetUri));
+        self::assertSame('//other.example/b?x=y#fragment', (string) $targetUri);
+    }
+
     /**
      * @dataProvider getResolveTestCases
      */
@@ -206,5 +290,11 @@ class UriResolverTest extends TestCase
             // absolute target URI without authority but base URI has one
             ['urn://a/b/',      'urn:/b/',      'urn:/b/'],
         ];
+    }
+
+    private static function customUri(string $uri): UriInterface
+    {
+        return new class($uri) extends Uri {
+        };
     }
 }
