@@ -409,11 +409,11 @@ class UtilsTest extends TestCase
     {
         $r1 = new Psr7\Request('GET', 'http://foo.com');
         $r2 = Psr7\Utils::modifyRequest($r1, []);
-        self::assertInstanceOf('GuzzleHttp\Psr7\Request', $r2);
+        self::assertSame($r1, $r2);
 
         $r1 = new Psr7\ServerRequest('GET', 'http://foo.com');
         $r2 = Psr7\Utils::modifyRequest($r1, []);
-        self::assertInstanceOf('Psr\Http\Message\ServerRequestInterface', $r2);
+        self::assertSame($r1, $r2);
     }
 
     public function testReturnsUriAsIsWhenNoChanges(): void
@@ -449,6 +449,140 @@ class UtilsTest extends TestCase
         $r1 = new Psr7\ServerRequest('GET', 'http://foo.com');
         $r2 = Psr7\Utils::modifyRequest($r1, ['remove_headers' => ['non-existent']]);
         self::assertInstanceOf('Psr\Http\Message\ServerRequestInterface', $r2);
+    }
+
+    public function testModifyRequestPreservesConcreteRequestSubclass(): void
+    {
+        $request = new class('GET', 'http://example.com', 'user-123') extends Psr7\Request {
+            /** @var string */
+            private $userId;
+
+            public function __construct(string $method, $uri, string $userId)
+            {
+                $this->userId = $userId;
+
+                parent::__construct($method, $uri);
+            }
+
+            public function userId(): string
+            {
+                return $this->userId;
+            }
+        };
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'method' => 'POST',
+            'uri' => new Psr7\Uri('http://www.example.com/path'),
+            'query' => 'a=b',
+            'set_headers' => ['X-Test' => '1'],
+            'body' => 'payload',
+            'version' => '2',
+        ]);
+
+        self::assertSame(get_class($request), get_class($modified));
+        self::assertSame('user-123', $modified->userId());
+        self::assertSame('POST', $modified->getMethod());
+        self::assertSame('http://www.example.com/path?a=b', (string) $modified->getUri());
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+        self::assertSame('payload', (string) $modified->getBody());
+        self::assertSame('2', $modified->getProtocolVersion());
+
+        self::assertSame('GET', $request->getMethod());
+        self::assertFalse($request->hasHeader('X-Test'));
+    }
+
+    public function testModifyRequestPreservesConcreteServerRequestSubclass(): void
+    {
+        $request = new class(
+            'GET',
+            'http://example.com',
+            [],
+            null,
+            '1.1',
+            ['server' => 'value'],
+            'ctx'
+        ) extends Psr7\ServerRequest {
+            /** @var string */
+            private $context;
+
+            public function __construct(
+                string $method,
+                $uri,
+                array $headers,
+                $body,
+                string $version,
+                array $serverParams,
+                string $context
+            ) {
+                $this->context = $context;
+
+                parent::__construct($method, $uri, $headers, $body, $version, $serverParams);
+            }
+
+            public function context(): string
+            {
+                return $this->context;
+            }
+        };
+
+        $file = new Psr7\UploadedFile('Test', 100, \UPLOAD_ERR_OK);
+        $request = $request
+            ->withCookieParams(['cookie' => 'value'])
+            ->withQueryParams(['query' => 'value'])
+            ->withParsedBody(['body' => 'value'])
+            ->withUploadedFiles([$file])
+            ->withAttribute('attribute', 'value');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'set_headers' => ['X-Test' => '1'],
+        ]);
+
+        self::assertSame(get_class($request), get_class($modified));
+        self::assertSame('ctx', $modified->context());
+        self::assertSame(['server' => 'value'], $modified->getServerParams());
+        self::assertSame(['cookie' => 'value'], $modified->getCookieParams());
+        self::assertSame(['query' => 'value'], $modified->getQueryParams());
+        self::assertSame(['body' => 'value'], $modified->getParsedBody());
+        self::assertSame([$file], $modified->getUploadedFiles());
+        self::assertSame(['attribute' => 'value'], $modified->getAttributes());
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+    }
+
+    public function testModifyRequestConvertsBodyWithStreamFor(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'body' => 'payload',
+        ]);
+
+        self::assertInstanceOf(StreamInterface::class, $modified->getBody());
+        self::assertSame('payload', (string) $modified->getBody());
+    }
+
+    public function testModifyRequestReaddsHostHeaderWhenFinalHeadersDoNotContainHost(): void
+    {
+        $request = (new Psr7\Request('GET', 'http://example.com'))->withoutHeader('Host');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'set_headers' => ['X-Test' => '1'],
+        ]);
+
+        self::assertSame('example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+    }
+
+    public function testModifyRequestPreservesConstructorStyleHeaderAggregation(): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'uri' => new Psr7\Uri('http://bar.com'),
+            'set_headers' => ['host' => 'custom'],
+        ]);
+
+        self::assertSame(['host' => ['custom', 'bar.com']], $modified->getHeaders());
     }
 
     public function testModifyServerRequestWithUploadedFiles(): void
@@ -505,7 +639,7 @@ class UtilsTest extends TestCase
             ->withAttribute('foo', 'bar');
 
         /** @var Psr7\ServerRequest $modifiedRequest */
-        $modifiedRequest = Psr7\Utils::modifyRequest($request, []);
+        $modifiedRequest = Psr7\Utils::modifyRequest($request, ['set_headers' => ['baz' => 'qux']]);
 
         self::assertSame(['foo' => 'bar'], $modifiedRequest->getAttributes());
     }
