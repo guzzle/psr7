@@ -500,7 +500,7 @@ class Uri implements UriInterface, \JsonSerializable
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to UriInterface::withPort() is deprecated and will throw in guzzlehttp/psr7 3.0; expected int|null.',
+                'Passing %s to UriInterface::withPort() is deprecated; guzzlehttp/psr7 3.0 requires int|null.',
                 \get_debug_type($port)
             );
         }

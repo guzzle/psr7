@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-- Deprecated invalid arguments to PSR-7 `with*` methods that will throw in 3.0
-- Deprecated non-string header values that will throw in 3.0
+- Deprecated invalid PSR-7 arguments that guzzlehttp/psr7 3.0 will require native types for
+- Deprecated non-string header values that guzzlehttp/psr7 3.0 will reject
 
 ## 2.10.1 - 2026-05-20
 

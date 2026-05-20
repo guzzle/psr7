@@ -128,21 +128,20 @@ class Response implements ResponseInterface
 
     public function withStatus($code, $reasonPhrase = ''): ResponseInterface
     {
-        $filterVar = 'filter_var';
-        if (!\is_int($code) && $filterVar($code, \FILTER_VALIDATE_INT) !== false) {
+        if (!\is_int($code) && \filter_var($code, \FILTER_VALIDATE_INT) !== false) {
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to ResponseInterface::withStatus() is deprecated and will throw in guzzlehttp/psr7 3.0; expected int for $code.',
+                'Passing %s to ResponseInterface::withStatus() is deprecated; guzzlehttp/psr7 3.0 requires int for $code.',
                 \get_debug_type($code)
             );
         }
 
-        if (!\is_string($reasonPhrase) && ($reasonPhrase === null || \is_scalar($reasonPhrase) || \is_object($reasonPhrase) && \method_exists($reasonPhrase, '__toString'))) {
+        if (!\is_string($reasonPhrase)) {
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to ResponseInterface::withStatus() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string for $reasonPhrase.',
+                'Passing %s to ResponseInterface::withStatus() is deprecated; guzzlehttp/psr7 3.0 requires string for $reasonPhrase.',
                 \get_debug_type($reasonPhrase)
             );
         }

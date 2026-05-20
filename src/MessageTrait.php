@@ -38,7 +38,7 @@ trait MessageTrait
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to MessageInterface::withProtocolVersion() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string.',
+                'Passing %s to MessageInterface::withProtocolVersion() is deprecated; guzzlehttp/psr7 3.0 requires string.',
                 \get_debug_type($version)
             );
         }
@@ -93,7 +93,7 @@ trait MessageTrait
                 \trigger_deprecation(
                     'guzzlehttp/psr7',
                     '2.11',
-                    'Passing %s to MessageInterface::withHeader() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
+                    'Passing %s to MessageInterface::withHeader() is deprecated; guzzlehttp/psr7 3.0 requires string|string[].',
                     \get_debug_type($item)
                 );
 
@@ -125,7 +125,7 @@ trait MessageTrait
                 \trigger_deprecation(
                     'guzzlehttp/psr7',
                     '2.11',
-                    'Passing %s to MessageInterface::withAddedHeader() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
+                    'Passing %s to MessageInterface::withAddedHeader() is deprecated; guzzlehttp/psr7 3.0 requires string|string[].',
                     \get_debug_type($item)
                 );
 
@@ -207,7 +207,7 @@ trait MessageTrait
                     \trigger_deprecation(
                         'guzzlehttp/psr7',
                         '2.11',
-                        'Passing %s to %s::__construct() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
+                        'Passing %s to %s::__construct() is deprecated; guzzlehttp/psr7 3.0 requires string|string[].',
                         \get_debug_type($item),
                         static::class
                     );

@@ -114,7 +114,7 @@ class Request implements RequestInterface
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to RequestInterface::withUri() is deprecated and will throw in guzzlehttp/psr7 3.0; expected bool for $preserveHost.',
+                'Passing %s to RequestInterface::withUri() is deprecated; guzzlehttp/psr7 3.0 requires bool for $preserveHost.',
                 \get_debug_type($preserveHost)
             );
         }

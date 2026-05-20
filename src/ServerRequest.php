@@ -267,12 +267,34 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
-        if (!self::isValidUploadedFilesTree($uploadedFiles)) {
+        $invalidUploadedFileFound = false;
+        $invalidUploadedFile = null;
+        $stack = [$uploadedFiles];
+
+        while ($stack !== []) {
+            foreach (\array_pop($stack) as $uploadedFile) {
+                if ($uploadedFile instanceof UploadedFileInterface) {
+                    continue;
+                }
+
+                if (\is_array($uploadedFile)) {
+                    $stack[] = $uploadedFile;
+                    continue;
+                }
+
+                $invalidUploadedFileFound = true;
+                $invalidUploadedFile = $uploadedFile;
+
+                break 2;
+            }
+        }
+
+        if ($invalidUploadedFileFound) {
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to ServerRequestInterface::withUploadedFiles() is deprecated and will throw in guzzlehttp/psr7 3.0; expected UploadedFileInterface[] tree.',
-                \get_debug_type($uploadedFiles)
+                'Passing %s inside ServerRequestInterface::withUploadedFiles() is deprecated; guzzlehttp/psr7 3.0 requires an UploadedFileInterface[] tree.',
+                \get_debug_type($invalidUploadedFile)
             );
         }
 
@@ -322,7 +344,7 @@ class ServerRequest extends Request implements ServerRequestInterface
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to ServerRequestInterface::withParsedBody() is deprecated and will throw in guzzlehttp/psr7 3.0; expected array|object|null.',
+                'Passing %s to ServerRequestInterface::withParsedBody() is deprecated; guzzlehttp/psr7 3.0 requires array|object|null.',
                 \get_debug_type($data)
             );
         }
@@ -343,6 +365,15 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function getAttribute($attribute, $default = null)
     {
+        if (!\is_string($attribute)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to ServerRequestInterface::getAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
+                \get_debug_type($attribute)
+            );
+        }
+
         if (false === array_key_exists($attribute, $this->attributes)) {
             return $default;
         }
@@ -356,7 +387,7 @@ class ServerRequest extends Request implements ServerRequestInterface
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.11',
-                'Passing %s to ServerRequestInterface::withAttribute() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string for $attribute.',
+                'Passing %s to ServerRequestInterface::withAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
                 \get_debug_type($attribute)
             );
         }
@@ -369,6 +400,15 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withoutAttribute($attribute): ServerRequestInterface
     {
+        if (!\is_string($attribute)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to ServerRequestInterface::withoutAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
+                \get_debug_type($attribute)
+            );
+        }
+
         if (false === array_key_exists($attribute, $this->attributes)) {
             return $this;
         }
@@ -377,22 +417,5 @@ class ServerRequest extends Request implements ServerRequestInterface
         unset($new->attributes[$attribute]);
 
         return $new;
-    }
-
-    private static function isValidUploadedFilesTree(array $uploadedFiles): bool
-    {
-        foreach ($uploadedFiles as $uploadedFile) {
-            if ($uploadedFile instanceof UploadedFileInterface) {
-                continue;
-            }
-
-            if (\is_array($uploadedFile) && self::isValidUploadedFilesTree($uploadedFile)) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
     }
 }
