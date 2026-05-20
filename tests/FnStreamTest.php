@@ -102,27 +102,17 @@ class FnStreamTest extends TestCase
         unserialize($b);
     }
 
-    /**
-     * @requires PHP < 7.4
-     */
-    public function testThatConvertingStreamToStringWillTriggerErrorAndWillReturnEmptyString(): void
+    public function testThatConvertingStreamToStringWillThrowException(): void
     {
         $a = new FnStream([
             '__toString' => function (): void {
-                throw new \Exception();
+                throw new \Exception('foo');
             },
         ]);
 
-        $errors = [];
-        set_error_handler(function (int $errorNumber, string $errorMessage) use (&$errors): void {
-            $errors[] = ['number' => $errorNumber, 'message' => $errorMessage];
-        });
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('foo');
+
         (string) $a;
-
-        restore_error_handler();
-
-        self::assertCount(1, $errors);
-        self::assertSame(E_USER_ERROR, $errors[0]['number']);
-        self::assertStringStartsWith('GuzzleHttp\Psr7\FnStream::__toString exception:', $errors[0]['message']);
     }
 }

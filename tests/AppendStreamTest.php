@@ -176,10 +176,7 @@ class AppendStreamTest extends TestCase
         self::assertNull($a->getSize());
     }
 
-    /**
-     * @requires PHP < 7.4
-     */
-    public function testCatchesExceptionsWhenCastingToString(): void
+    public function testThrowsExceptionsWhenCastingToString(): void
     {
         $s = $this->createMock(StreamInterface::class);
         $s->expects(self::once())
@@ -197,19 +194,10 @@ class AppendStreamTest extends TestCase
         $a = new AppendStream([$s]);
         self::assertFalse($a->eof());
 
-        $errors = [];
-        set_error_handler(static function (int $errorNumber, string $errorMessage) use (&$errors): bool {
-            $errors[] = ['number' => $errorNumber, 'message' => $errorMessage];
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('foo');
 
-            return true;
-        });
         (string) $a;
-
-        restore_error_handler();
-
-        self::assertCount(1, $errors);
-        self::assertSame(E_USER_ERROR, $errors[0]['number']);
-        self::assertStringStartsWith('GuzzleHttp\Psr7\AppendStream::__toString exception:', $errors[0]['message']);
     }
 
     public function testReturnsEmptyMetadata(): void

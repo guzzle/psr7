@@ -270,10 +270,10 @@ of depending on package internals.
 its high-water mark. This keeps the method compatible with the `int` return type
 from `StreamInterface::write()`.
 
-Several stream `__toString()` implementations now catch `Throwable`. On PHP 7.4
-and newer, exceptions thrown during stringification are rethrown. Avoid relying
-on `(string) $stream` to hide read failures; call `getContents()` or `read()` and
-handle exceptions when failures are possible.
+Several stream `__toString()` implementations now allow exceptions thrown during
+stringification to be rethrown. Avoid relying on `(string) $stream` to hide read
+failures; call `getContents()` or `read()` and handle exceptions when failures
+are possible.
 
 #### PSR-17 Factories
 
