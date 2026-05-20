@@ -496,12 +496,13 @@ class Uri implements UriInterface, \JsonSerializable
 
     public function withPort($port): UriInterface
     {
-        $portType = \preg_replace('/\z/', '', \get_debug_type($port)) ?? '';
-        if ($portType !== 'null' && $portType !== 'int') {
-            \trigger_error(\sprintf(
+        if ($port !== null && !\is_int($port)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
                 'Passing %s to UriInterface::withPort() is deprecated and will throw in guzzlehttp/psr7 3.0; expected int|null.',
-                $portType
-            ), \E_USER_DEPRECATED);
+                \get_debug_type($port)
+            );
         }
 
         $port = $this->filterPort($port);

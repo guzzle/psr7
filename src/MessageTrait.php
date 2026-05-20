@@ -34,12 +34,13 @@ trait MessageTrait
      */
     public function withProtocolVersion($version): MessageInterface
     {
-        $versionType = \preg_replace('/\z/', '', \get_debug_type($version)) ?? '';
-        if ($versionType !== 'string') {
-            \trigger_error(\sprintf(
+        if (!\is_string($version)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
                 'Passing %s to MessageInterface::withProtocolVersion() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string.',
-                $versionType
-            ), \E_USER_DEPRECATED);
+                \get_debug_type($version)
+            );
         }
 
         if ($this->protocol === $version) {
@@ -88,12 +89,13 @@ trait MessageTrait
         $this->assertHeader($header);
         $values = \is_array($value) ? $value : [$value];
         foreach ($values as $item) {
-            $itemType = \preg_replace('/\z/', '', \get_debug_type($item)) ?? '';
-            if (\in_array($itemType, ['int', 'float', 'bool', 'null'], true)) {
-                \trigger_error(\sprintf(
+            if (!\is_string($item) && (\is_scalar($item) || $item === null)) {
+                \trigger_deprecation(
+                    'guzzlehttp/psr7',
+                    '2.11',
                     'Passing %s to MessageInterface::withHeader() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
-                    $itemType
-                ), \E_USER_DEPRECATED);
+                    \get_debug_type($item)
+                );
 
                 break;
             }
@@ -119,12 +121,13 @@ trait MessageTrait
         $this->assertHeader($header);
         $values = \is_array($value) ? $value : [$value];
         foreach ($values as $item) {
-            $itemType = \preg_replace('/\z/', '', \get_debug_type($item)) ?? '';
-            if (\in_array($itemType, ['int', 'float', 'bool', 'null'], true)) {
-                \trigger_error(\sprintf(
+            if (!\is_string($item) && (\is_scalar($item) || $item === null)) {
+                \trigger_deprecation(
+                    'guzzlehttp/psr7',
+                    '2.11',
                     'Passing %s to MessageInterface::withAddedHeader() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
-                    $itemType
-                ), \E_USER_DEPRECATED);
+                    \get_debug_type($item)
+                );
 
                 break;
             }
@@ -200,13 +203,14 @@ trait MessageTrait
             $this->assertHeader($header);
             $values = \is_array($value) ? $value : [$value];
             foreach ($values as $item) {
-                $itemType = \preg_replace('/\z/', '', \get_debug_type($item)) ?? '';
-                if (\in_array($itemType, ['int', 'float', 'bool', 'null'], true)) {
-                    \trigger_error(\sprintf(
+                if (!\is_string($item) && (\is_scalar($item) || $item === null)) {
+                    \trigger_deprecation(
+                        'guzzlehttp/psr7',
+                        '2.11',
                         'Passing %s to %s::__construct() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
-                        $itemType,
+                        \get_debug_type($item),
                         static::class
-                    ), \E_USER_DEPRECATED);
+                    );
 
                     break;
                 }

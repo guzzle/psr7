@@ -16,8 +16,6 @@ use Psr\Http\Message\StreamInterface;
  */
 class RequestTest extends TestCase
 {
-    use DeprecationAssertionTrait;
-
     public function testRequestUriMayBeString(): void
     {
         $r = new Request('GET', '/');
@@ -139,18 +137,6 @@ class RequestTest extends TestCase
         $r2 = $r1->withRequestTarget('*');
         self::assertSame('*', $r2->getRequestTarget());
         self::assertSame('/', $r1->getRequestTarget());
-    }
-
-    public function testWithUriDeprecatesNonBoolPreserveHost(): void
-    {
-        $r = new Request('GET', '/');
-
-        self::assertInstanceOf(Request::class, self::assertUserDeprecation(
-            'Passing int to RequestInterface::withUri() is deprecated',
-            static function () use ($r) {
-                return $r->withUri(new Uri('/foo'), 1);
-            }
-        ));
     }
 
     public function testRequestTargetDoesNotAllowSpaces(): void

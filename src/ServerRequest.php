@@ -268,10 +268,12 @@ class ServerRequest extends Request implements ServerRequestInterface
     public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
         if (!self::isValidUploadedFilesTree($uploadedFiles)) {
-            \trigger_error(\sprintf(
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
                 'Passing %s to ServerRequestInterface::withUploadedFiles() is deprecated and will throw in guzzlehttp/psr7 3.0; expected UploadedFileInterface[] tree.',
                 \get_debug_type($uploadedFiles)
-            ), \E_USER_DEPRECATED);
+            );
         }
 
         $new = clone $this;
@@ -316,12 +318,13 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withParsedBody($data): ServerRequestInterface
     {
-        $dataType = \preg_replace('/\z/', '', \get_debug_type($data)) ?? '';
-        if (\in_array($dataType, ['int', 'float', 'bool', 'string'], true)) {
-            \trigger_error(\sprintf(
+        if ($data !== null && !\is_array($data) && !\is_object($data)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
                 'Passing %s to ServerRequestInterface::withParsedBody() is deprecated and will throw in guzzlehttp/psr7 3.0; expected array|object|null.',
-                $dataType
-            ), \E_USER_DEPRECATED);
+                \get_debug_type($data)
+            );
         }
 
         $new = clone $this;
@@ -349,12 +352,13 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withAttribute($attribute, $value): ServerRequestInterface
     {
-        $attributeType = \preg_replace('/\z/', '', \get_debug_type($attribute)) ?? '';
-        if ($attributeType !== 'string') {
-            \trigger_error(\sprintf(
+        if (!\is_string($attribute)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
                 'Passing %s to ServerRequestInterface::withAttribute() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string for $attribute.',
-                $attributeType
-            ), \E_USER_DEPRECATED);
+                \get_debug_type($attribute)
+            );
         }
 
         $new = clone $this;

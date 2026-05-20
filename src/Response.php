@@ -128,21 +128,23 @@ class Response implements ResponseInterface
 
     public function withStatus($code, $reasonPhrase = ''): ResponseInterface
     {
-        $codeType = \preg_replace('/\z/', '', \get_debug_type($code)) ?? '';
         $filterVar = 'filter_var';
-        if ($codeType !== 'int' && $filterVar($code, \FILTER_VALIDATE_INT) !== false) {
-            \trigger_error(\sprintf(
+        if (!\is_int($code) && $filterVar($code, \FILTER_VALIDATE_INT) !== false) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
                 'Passing %s to ResponseInterface::withStatus() is deprecated and will throw in guzzlehttp/psr7 3.0; expected int for $code.',
-                $codeType
-            ), \E_USER_DEPRECATED);
+                \get_debug_type($code)
+            );
         }
 
-        $reasonPhraseType = \preg_replace('/\z/', '', \get_debug_type($reasonPhrase)) ?? '';
-        if ($reasonPhraseType !== 'string') {
-            \trigger_error(\sprintf(
+        if (!\is_string($reasonPhrase) && ($reasonPhrase === null || \is_scalar($reasonPhrase) || \is_object($reasonPhrase) && \method_exists($reasonPhrase, '__toString'))) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
                 'Passing %s to ResponseInterface::withStatus() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string for $reasonPhrase.',
-                $reasonPhraseType
-            ), \E_USER_DEPRECATED);
+                \get_debug_type($reasonPhrase)
+            );
         }
 
         $this->assertStatusCodeIsInteger($code);
