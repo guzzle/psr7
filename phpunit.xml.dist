@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
     backupGlobals="true"
     colors="true"
     beStrictAboutOutputDuringTests="true"
@@ -19,11 +20,11 @@
             <directory>./vendor/http-interop/http-factory-tests/test</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist>
-            <directory>src</directory>
-        </whitelist>
-    </filter>
+    <coverage>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </coverage>
     <php>
         <const name="REQUEST_FACTORY" value="GuzzleHttp\Psr7\HttpFactory"/>
         <const name="RESPONSE_FACTORY" value="GuzzleHttp\Psr7\HttpFactory"/>
