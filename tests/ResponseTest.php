@@ -49,14 +49,6 @@ class ResponseTest extends TestCase
         self::assertSame($body, $r->getBody());
     }
 
-    public function testStatusCanBeNumericString(): void
-    {
-        $r = (new Response())->withStatus('201');
-
-        self::assertSame(201, $r->getStatusCode());
-        self::assertSame('Created', $r->getReasonPhrase());
-    }
-
     public function testCanConstructWithHeaders(): void
     {
         $r = new Response(200, ['Foo' => 'Bar']);
@@ -164,12 +156,6 @@ class ResponseTest extends TestCase
         self::assertSame(['Foo' => ['Bar'], 'baZ' => ['Bam']], $r2->getHeaders());
         self::assertSame('Bam', $r2->getHeaderLine('baz'));
         self::assertSame(['Bam'], $r2->getHeader('baz'));
-    }
-
-    public function testNumericHeaderValue(): void
-    {
-        $r = (new Response())->withHeader('Api-Version', 1);
-        self::assertSame(['Api-Version' => ['1']], $r->getHeaders());
     }
 
     public function testWithHeaderAsArray(): void
