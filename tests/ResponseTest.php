@@ -239,6 +239,14 @@ class ResponseTest extends TestCase
         self::assertSame('bar', $r->getHeaderLine('123'));
     }
 
+    public function testConstructResponseEmptyListHeaderValueIsRejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Header value must be a non-empty array or string.');
+
+        new Response(200, ['Foo' => []]);
+    }
+
     /**
      * @dataProvider invalidHeaderProvider
      */
@@ -253,6 +261,8 @@ class ResponseTest extends TestCase
     {
         return [
             ['', '', '"" is not valid header name'],
+            ['foo', [], 'Header value must be a non-empty array or string.'],
+            ['foo', false, 'Header value must be a string or array of strings but boolean provided.'],
             ['foo', new \stdClass(),  'Header value must be a string or array of strings but stdClass provided.'],
             ['foo', 1, 'Header value must be a string or array of strings but integer provided.'],
             ['foo', null, 'Header value must be a string or array of strings but NULL provided.'],
@@ -283,6 +293,17 @@ class ResponseTest extends TestCase
         yield ["\n", 'foo', "\"\n\" is not valid header name."];
         yield ["\r\n", 'foo', "\"\r\n\" is not valid header name."];
         yield ["\t", 'foo', "\"\t\" is not valid header name."];
+    }
+
+    /**
+     * @dataProvider invalidWithHeaderProvider
+     */
+    public function testWithInvalidAddedHeader($header, $headerValue, $expectedMessage): void
+    {
+        $r = new Response();
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedMessage);
+        $r->withAddedHeader($header, $headerValue);
     }
 
     public function testHeaderValuesAreTrimmed(): void

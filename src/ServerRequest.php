@@ -187,13 +187,21 @@ class ServerRequest extends Request implements ServerRequestInterface
     private static function getAllHeaders(): array
     {
         if (\function_exists('apache_request_headers')) {
-            $headers = \apache_request_headers();
+            $headers = self::getApacheRequestHeaders();
             if (is_array($headers)) {
                 return self::normalizeHeaderValues($headers);
             }
         }
 
         return self::getHeadersFromServer($_SERVER);
+    }
+
+    /**
+     * @return mixed
+     */
+    private static function getApacheRequestHeaders()
+    {
+        return \apache_request_headers();
     }
 
     /**

@@ -758,6 +758,52 @@ class ServerRequestTest extends TestCase
         self::assertSame($params, $request2->getParsedBody());
     }
 
+    /**
+     * @dataProvider validParsedBodyProvider
+     */
+    public function testWithParsedBodyAcceptsValidValues($value): void
+    {
+        $request = new ServerRequest('GET', '/');
+
+        $new = $request->withParsedBody($value);
+
+        self::assertNotSame($request, $new);
+        self::assertNull($request->getParsedBody());
+        self::assertSame($value, $new->getParsedBody());
+    }
+
+    public static function validParsedBodyProvider(): iterable
+    {
+        yield 'null' => [null];
+        yield 'array' => [['name' => 'value']];
+        yield 'object' => [(object) ['name' => 'value']];
+    }
+
+    /**
+     * @dataProvider invalidParsedBodyProvider
+     */
+    public function testWithParsedBodyRejectsInvalidValues($value): void
+    {
+        $request = (new ServerRequest('GET', '/'))->withParsedBody(['original' => 'value']);
+
+        try {
+            $request->withParsedBody($value);
+            self::fail('Parsed body value should have been rejected.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame('Parsed body must be an array, object, or null.', $e->getMessage());
+            self::assertSame(['original' => 'value'], $request->getParsedBody());
+        }
+    }
+
+    public static function invalidParsedBodyProvider(): iterable
+    {
+        yield 'integer' => [1];
+        yield 'float' => [1.1];
+        yield 'string' => ['body'];
+        yield 'true' => [true];
+        yield 'false' => [false];
+    }
+
     public function testAttributes(): void
     {
         $request1 = new ServerRequest('GET', '/');

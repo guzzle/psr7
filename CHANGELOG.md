@@ -11,8 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Require `psr/http-message:^2.0` and add its native parameter types
 - Require `psr/http-factory:^1.1`
-- Reject non-string header values, invalid uploaded file trees, and invalid parsed body values
-- Harden URI host and scheme validation
+- Preserve HTTP request method casing instead of uppercasing methods automatically
+- Reject empty arrays and non-string values as header values
+- Reject invalid uploaded file trees and invalid parsed body values
+- Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
+- Harden URI host and scheme validation, including rejecting schemes that do not begin with a letter
 - Ignore malformed `HTTP_HOST` values in `ServerRequest::getUriFromGlobals()`
 - Reject hosts with embedded ports in `Uri::withHost()`
 - Validate iterator chunks passed to `Utils::streamFor()`

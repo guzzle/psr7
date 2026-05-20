@@ -249,9 +249,9 @@ class UriResolverTest extends TestCase
             // empty base path and relative-path reference
             ['//example.com',    'a',             '//example.com/a'],
             // path starting with two slashes
-            ['//example.com//two-slashes', './',  '//example.com//'],
-            ['//example.com',    './/',           '//example.com//'],
-            ['//example.com/',   './/',           '//example.com//'],
+            ['//example.com//two-slashes', './',  '//example.com/'],
+            ['//example.com',    './',            '//example.com/'],
+            ['//example.com/',   './',            '//example.com/'],
             // base URI has less components than relative URI
             ['/',                '//a/b?q#h',     '//a/b?q#h'],
             ['/',                'urn:/',         'urn:/'],

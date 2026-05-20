@@ -44,3 +44,8 @@ jobs:
         env:
           TEST_SERVER: 127.0.0.1:10002
         run: vendor/bin/phpunit --testsuite "PSR-17 Integration Test Suite"
+
+      - name: Run PSR-7 integration tests
+        env:
+          TEST_SERVER: 127.0.0.1:10002
+        run: vendor/bin/phpunit --testsuite "PSR-7 Integration Test Suite" --exclude-group internet

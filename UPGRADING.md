@@ -56,16 +56,34 @@ $response = $response->withStatus(201);
 $uri = $uri->withPort(8080);
 ```
 
-Header values must now be strings or arrays of strings. Scalars and `null` are no
-longer cast to strings.
+Request methods are no longer uppercased by `Request` or `withMethod()`. If your
+application requires uppercase methods, normalize methods before constructing or
+modifying requests.
+
+```php
+// 2.x
+$request = new Request('get', '/');
+$request->getMethod(); // GET
+
+// 3.0
+$request = new Request('get', '/');
+$request->getMethod(); // get
+```
+
+Header values must now be strings or non-empty arrays of strings. Scalars, `null`,
+`false`, and empty arrays are no longer cast or accepted.
 
 ```php
 // 2.x, no longer accepted in 3.0
 $response = $response->withHeader('Api-Version', 1);
+$response = $response->withHeader('Empty-List', []);
 
 // 3.0
 $response = $response->withHeader('Api-Version', '1');
+$response = $response->withHeader('Empty-Value', '');
 ```
+
+Use `withoutHeader()` to remove a header.
 
 `ServerRequestInterface::withUploadedFiles()` now rejects invalid nested upload
 trees. Every leaf must be an `UploadedFileInterface` instance.
@@ -109,6 +127,16 @@ Common host forms such as `localhost`, single-label hosts, underscores, Unicode
 hosts, valid IPv6 literals, and normal host and port URI strings remain
 supported.
 
+URI schemes must now match RFC 3986 syntax and begin with a letter.
+
+```php
+// 2.x, no longer accepted in 3.0
+$uri = (new Uri())->withScheme('0');
+
+// 3.0
+$uri = (new Uri())->withScheme('https');
+```
+
 The stricter validation also applies when a request is created or modified from
 a custom `UriInterface` implementation and its host is used to generate or
 update a `Host` header.
@@ -120,6 +148,22 @@ host behavior.
 Applications that need to reject malformed inbound `Host` headers should
 validate the request host before calling `getUriFromGlobals()` or inspect the
 original server parameters.
+
+#### URI Paths and Request Targets
+
+`Uri::getPath()` now normalizes multiple leading slashes to one slash when
+returning the path in isolation. Casting the URI to string still preserves the
+original URI representation.
+
+```php
+$uri = new Uri('http://example.org//valid///path');
+
+$uri->getPath(); // /valid///path
+(string) $uri;   // http://example.org//valid///path
+```
+
+`Request::getRequestTarget()` applies the same normalization for URI-derived
+origin-form request targets.
 
 #### Query Builder Values
 
