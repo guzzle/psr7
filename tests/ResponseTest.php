@@ -67,7 +67,7 @@ class ResponseTest extends TestCase
     public function testWithStatusDeprecatesNonStringReasonPhrase(): void
     {
         $r = self::assertUserDeprecation(
-            'Passing integer to ResponseInterface::withStatus() is deprecated',
+            'Passing int to ResponseInterface::withStatus() is deprecated',
             static function () {
                 return (new Response())->withStatus(201, 123);
             }
@@ -188,7 +188,7 @@ class ResponseTest extends TestCase
     public function testNumericHeaderValue(): void
     {
         $r = self::assertUserDeprecation(
-            'Passing integer to MessageInterface::withHeader() is deprecated',
+            'Passing int to MessageInterface::withHeader() is deprecated',
             static function () {
                 return (new Response())->withHeader('Api-Version', 1);
             }
@@ -200,7 +200,7 @@ class ResponseTest extends TestCase
     public function testConstructorDeprecatesNumericHeaderValue(): void
     {
         $r = self::assertUserDeprecation(
-            'Passing integer to GuzzleHttp\\Psr7\\Response::__construct() is deprecated',
+            'Passing int to GuzzleHttp\\Psr7\\Response::__construct() is deprecated',
             static function () {
                 return new Response(200, ['Api-Version' => 1]);
             }
@@ -212,7 +212,7 @@ class ResponseTest extends TestCase
     public function testWithAddedHeaderDeprecatesNumericHeaderValue(): void
     {
         $r = self::assertUserDeprecation(
-            'Passing integer to MessageInterface::withAddedHeader() is deprecated',
+            'Passing int to MessageInterface::withAddedHeader() is deprecated',
             static function () {
                 return (new Response())->withAddedHeader('Api-Version', 1);
             }
@@ -224,7 +224,7 @@ class ResponseTest extends TestCase
     public function testWithProtocolVersionDeprecatesNonStringValue(): void
     {
         self::assertInstanceOf(Response::class, self::assertUserDeprecation(
-            'Passing double to MessageInterface::withProtocolVersion() is deprecated',
+            'Passing float to MessageInterface::withProtocolVersion() is deprecated',
             static function () {
                 return (new Response())->withProtocolVersion(1.1);
             }

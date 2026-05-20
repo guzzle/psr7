@@ -128,12 +128,21 @@ class Response implements ResponseInterface
 
     public function withStatus($code, $reasonPhrase = ''): ResponseInterface
     {
-        if (!$this->isInt($code) && $this->isIntLike($code)) {
-            $this->triggerInvalidArgumentDeprecation('ResponseInterface::withStatus()', 'int for $code', $code);
+        $codeType = \preg_replace('/\z/', '', \get_debug_type($code)) ?? '';
+        $filterVar = 'filter_var';
+        if ($codeType !== 'int' && $filterVar($code, \FILTER_VALIDATE_INT) !== false) {
+            \trigger_error(\sprintf(
+                'Passing %s to ResponseInterface::withStatus() is deprecated and will throw in guzzlehttp/psr7 3.0; expected int for $code.',
+                $codeType
+            ), \E_USER_DEPRECATED);
         }
 
-        if (!$this->isString($reasonPhrase) && ($this->isNull($reasonPhrase) || $this->isScalar($reasonPhrase) || $this->isStringableObject($reasonPhrase))) {
-            $this->triggerInvalidArgumentDeprecation('ResponseInterface::withStatus()', 'string for $reasonPhrase', $reasonPhrase);
+        $reasonPhraseType = \preg_replace('/\z/', '', \get_debug_type($reasonPhrase)) ?? '';
+        if ($reasonPhraseType !== 'string') {
+            \trigger_error(\sprintf(
+                'Passing %s to ResponseInterface::withStatus() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string for $reasonPhrase.',
+                $reasonPhraseType
+            ), \E_USER_DEPRECATED);
         }
 
         $this->assertStatusCodeIsInteger($code);
@@ -165,74 +174,5 @@ class Response implements ResponseInterface
         if ($statusCode < 100 || $statusCode >= 600) {
             throw new \InvalidArgumentException('Status code must be an integer value between 1xx and 5xx.');
         }
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isInt($value): bool
-    {
-        return \is_int($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isIntLike($value): bool
-    {
-        return \filter_var($value, \FILTER_VALIDATE_INT) !== false;
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isNull($value): bool
-    {
-        return $value === null;
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isScalar($value): bool
-    {
-        return \is_scalar($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isString($value): bool
-    {
-        return \is_string($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isStringableObject($value): bool
-    {
-        return \is_object($value) && \method_exists($value, '__toString');
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function triggerInvalidArgumentDeprecation(string $method, string $expected, $value): void
-    {
-        \trigger_error(\sprintf(
-            'Passing %s to %s is deprecated and will throw in guzzlehttp/psr7 3.0; expected %s.',
-            $this->describeType($value),
-            $method,
-            $expected
-        ), \E_USER_DEPRECATED);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function describeType($value): string
-    {
-        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 }

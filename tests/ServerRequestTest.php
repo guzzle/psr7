@@ -627,7 +627,7 @@ class ServerRequestTest extends TestCase
         $request = new ServerRequest('GET', '/');
 
         $updated = self::assertUserDeprecation(
-            'Passing integer to ServerRequestInterface::withAttribute() is deprecated',
+            'Passing int to ServerRequestInterface::withAttribute() is deprecated',
             static function () use ($request) {
                 return $request->withAttribute(1, 'value');
             }

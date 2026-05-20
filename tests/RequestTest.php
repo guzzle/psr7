@@ -146,7 +146,7 @@ class RequestTest extends TestCase
         $r = new Request('GET', '/');
 
         self::assertInstanceOf(Request::class, self::assertUserDeprecation(
-            'Passing integer to RequestInterface::withUri() is deprecated',
+            'Passing int to RequestInterface::withUri() is deprecated',
             static function () use ($r) {
                 return $r->withUri(new Uri('/foo'), 1);
             }

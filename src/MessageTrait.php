@@ -34,8 +34,12 @@ trait MessageTrait
      */
     public function withProtocolVersion($version): MessageInterface
     {
-        if (!$this->isString($version)) {
-            $this->triggerInvalidArgumentDeprecation('MessageInterface::withProtocolVersion()', 'string', $version);
+        $versionType = \preg_replace('/\z/', '', \get_debug_type($version)) ?? '';
+        if ($versionType !== 'string') {
+            \trigger_error(\sprintf(
+                'Passing %s to MessageInterface::withProtocolVersion() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string.',
+                $versionType
+            ), \E_USER_DEPRECATED);
         }
 
         if ($this->protocol === $version) {
@@ -82,7 +86,18 @@ trait MessageTrait
     public function withHeader($header, $value): MessageInterface
     {
         $this->assertHeader($header);
-        $this->deprecateInvalidHeaderValue('MessageInterface::withHeader()', $value);
+        $values = \is_array($value) ? $value : [$value];
+        foreach ($values as $item) {
+            $itemType = \preg_replace('/\z/', '', \get_debug_type($item)) ?? '';
+            if (\in_array($itemType, ['int', 'float', 'bool', 'null'], true)) {
+                \trigger_error(\sprintf(
+                    'Passing %s to MessageInterface::withHeader() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
+                    $itemType
+                ), \E_USER_DEPRECATED);
+
+                break;
+            }
+        }
         $value = $this->normalizeHeaderValue($value);
         $normalized = strtolower($header);
 
@@ -102,7 +117,18 @@ trait MessageTrait
     public function withAddedHeader($header, $value): MessageInterface
     {
         $this->assertHeader($header);
-        $this->deprecateInvalidHeaderValue('MessageInterface::withAddedHeader()', $value);
+        $values = \is_array($value) ? $value : [$value];
+        foreach ($values as $item) {
+            $itemType = \preg_replace('/\z/', '', \get_debug_type($item)) ?? '';
+            if (\in_array($itemType, ['int', 'float', 'bool', 'null'], true)) {
+                \trigger_error(\sprintf(
+                    'Passing %s to MessageInterface::withAddedHeader() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
+                    $itemType
+                ), \E_USER_DEPRECATED);
+
+                break;
+            }
+        }
         $value = $this->normalizeHeaderValue($value);
         $normalized = strtolower($header);
 
@@ -172,7 +198,19 @@ trait MessageTrait
             $header = (string) $header;
 
             $this->assertHeader($header);
-            $this->deprecateInvalidHeaderValue(static::class.'::__construct()', $value);
+            $values = \is_array($value) ? $value : [$value];
+            foreach ($values as $item) {
+                $itemType = \preg_replace('/\z/', '', \get_debug_type($item)) ?? '';
+                if (\in_array($itemType, ['int', 'float', 'bool', 'null'], true)) {
+                    \trigger_error(\sprintf(
+                        'Passing %s to %s::__construct() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string|string[].',
+                        $itemType,
+                        static::class
+                    ), \E_USER_DEPRECATED);
+
+                    break;
+                }
+            }
             $value = $this->normalizeHeaderValue($value);
             $normalized = strtolower($header);
             if (isset($this->headerNames[$normalized])) {
@@ -183,59 +221,6 @@ trait MessageTrait
                 $this->headers[$header] = $value;
             }
         }
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function deprecateInvalidHeaderValue(string $method, $value): void
-    {
-        $values = \is_array($value) ? $value : [$value];
-
-        foreach ($values as $item) {
-            if (!$this->isString($item) && ($this->isScalar($item) || $item === null)) {
-                $this->triggerInvalidArgumentDeprecation($method, 'string|string[]', $item);
-
-                return;
-            }
-        }
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isScalar($value): bool
-    {
-        return \is_scalar($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isString($value): bool
-    {
-        return \is_string($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function triggerInvalidArgumentDeprecation(string $method, string $expected, $value): void
-    {
-        \trigger_error(\sprintf(
-            'Passing %s to %s is deprecated and will throw in guzzlehttp/psr7 3.0; expected %s.',
-            $this->describeType($value),
-            $method,
-            $expected
-        ), \E_USER_DEPRECATED);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function describeType($value): string
-    {
-        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 
     /**

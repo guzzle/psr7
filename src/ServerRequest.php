@@ -268,7 +268,10 @@ class ServerRequest extends Request implements ServerRequestInterface
     public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
         if (!self::isValidUploadedFilesTree($uploadedFiles)) {
-            $this->triggerInvalidArgumentDeprecation('ServerRequestInterface::withUploadedFiles()', 'UploadedFileInterface[] tree', $uploadedFiles);
+            \trigger_error(\sprintf(
+                'Passing %s to ServerRequestInterface::withUploadedFiles() is deprecated and will throw in guzzlehttp/psr7 3.0; expected UploadedFileInterface[] tree.',
+                \get_debug_type($uploadedFiles)
+            ), \E_USER_DEPRECATED);
         }
 
         $new = clone $this;
@@ -313,8 +316,12 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withParsedBody($data): ServerRequestInterface
     {
-        if ($data !== null && !$this->isArray($data) && !$this->isObject($data)) {
-            $this->triggerInvalidArgumentDeprecation('ServerRequestInterface::withParsedBody()', 'array|object|null', $data);
+        $dataType = \preg_replace('/\z/', '', \get_debug_type($data)) ?? '';
+        if (\in_array($dataType, ['int', 'float', 'bool', 'string'], true)) {
+            \trigger_error(\sprintf(
+                'Passing %s to ServerRequestInterface::withParsedBody() is deprecated and will throw in guzzlehttp/psr7 3.0; expected array|object|null.',
+                $dataType
+            ), \E_USER_DEPRECATED);
         }
 
         $new = clone $this;
@@ -342,8 +349,12 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withAttribute($attribute, $value): ServerRequestInterface
     {
-        if (!$this->isString($attribute)) {
-            $this->triggerInvalidArgumentDeprecation('ServerRequestInterface::withAttribute()', 'string for $attribute', $attribute);
+        $attributeType = \preg_replace('/\z/', '', \get_debug_type($attribute)) ?? '';
+        if ($attributeType !== 'string') {
+            \trigger_error(\sprintf(
+                'Passing %s to ServerRequestInterface::withAttribute() is deprecated and will throw in guzzlehttp/psr7 3.0; expected string for $attribute.',
+                $attributeType
+            ), \E_USER_DEPRECATED);
         }
 
         $new = clone $this;
@@ -362,51 +373,6 @@ class ServerRequest extends Request implements ServerRequestInterface
         unset($new->attributes[$attribute]);
 
         return $new;
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isArray($value): bool
-    {
-        return \is_array($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isObject($value): bool
-    {
-        return \is_object($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isString($value): bool
-    {
-        return \is_string($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function triggerInvalidArgumentDeprecation(string $method, string $expected, $value): void
-    {
-        \trigger_error(\sprintf(
-            'Passing %s to %s is deprecated and will throw in guzzlehttp/psr7 3.0; expected %s.',
-            $this->describeType($value),
-            $method,
-            $expected
-        ), \E_USER_DEPRECATED);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function describeType($value): string
-    {
-        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 
     private static function isValidUploadedFilesTree(array $uploadedFiles): bool

@@ -110,8 +110,12 @@ class Request implements RequestInterface
 
     public function withUri(UriInterface $uri, $preserveHost = false): RequestInterface
     {
-        if (!$this->isBool($preserveHost)) {
-            $this->triggerInvalidArgumentDeprecation('RequestInterface::withUri()', 'bool for $preserveHost', $preserveHost);
+        $preserveHostType = \preg_replace('/\z/', '', \get_debug_type($preserveHost)) ?? '';
+        if ($preserveHostType !== 'bool') {
+            \trigger_error(\sprintf(
+                'Passing %s to RequestInterface::withUri() is deprecated and will throw in guzzlehttp/psr7 3.0; expected bool for $preserveHost.',
+                $preserveHostType
+            ), \E_USER_DEPRECATED);
         }
 
         if ($uri === $this->uri) {
@@ -126,35 +130,6 @@ class Request implements RequestInterface
         }
 
         return $new;
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function isBool($value): bool
-    {
-        return \is_bool($value);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function triggerInvalidArgumentDeprecation(string $method, string $expected, $value): void
-    {
-        \trigger_error(\sprintf(
-            'Passing %s to %s is deprecated and will throw in guzzlehttp/psr7 3.0; expected %s.',
-            $this->describeType($value),
-            $method,
-            $expected
-        ), \E_USER_DEPRECATED);
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private function describeType($value): string
-    {
-        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 
     private function updateHostFromUri(): void
