@@ -1,28 +1,10 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/AppendStream.php
-
-		-
 			message: '#^Method GuzzleHttp\\Psr7\\BufferStream\:\:getSize\(\) never returns null so it can be removed from the return type\.$#'
 			identifier: return.unusedType
 			count: 1
 			path: src/BufferStream.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/CachingStream.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/DroppingStream.php
 
 		-
 			message: '#^Access to an undefined property GuzzleHttp\\Psr7\\FnStream\:\:\$_fn___toString\.$#'
@@ -115,34 +97,10 @@ parameters:
 			path: src/FnStream.php
 
 		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/FnStream.php
-
-		-
 			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Header.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/InflateStream.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/LazyOpenStream.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/LimitStream.php
 
 		-
 			message: '#^PHPDoc tag @var with type array\<array\> is not subtype of native type list\<array\<string\>\>\.$#'
@@ -175,24 +133,6 @@ parameters:
 			path: src/Message.php
 
 		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/MultipartStream.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/NoSeekStream.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: src/PumpStream.php
-
-		-
 			message: '#^Method GuzzleHttp\\Psr7\\ServerRequest\:\:normalizeNestedFileSpec\(\) should return array\<Psr\\Http\\Message\\UploadedFileInterface\> but returns array\<int\|string, array\<Psr\\Http\\Message\\UploadedFileInterface\>\|Psr\\Http\\Message\\UploadedFileInterface\>\.$#'
 			identifier: return.type
 			count: 1
@@ -208,12 +148,6 @@ parameters:
 			message: '#^Property GuzzleHttp\\Psr7\\Stream\:\:\$stream \(resource\) in isset\(\) is not nullable\.$#'
 			identifier: isset.property
 			count: 10
-			path: src/Stream.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
 			path: src/Stream.php
 
 		-

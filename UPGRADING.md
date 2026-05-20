@@ -4,6 +4,14 @@ Guzzle PSR-7 Upgrade Guide
 2.x to 3.0
 ----------
 
+#### PHP Version and Dependencies
+
+Guzzle PSR-7 3.0 requires PHP `^7.4 || ^8.0`. Guzzle PSR-7 2.x supported PHP
+`^7.2.5 || ^8.0`.
+
+If your application still supports PHP 7.2 or 7.3, continue using Guzzle PSR-7
+2.x until your minimum PHP version is raised.
+
 #### URI Host and Scheme Validation
 
 URI hosts containing control characters, whitespace, URI delimiters, backslashes,
@@ -270,10 +278,10 @@ of depending on package internals.
 its high-water mark. This keeps the method compatible with the `int` return type
 from `StreamInterface::write()`.
 
-Several stream `__toString()` implementations now catch `Throwable`. On PHP 7.4
-and newer, exceptions thrown during stringification are rethrown. Avoid relying
-on `(string) $stream` to hide read failures; call `getContents()` or `read()` and
-handle exceptions when failures are possible.
+Several stream `__toString()` implementations now allow exceptions thrown during
+stringification to be rethrown. Avoid relying on `(string) $stream` to hide read
+failures; call `getContents()` or `read()` and handle exceptions when failures
+are possible.
 
 #### PSR-17 Factories
 

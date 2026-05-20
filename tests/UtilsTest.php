@@ -211,9 +211,6 @@ class UtilsTest extends TestCase
         Psr7\Utils::tryFopen('', 'r');
     }
 
-    /**
-     * @requires PHP 7.4
-     */
     public function testGetsContentsThrowExceptionWhenNotReadable(): void
     {
         $r = fopen(tempnam(sys_get_temp_dir(), 'guzzle-psr7-'), 'w');
