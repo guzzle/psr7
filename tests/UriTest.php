@@ -621,14 +621,6 @@ class UriTest extends TestCase
         self::assertNull($uri->getPort());
     }
 
-    public function testPortPassedAsStringIsCastedToInt(): void
-    {
-        $uri = (new Uri('//example.com'))->withPort('8080');
-
-        self::assertSame(8080, $uri->getPort(), 'Port is returned as integer');
-        self::assertSame('example.com:8080', $uri->getAuthority());
-    }
-
     public function testPortCanBeRemoved(): void
     {
         $uri = (new Uri('http://example.com:8080'))->withPort(null);

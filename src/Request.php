@@ -110,6 +110,15 @@ class Request implements RequestInterface
 
     public function withUri(UriInterface $uri, $preserveHost = false): RequestInterface
     {
+        if (!\is_bool($preserveHost)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to RequestInterface::withUri() is deprecated; guzzlehttp/psr7 3.0 requires bool for $preserveHost.',
+                \get_debug_type($preserveHost)
+            );
+        }
+
         if ($uri === $this->uri) {
             return $this;
         }

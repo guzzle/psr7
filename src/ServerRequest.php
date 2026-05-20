@@ -348,6 +348,37 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
+        $invalidUploadedFileFound = false;
+        $invalidUploadedFile = null;
+        $stack = [$uploadedFiles];
+
+        while ($stack !== []) {
+            foreach (\array_pop($stack) as $uploadedFile) {
+                if ($uploadedFile instanceof UploadedFileInterface) {
+                    continue;
+                }
+
+                if (\is_array($uploadedFile)) {
+                    $stack[] = $uploadedFile;
+                    continue;
+                }
+
+                $invalidUploadedFileFound = true;
+                $invalidUploadedFile = $uploadedFile;
+
+                break 2;
+            }
+        }
+
+        if ($invalidUploadedFileFound) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s inside ServerRequestInterface::withUploadedFiles() is deprecated; guzzlehttp/psr7 3.0 requires an UploadedFileInterface[] tree.',
+                \get_debug_type($invalidUploadedFile)
+            );
+        }
+
         $new = clone $this;
         $new->uploadedFiles = $uploadedFiles;
 
@@ -390,6 +421,15 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withParsedBody($data): ServerRequestInterface
     {
+        if ($data !== null && !\is_array($data) && !\is_object($data)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to ServerRequestInterface::withParsedBody() is deprecated; guzzlehttp/psr7 3.0 requires array|object|null.',
+                \get_debug_type($data)
+            );
+        }
+
         $new = clone $this;
         $new->parsedBody = $data;
 
@@ -406,6 +446,15 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function getAttribute($attribute, $default = null)
     {
+        if (!\is_string($attribute)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to ServerRequestInterface::getAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
+                \get_debug_type($attribute)
+            );
+        }
+
         if (false === array_key_exists($attribute, $this->attributes)) {
             return $default;
         }
@@ -415,6 +464,15 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withAttribute($attribute, $value): ServerRequestInterface
     {
+        if (!\is_string($attribute)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to ServerRequestInterface::withAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
+                \get_debug_type($attribute)
+            );
+        }
+
         $new = clone $this;
         $new->attributes[$attribute] = $value;
 
@@ -423,6 +481,15 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withoutAttribute($attribute): ServerRequestInterface
     {
+        if (!\is_string($attribute)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to ServerRequestInterface::withoutAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
+                \get_debug_type($attribute)
+            );
+        }
+
         if (false === array_key_exists($attribute, $this->attributes)) {
             return $this;
         }
