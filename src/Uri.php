@@ -496,8 +496,8 @@ class Uri implements UriInterface, \JsonSerializable
 
     public function withPort($port): UriInterface
     {
-        if ($port !== null && !Deprecation::isInt($port)) {
-            Deprecation::invalidArgument('UriInterface::withPort()', 'int|null', $port);
+        if ($port !== null && !$this->isInt($port)) {
+            $this->triggerInvalidArgumentDeprecation('UriInterface::withPort()', 'int|null', $port);
         }
 
         $port = $this->filterPort($port);
@@ -662,6 +662,35 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return $port;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function isInt($value): bool
+    {
+        return \is_int($value);
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function triggerInvalidArgumentDeprecation(string $method, string $expected, $value): void
+    {
+        \trigger_error(\sprintf(
+            'Passing %s to %s is deprecated and will throw in guzzlehttp/psr7 3.0; expected %s.',
+            $this->describeType($value),
+            $method,
+            $expected
+        ), \E_USER_DEPRECATED);
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function describeType($value): string
+    {
+        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 
     /**

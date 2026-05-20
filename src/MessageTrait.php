@@ -34,8 +34,8 @@ trait MessageTrait
      */
     public function withProtocolVersion($version): MessageInterface
     {
-        if (!Deprecation::isString($version)) {
-            Deprecation::invalidArgument('MessageInterface::withProtocolVersion()', 'string', $version);
+        if (!$this->isString($version)) {
+            $this->triggerInvalidArgumentDeprecation('MessageInterface::withProtocolVersion()', 'string', $version);
         }
 
         if ($this->protocol === $version) {
@@ -193,12 +193,49 @@ trait MessageTrait
         $values = \is_array($value) ? $value : [$value];
 
         foreach ($values as $item) {
-            if (!Deprecation::isString($item) && (Deprecation::isScalar($item) || $item === null)) {
-                Deprecation::invalidArgument($method, 'string|string[]', $item);
+            if (!$this->isString($item) && ($this->isScalar($item) || $item === null)) {
+                $this->triggerInvalidArgumentDeprecation($method, 'string|string[]', $item);
 
                 return;
             }
         }
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function isScalar($value): bool
+    {
+        return \is_scalar($value);
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function isString($value): bool
+    {
+        return \is_string($value);
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function triggerInvalidArgumentDeprecation(string $method, string $expected, $value): void
+    {
+        \trigger_error(\sprintf(
+            'Passing %s to %s is deprecated and will throw in guzzlehttp/psr7 3.0; expected %s.',
+            $this->describeType($value),
+            $method,
+            $expected
+        ), \E_USER_DEPRECATED);
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function describeType($value): string
+    {
+        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 
     /**
