@@ -153,7 +153,15 @@ final class Utils
      * - version: (string) Set the protocol version.
      *
      * @param RequestInterface $request Request to clone and modify.
-     * @param array            $changes Changes to apply.
+     * @param array{
+     *     method?: string,
+     *     set_headers?: array<array-key, string|string[]>,
+     *     remove_headers?: array<array-key, string|int>,
+     *     body?: resource|string|int|float|bool|StreamInterface|callable|\Iterator|null,
+     *     uri?: UriInterface,
+     *     query?: string,
+     *     version?: string
+     * } $changes Changes to apply.
      */
     public static function modifyRequest(RequestInterface $request, array $changes): RequestInterface
     {
