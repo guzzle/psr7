@@ -113,11 +113,6 @@ class UploadedFile implements UploadedFileInterface
         $this->error = $error;
     }
 
-    private static function isStringNotEmpty($param): bool
-    {
-        return is_string($param) && false === empty($param);
-    }
-
     /**
      * Return true if there is no upload error
      */
@@ -159,11 +154,11 @@ class UploadedFile implements UploadedFileInterface
         return new LazyOpenStream($file, 'r+');
     }
 
-    public function moveTo($targetPath): void
+    public function moveTo(string $targetPath): void
     {
         $this->validateActive();
 
-        if (false === self::isStringNotEmpty($targetPath)) {
+        if ($targetPath === '') {
             throw new InvalidArgumentException(
                 'Invalid path provided for move operation; must be a non-empty string'
             );

@@ -75,7 +75,7 @@ class Request implements RequestInterface
         return $target;
     }
 
-    public function withRequestTarget($requestTarget): RequestInterface
+    public function withRequestTarget(string $requestTarget): RequestInterface
     {
         if (preg_match('#\s#', $requestTarget)) {
             throw new InvalidArgumentException(
@@ -94,7 +94,7 @@ class Request implements RequestInterface
         return $this->method;
     }
 
-    public function withMethod($method): RequestInterface
+    public function withMethod(string $method): RequestInterface
     {
         $this->assertMethod($method);
         $new = clone $this;
@@ -108,17 +108,8 @@ class Request implements RequestInterface
         return $this->uri;
     }
 
-    public function withUri(UriInterface $uri, $preserveHost = false): RequestInterface
+    public function withUri(UriInterface $uri, bool $preserveHost = false): RequestInterface
     {
-        if (!\is_bool($preserveHost)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to RequestInterface::withUri() is deprecated; guzzlehttp/psr7 3.0 requires bool for $preserveHost.',
-                \get_debug_type($preserveHost)
-            );
-        }
-
         if ($uri === $this->uri) {
             return $this;
         }
@@ -158,12 +149,9 @@ class Request implements RequestInterface
         $this->headers = [$header => [$host]] + $this->headers;
     }
 
-    /**
-     * @param mixed $method
-     */
-    private function assertMethod($method): void
+    private function assertMethod(string $method): void
     {
-        if (!is_string($method) || $method === '') {
+        if ($method === '') {
             throw new InvalidArgumentException('Method must be a non-empty string.');
         }
     }

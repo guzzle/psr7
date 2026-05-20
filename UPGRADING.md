@@ -12,6 +12,69 @@ Guzzle PSR-7 3.0 requires PHP `^7.4 || ^8.0`. Guzzle PSR-7 2.x supported PHP
 If your application still supports PHP 7.2 or 7.3, continue using Guzzle PSR-7
 2.x until your minimum PHP version is raised.
 
+Guzzle PSR-7 3.0 requires `psr/http-message:^2.0` and `psr/http-factory:^1.1`.
+If your dependency constraints pin `psr/http-message` to v1, update them before
+upgrading.
+
+#### PSR-7 Argument Types and Values
+
+Guzzle PSR-7 3.0 requires the argument types documented by PSR-7 more strictly.
+It adds the native parameter types from `psr/http-message` v2 and rejects several
+values that 2.x previously cast or accepted. Code passing invalid argument types
+may now receive PHP `TypeError` exceptions instead of package-specific
+`InvalidArgumentException` exceptions or implicit casts.
+
+Native parameter type changes include:
+
+- `MessageInterface::withProtocolVersion()` now requires `string`.
+- Message header names now require `string`.
+- `RequestInterface::withRequestTarget()` and `withMethod()` now require `string`.
+- `RequestInterface::withUri()` now requires `bool` for `$preserveHost`.
+- `ResponseInterface::withStatus()` now requires `int` status codes and `string` reason phrases.
+- Server request attribute names now require `string`.
+- `UriInterface::withPort()` now requires `int|null`.
+- URI scheme, user info, host, path, query, and fragment mutators now require strings.
+- Stream `seek()`, `read()`, `write()`, and `getMetadata()` now require their PSR-7 v2 parameter types.
+- `UploadedFileInterface::moveTo()` now requires a string target path.
+
+Update callers to pass values of the documented type before calling these
+methods:
+
+```php
+// 2.x, no longer supported in 3.0
+$response = $response->withStatus('201');
+$uri = $uri->withPort('8080');
+
+// 3.0
+$response = $response->withStatus(201);
+$uri = $uri->withPort(8080);
+```
+
+Header values must now be strings or arrays of strings. Scalars and `null` are no
+longer cast to strings.
+
+```php
+// 2.x, no longer accepted in 3.0
+$response = $response->withHeader('Api-Version', 1);
+
+// 3.0
+$response = $response->withHeader('Api-Version', '1');
+```
+
+`ServerRequestInterface::withUploadedFiles()` now rejects invalid nested upload
+trees. Every leaf must be an `UploadedFileInterface` instance.
+
+`ServerRequestInterface::withParsedBody()` now rejects values other than
+`array`, `object`, or `null`.
+
+```php
+// 2.x, no longer accepted in 3.0
+$request = $request->withParsedBody('name=value');
+
+// 3.0
+$request = $request->withParsedBody(['name' => 'value']);
+```
+
 #### URI Host and Scheme Validation
 
 URI hosts containing control characters, whitespace, URI delimiters, backslashes,

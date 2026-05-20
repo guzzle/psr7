@@ -348,8 +348,6 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
-        $invalidUploadedFileFound = false;
-        $invalidUploadedFile = null;
         $stack = [$uploadedFiles];
 
         while ($stack !== []) {
@@ -363,20 +361,11 @@ class ServerRequest extends Request implements ServerRequestInterface
                     continue;
                 }
 
-                $invalidUploadedFileFound = true;
-                $invalidUploadedFile = $uploadedFile;
-
-                break 2;
+                throw new InvalidArgumentException(sprintf(
+                    'Invalid uploaded file tree; expected UploadedFileInterface instances but %s provided.',
+                    is_object($uploadedFile) ? get_class($uploadedFile) : gettype($uploadedFile)
+                ));
             }
-        }
-
-        if ($invalidUploadedFileFound) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s inside ServerRequestInterface::withUploadedFiles() is deprecated; guzzlehttp/psr7 3.0 requires an UploadedFileInterface[] tree.',
-                \get_debug_type($invalidUploadedFile)
-            );
         }
 
         $new = clone $this;
@@ -422,12 +411,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public function withParsedBody($data): ServerRequestInterface
     {
         if ($data !== null && !\is_array($data) && !\is_object($data)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to ServerRequestInterface::withParsedBody() is deprecated; guzzlehttp/psr7 3.0 requires array|object|null.',
-                \get_debug_type($data)
-            );
+            throw new InvalidArgumentException('Parsed body must be an array, object, or null.');
         }
 
         $new = clone $this;
@@ -444,58 +428,31 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * @return mixed
      */
-    public function getAttribute($attribute, $default = null)
+    public function getAttribute(string $name, $default = null)
     {
-        if (!\is_string($attribute)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to ServerRequestInterface::getAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
-                \get_debug_type($attribute)
-            );
-        }
-
-        if (false === array_key_exists($attribute, $this->attributes)) {
+        if (false === array_key_exists($name, $this->attributes)) {
             return $default;
         }
 
-        return $this->attributes[$attribute];
+        return $this->attributes[$name];
     }
 
-    public function withAttribute($attribute, $value): ServerRequestInterface
+    public function withAttribute(string $name, $value): ServerRequestInterface
     {
-        if (!\is_string($attribute)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to ServerRequestInterface::withAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
-                \get_debug_type($attribute)
-            );
-        }
-
         $new = clone $this;
-        $new->attributes[$attribute] = $value;
+        $new->attributes[$name] = $value;
 
         return $new;
     }
 
-    public function withoutAttribute($attribute): ServerRequestInterface
+    public function withoutAttribute(string $name): ServerRequestInterface
     {
-        if (!\is_string($attribute)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to ServerRequestInterface::withoutAttribute() is deprecated; guzzlehttp/psr7 3.0 requires string for $attribute.',
-                \get_debug_type($attribute)
-            );
-        }
-
-        if (false === array_key_exists($attribute, $this->attributes)) {
+        if (false === array_key_exists($name, $this->attributes)) {
             return $this;
         }
 
         $new = clone $this;
-        unset($new->attributes[$attribute]);
+        unset($new->attributes[$name]);
 
         return $new;
     }

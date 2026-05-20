@@ -214,7 +214,7 @@ class UriTest extends TestCase
 
     public function testSchemeMustHaveCorrectType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         (new Uri())->withScheme([]);
     }
 
@@ -246,7 +246,7 @@ class UriTest extends TestCase
 
     public function testHostMustHaveCorrectType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         (new Uri())->withHost([]);
     }
 
@@ -282,19 +282,19 @@ class UriTest extends TestCase
 
     public function testPathMustHaveCorrectType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         (new Uri())->withPath([]);
     }
 
     public function testQueryMustHaveCorrectType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         (new Uri())->withQuery([]);
     }
 
     public function testFragmentMustHaveCorrectType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         (new Uri())->withFragment([]);
     }
 

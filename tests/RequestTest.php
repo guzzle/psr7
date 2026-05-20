@@ -111,7 +111,7 @@ class RequestTest extends TestCase
     public function testWithInvalidMethods($method): void
     {
         $r = new Request('get', '/');
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         $r->withMethod($method);
     }
 
