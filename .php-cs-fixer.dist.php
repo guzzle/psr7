@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $config = (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setRules([
