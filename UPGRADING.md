@@ -16,6 +16,12 @@ Guzzle PSR-7 3.0 requires `psr/http-message:^2.0` and `psr/http-factory:^1.1`.
 If your dependency constraints pin `psr/http-message` to v1, update them before
 upgrading.
 
+Guzzle PSR-7 no longer depends on `ralouphie/getallheaders` and no longer
+provides a transitive global `getallheaders()` polyfill.
+`ServerRequest::fromGlobals()` continues to collect request headers internally.
+Applications that call `getallheaders()` directly on SAPIs where PHP does not
+provide it should require their own polyfill.
+
 #### PSR-7 Argument Types and Values
 
 Guzzle PSR-7 3.0 requires the argument types documented by PSR-7 more strictly.
