@@ -212,12 +212,6 @@ class UriTest extends TestCase
         new Uri('//example.com:-1');
     }
 
-    public function testSchemeMustHaveCorrectType(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        (new Uri())->withScheme([]);
-    }
-
     /**
      * @dataProvider getInvalidSchemes
      */
@@ -242,12 +236,6 @@ class UriTest extends TestCase
         $this->expectException(MalformedUriException::class);
 
         Uri::fromParts(['scheme' => "ht\ntp", 'host' => 'example.com']);
-    }
-
-    public function testHostMustHaveCorrectType(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        (new Uri())->withHost([]);
     }
 
     /**
@@ -278,24 +266,6 @@ class UriTest extends TestCase
         yield 'unterminated bracketed IPv6' => ['[::1'];
         yield 'unbalanced opening bracket' => ['example[com'];
         yield 'unbalanced closing bracket' => ['example]com'];
-    }
-
-    public function testPathMustHaveCorrectType(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        (new Uri())->withPath([]);
-    }
-
-    public function testQueryMustHaveCorrectType(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        (new Uri())->withQuery([]);
-    }
-
-    public function testFragmentMustHaveCorrectType(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        (new Uri())->withFragment([]);
     }
 
     public function testCanParseFalseyUriParts(): void

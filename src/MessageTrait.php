@@ -32,17 +32,8 @@ trait MessageTrait
     /**
      * @return static
      */
-    public function withProtocolVersion($version): MessageInterface
+    public function withProtocolVersion(string $version): MessageInterface
     {
-        if (!\is_string($version)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to MessageInterface::withProtocolVersion() is deprecated; guzzlehttp/psr7 3.0 requires string.',
-                \get_debug_type($version)
-            );
-        }
-
         if ($this->protocol === $version) {
             return $this;
         }
@@ -58,14 +49,14 @@ trait MessageTrait
         return $this->headers;
     }
 
-    public function hasHeader($header): bool
+    public function hasHeader(string $name): bool
     {
-        return isset($this->headerNames[strtolower($header)]);
+        return isset($this->headerNames[strtolower($name)]);
     }
 
-    public function getHeader($header): array
+    public function getHeader(string $name): array
     {
-        $header = strtolower($header);
+        $header = strtolower($name);
 
         if (!isset($this->headerNames[$header])) {
             return [];
@@ -76,39 +67,26 @@ trait MessageTrait
         return $this->headers[$header];
     }
 
-    public function getHeaderLine($header): string
+    public function getHeaderLine(string $name): string
     {
-        return implode(', ', $this->getHeader($header));
+        return implode(', ', $this->getHeader($name));
     }
 
     /**
      * @return static
      */
-    public function withHeader($header, $value): MessageInterface
+    public function withHeader(string $name, $value): MessageInterface
     {
-        $this->assertHeader($header);
-        $values = \is_array($value) ? $value : [$value];
-        foreach ($values as $item) {
-            if (!\is_string($item) && (\is_scalar($item) || $item === null)) {
-                \trigger_deprecation(
-                    'guzzlehttp/psr7',
-                    '2.11',
-                    'Passing %s to MessageInterface::withHeader() is deprecated; guzzlehttp/psr7 3.0 requires string|string[].',
-                    \get_debug_type($item)
-                );
-
-                break;
-            }
-        }
+        $this->assertHeader($name);
         $value = $this->normalizeHeaderValue($value);
-        $normalized = strtolower($header);
+        $normalized = strtolower($name);
 
         $new = clone $this;
         if (isset($new->headerNames[$normalized])) {
             unset($new->headers[$new->headerNames[$normalized]]);
         }
-        $new->headerNames[$normalized] = $header;
-        $new->headers[$header] = $value;
+        $new->headerNames[$normalized] = $name;
+        $new->headers[$name] = $value;
 
         return $new;
     }
@@ -116,32 +94,19 @@ trait MessageTrait
     /**
      * @return static
      */
-    public function withAddedHeader($header, $value): MessageInterface
+    public function withAddedHeader(string $name, $value): MessageInterface
     {
-        $this->assertHeader($header);
-        $values = \is_array($value) ? $value : [$value];
-        foreach ($values as $item) {
-            if (!\is_string($item) && (\is_scalar($item) || $item === null)) {
-                \trigger_deprecation(
-                    'guzzlehttp/psr7',
-                    '2.11',
-                    'Passing %s to MessageInterface::withAddedHeader() is deprecated; guzzlehttp/psr7 3.0 requires string|string[].',
-                    \get_debug_type($item)
-                );
-
-                break;
-            }
-        }
+        $this->assertHeader($name);
         $value = $this->normalizeHeaderValue($value);
-        $normalized = strtolower($header);
+        $normalized = strtolower($name);
 
         $new = clone $this;
         if (isset($new->headerNames[$normalized])) {
-            $header = $this->headerNames[$normalized];
-            $new->headers[$header] = array_merge($this->headers[$header], $value);
+            $name = $this->headerNames[$normalized];
+            $new->headers[$name] = array_merge($this->headers[$name], $value);
         } else {
-            $new->headerNames[$normalized] = $header;
-            $new->headers[$header] = $value;
+            $new->headerNames[$normalized] = $name;
+            $new->headers[$name] = $value;
         }
 
         return $new;
@@ -150,18 +115,18 @@ trait MessageTrait
     /**
      * @return static
      */
-    public function withoutHeader($header): MessageInterface
+    public function withoutHeader(string $name): MessageInterface
     {
-        $normalized = strtolower($header);
+        $normalized = strtolower($name);
 
         if (!isset($this->headerNames[$normalized])) {
             return $this;
         }
 
-        $header = $this->headerNames[$normalized];
+        $name = $this->headerNames[$normalized];
 
         $new = clone $this;
-        unset($new->headers[$header], $new->headerNames[$normalized]);
+        unset($new->headers[$name], $new->headerNames[$normalized]);
 
         return $new;
     }
@@ -201,20 +166,6 @@ trait MessageTrait
             $header = (string) $header;
 
             $this->assertHeader($header);
-            $values = \is_array($value) ? $value : [$value];
-            foreach ($values as $item) {
-                if (!\is_string($item) && (\is_scalar($item) || $item === null)) {
-                    \trigger_deprecation(
-                        'guzzlehttp/psr7',
-                        '2.11',
-                        'Passing %s to %s::__construct() is deprecated; guzzlehttp/psr7 3.0 requires string|string[].',
-                        \get_debug_type($item),
-                        static::class
-                    );
-
-                    break;
-                }
-            }
             $value = $this->normalizeHeaderValue($value);
             $normalized = strtolower($header);
             if (isset($this->headerNames[$normalized])) {
@@ -258,14 +209,14 @@ trait MessageTrait
     private function trimAndValidateHeaderValues(array $values): array
     {
         return array_map(function ($value) {
-            if (!is_scalar($value) && null !== $value) {
+            if (!is_string($value)) {
                 throw new \InvalidArgumentException(sprintf(
-                    'Header value must be scalar or null but %s provided.',
+                    'Header value must be a string or array of strings but %s provided.',
                     is_object($value) ? get_class($value) : gettype($value)
                 ));
             }
 
-            $trimmed = trim((string) $value, " \t");
+            $trimmed = trim($value, " \t");
             $this->assertValue($trimmed);
 
             return $trimmed;

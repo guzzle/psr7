@@ -1,82 +1,10 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/AppendStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/AppendStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/AppendStream.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/BufferStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/BufferStream.php
-
-		-
 			message: '#^Method GuzzleHttp\\Psr7\\BufferStream\:\:getSize\(\) never returns null so it can be removed from the return type\.$#'
 			identifier: return.unusedType
 			count: 1
 			path: src/BufferStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/BufferStream.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/CachingStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/CachingStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/CachingStream.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/DroppingStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/DroppingStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/DroppingStream.php
 
 		-
 			message: '#^Access to an undefined property GuzzleHttp\\Psr7\\FnStream\:\:\$_fn___toString\.$#'
@@ -169,82 +97,10 @@ parameters:
 			path: src/FnStream.php
 
 		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/FnStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/FnStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/FnStream.php
-
-		-
 			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: src/Header.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/InflateStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/InflateStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/InflateStream.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/LazyOpenStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/LazyOpenStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/LazyOpenStream.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/LimitStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/LimitStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/LimitStream.php
 
 		-
 			message: '#^PHPDoc tag @var with type array\<array\> is not subtype of native type list\<array\<string\>\>\.$#'
@@ -277,138 +133,6 @@ parameters:
 			path: src/Message.php
 
 		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/MultipartStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/MultipartStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/MultipartStream.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/NoSeekStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/NoSeekStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/NoSeekStream.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/PumpStream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/PumpStream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/PumpStream.php
-
-		-
-			message: '#^Call to function is_bool\(\) with bool will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Request.php
-
-		-
-			message: '#^Call to function is_scalar\(\) with \*NEVER\* will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/Request.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 4
-			path: src/Request.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 3
-			path: src/Request.php
-
-		-
-			message: '#^Result of \|\| is always true\.$#'
-			identifier: booleanOr.alwaysTrue
-			count: 3
-			path: src/Request.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between \*NEVER\* and null will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 3
-			path: src/Request.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Response.php
-
-		-
-			message: '#^Call to function is_scalar\(\) with \*NEVER\* will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/Response.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 5
-			path: src/Response.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 4
-			path: src/Response.php
-
-		-
-			message: '#^Result of \|\| is always true\.$#'
-			identifier: booleanOr.alwaysTrue
-			count: 3
-			path: src/Response.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between false and false will always evaluate to false\.$#'
-			identifier: notIdentical.alwaysFalse
-			count: 1
-			path: src/Response.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between \*NEVER\* and null will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 3
-			path: src/Response.php
-
-		-
 			message: '#^Argument of an invalid type null supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 1
@@ -418,12 +142,6 @@ parameters:
 			message: '#^Call to function is_object\(\) with object will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
-			path: src/ServerRequest.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
 			path: src/ServerRequest.php
 
 		-
@@ -439,18 +157,6 @@ parameters:
 			path: src/ServerRequest.php
 
 		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 3
-			path: src/Stream.php
-
-		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: src/Stream.php
-
-		-
 			message: '#^Offset ''size'' on array\{0\: int, 1\: int, 2\: int, 3\: int, 4\: int, 5\: int, 6\: int, 7\: int, \.\.\.\} in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.offset
 			count: 1
@@ -461,30 +167,6 @@ parameters:
 			identifier: isset.property
 			count: 10
 			path: src/Stream.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
-			count: 1
-			path: src/Stream.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\UploadedFile\:\:isStringNotEmpty\(\) has parameter \$param with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/UploadedFile.php
-
-		-
-			message: '#^Call to function is_int\(\) with int will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Uri.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: src/Uri.php
 
 		-
 			message: '#^Method GuzzleHttp\\Psr7\\Uri\:\:filterPath\(\) should return string but returns string\|null\.$#'
@@ -507,12 +189,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(int\<0, 65535\>\|string\)\: mixed\)\|null, ''urldecode'' given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Uri.php
-
-		-
-			message: '#^Result of && is always false\.$#'
-			identifier: booleanAnd.alwaysFalse
 			count: 1
 			path: src/Uri.php
 

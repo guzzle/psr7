@@ -261,7 +261,10 @@ class ResponseTest extends TestCase
     {
         return [
             ['', '', '"" is not valid header name'],
-            ['foo', new \stdClass(),  'Header value must be scalar or null but stdClass provided.'],
+            ['foo', new \stdClass(),  'Header value must be a string or array of strings but stdClass provided.'],
+            ['foo', 1, 'Header value must be a string or array of strings but integer provided.'],
+            ['foo', null, 'Header value must be a string or array of strings but NULL provided.'],
+            ['foo', [1], 'Header value must be a string or array of strings but integer provided.'],
         ];
     }
 
@@ -279,9 +282,6 @@ class ResponseTest extends TestCase
     public static function invalidWithHeaderProvider(): iterable
     {
         yield from self::invalidHeaderProvider();
-        yield [[], 'foo', 'Header name must be a string but array provided.'];
-        yield [false, 'foo', 'Header name must be a string but boolean provided.'];
-        yield [new \stdClass(), 'foo', 'Header name must be a string but stdClass provided.'];
         yield ['', 'foo', '"" is not valid header name.'];
         yield ["Content-Type\r\n\r\n", 'foo', "\"Content-Type\r\n\r\n\" is not valid header name."];
         yield ["Content-Type\r\n", 'foo', "\"Content-Type\r\n\" is not valid header name."];
@@ -313,40 +313,6 @@ class ResponseTest extends TestCase
 
         $headerLine = $message->getHeaderLine('list');
         self::assertSame('one, two, three', $headerLine);
-    }
-
-    /**
-     * @dataProvider nonIntegerStatusCodeProvider
-     *
-     * @param mixed $invalidValues
-     */
-    public function testConstructResponseWithNonIntegerStatusCode($invalidValues): void
-    {
-        $this->expectException(\TypeError::class);
-        new Response($invalidValues);
-    }
-
-    /**
-     * @dataProvider nonIntegerStatusCodeProvider
-     *
-     * @param mixed $invalidValues
-     */
-    public function testResponseChangeStatusCodeWithNonInteger($invalidValues): void
-    {
-        $response = new Response();
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Status code must be an integer value.');
-        $response->withStatus($invalidValues);
-    }
-
-    public static function nonIntegerStatusCodeProvider(): iterable
-    {
-        return [
-            ['whatever'],
-            ['1.01'],
-            [1.01],
-            [new \stdClass()],
-        ];
     }
 
     /**

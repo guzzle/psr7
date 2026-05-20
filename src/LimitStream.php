@@ -71,26 +71,8 @@ final class LimitStream implements StreamInterface
     /**
      * Allow for a bounded seek on the read limited stream
      */
-    public function seek($offset, $whence = SEEK_SET): void
+    public function seek(int $offset, int $whence = SEEK_SET): void
     {
-        if (!\is_int($offset)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to StreamInterface::seek() is deprecated; guzzlehttp/psr7 3.0 requires int for $offset.',
-                \get_debug_type($offset)
-            );
-        }
-
-        if (!\is_int($whence)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to StreamInterface::seek() is deprecated; guzzlehttp/psr7 3.0 requires int for $whence.',
-                \get_debug_type($whence)
-            );
-        }
-
         if ($whence !== SEEK_SET || $offset < 0) {
             throw new \RuntimeException(sprintf(
                 'Cannot seek to offset %s with whence %s',
@@ -155,17 +137,8 @@ final class LimitStream implements StreamInterface
         $this->limit = $limit;
     }
 
-    public function read($length): string
+    public function read(int $length): string
     {
-        if (!\is_int($length)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing %s to StreamInterface::read() is deprecated; guzzlehttp/psr7 3.0 requires int for $length.',
-                \get_debug_type($length)
-            );
-        }
-
         if ($this->limit === -1) {
             return $this->stream->read($length);
         }

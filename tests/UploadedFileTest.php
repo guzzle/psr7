@@ -99,31 +99,14 @@ class UploadedFileTest extends TestCase
         self::assertSame($stream->__toString(), file_get_contents($to));
     }
 
-    public static function invalidMovePaths(): iterable
-    {
-        return [
-            'null' => [null],
-            'true' => [true],
-            'false' => [false],
-            'int' => [1],
-            'float' => [1.1],
-            'empty' => [''],
-            'array' => [['filename']],
-            'object' => [(object) ['filename']],
-        ];
-    }
-
-    /**
-     * @dataProvider invalidMovePaths
-     */
-    public function testMoveRaisesExceptionForInvalidPath($path): void
+    public function testMoveRaisesExceptionForEmptyPath(): void
     {
         $stream = \GuzzleHttp\Psr7\Utils::streamFor('Foo bar!');
         $upload = new UploadedFile($stream, 0, UPLOAD_ERR_OK);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('path');
-        $upload->moveTo($path);
+        $upload->moveTo('');
     }
 
     public function testMoveCannotBeCalledMoreThanOnce(): void
