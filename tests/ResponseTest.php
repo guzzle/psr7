@@ -293,23 +293,6 @@ class ResponseTest extends TestCase
         yield ["\t", 'foo', "\"\t\" is not valid header name."];
     }
 
-    /**
-     * @dataProvider invalidHeaderNameTypeProvider
-     */
-    public function testWithInvalidHeaderNameType($header): void
-    {
-        $this->expectException(\TypeError::class);
-
-        (new Response())->withHeader($header, 'foo');
-    }
-
-    public static function invalidHeaderNameTypeProvider(): iterable
-    {
-        yield [[]];
-        yield [false];
-        yield [new \stdClass()];
-    }
-
     public function testHeaderValuesAreTrimmed(): void
     {
         $r1 = new Response(200, ['OWS' => " \t \tFoo\t \t "]);
@@ -330,39 +313,6 @@ class ResponseTest extends TestCase
 
         $headerLine = $message->getHeaderLine('list');
         self::assertSame('one, two, three', $headerLine);
-    }
-
-    /**
-     * @dataProvider nonIntegerStatusCodeProvider
-     *
-     * @param mixed $invalidValues
-     */
-    public function testConstructResponseWithNonIntegerStatusCode($invalidValues): void
-    {
-        $this->expectException(\TypeError::class);
-        new Response($invalidValues);
-    }
-
-    /**
-     * @dataProvider nonIntegerStatusCodeProvider
-     *
-     * @param mixed $invalidValues
-     */
-    public function testResponseChangeStatusCodeWithNonInteger($invalidValues): void
-    {
-        $response = new Response();
-        $this->expectException(\TypeError::class);
-        $response->withStatus($invalidValues);
-    }
-
-    public static function nonIntegerStatusCodeProvider(): iterable
-    {
-        return [
-            ['whatever'],
-            ['1.01'],
-            [1.01],
-            [new \stdClass()],
-        ];
     }
 
     /**

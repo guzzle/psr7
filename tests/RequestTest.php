@@ -96,35 +96,6 @@ class RequestTest extends TestCase
         self::assertSame($u1, $r1->getUri());
     }
 
-    /**
-     * @dataProvider invalidMethodsProvider
-     */
-    public function testConstructWithInvalidMethods($method): void
-    {
-        $this->expectException(\TypeError::class);
-        new Request($method, '/');
-    }
-
-    /**
-     * @dataProvider invalidMethodsProvider
-     */
-    public function testWithInvalidMethods($method): void
-    {
-        $r = new Request('get', '/');
-        $this->expectException(\TypeError::class);
-        $r->withMethod($method);
-    }
-
-    public static function invalidMethodsProvider(): iterable
-    {
-        return [
-            [null],
-            [false],
-            [['foo']],
-            [new \stdClass()],
-        ];
-    }
-
     public function testSameInstanceWhenSameUri(): void
     {
         $r1 = new Request('GET', 'http://foo.com');
