@@ -14,6 +14,8 @@ use Psr\Http\Message\UriInterface;
  */
 class UriTest extends TestCase
 {
+    use DeprecationAssertionTrait;
+
     public function testParsesProvidedUri(): void
     {
         $uri = new Uri('https://user:pass@example.com:8080/path/123?q=abc#test');
@@ -542,7 +544,12 @@ class UriTest extends TestCase
 
     public function testPortPassedAsStringIsCastedToInt(): void
     {
-        $uri = (new Uri('//example.com'))->withPort('8080');
+        $uri = self::assertUserDeprecation(
+            'Passing string to UriInterface::withPort() is deprecated',
+            static function () {
+                return (new Uri('//example.com'))->withPort('8080');
+            }
+        );
 
         self::assertSame(8080, $uri->getPort(), 'Port is returned as integer');
         self::assertSame('example.com:8080', $uri->getAuthority());

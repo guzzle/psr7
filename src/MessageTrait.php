@@ -34,6 +34,10 @@ trait MessageTrait
      */
     public function withProtocolVersion($version): MessageInterface
     {
+        if (!Deprecation::isString($version)) {
+            Deprecation::invalidArgument('MessageInterface::withProtocolVersion()', 'string', $version);
+        }
+
         if ($this->protocol === $version) {
             return $this;
         }
@@ -78,6 +82,7 @@ trait MessageTrait
     public function withHeader($header, $value): MessageInterface
     {
         $this->assertHeader($header);
+        $this->deprecateInvalidHeaderValue('MessageInterface::withHeader()', $value);
         $value = $this->normalizeHeaderValue($value);
         $normalized = strtolower($header);
 
@@ -97,6 +102,7 @@ trait MessageTrait
     public function withAddedHeader($header, $value): MessageInterface
     {
         $this->assertHeader($header);
+        $this->deprecateInvalidHeaderValue('MessageInterface::withAddedHeader()', $value);
         $value = $this->normalizeHeaderValue($value);
         $normalized = strtolower($header);
 
@@ -166,6 +172,7 @@ trait MessageTrait
             $header = (string) $header;
 
             $this->assertHeader($header);
+            $this->deprecateInvalidHeaderValue(static::class.'::__construct()', $value);
             $value = $this->normalizeHeaderValue($value);
             $normalized = strtolower($header);
             if (isset($this->headerNames[$normalized])) {
@@ -174,6 +181,22 @@ trait MessageTrait
             } else {
                 $this->headerNames[$normalized] = $header;
                 $this->headers[$header] = $value;
+            }
+        }
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function deprecateInvalidHeaderValue(string $method, $value): void
+    {
+        $values = \is_array($value) ? $value : [$value];
+
+        foreach ($values as $item) {
+            if (!Deprecation::isString($item) && (Deprecation::isScalar($item) || $item === null)) {
+                Deprecation::invalidArgument($method, 'string|string[]', $item);
+
+                return;
             }
         }
     }

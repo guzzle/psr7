@@ -128,6 +128,14 @@ class Response implements ResponseInterface
 
     public function withStatus($code, $reasonPhrase = ''): ResponseInterface
     {
+        if (!Deprecation::isInt($code) && Deprecation::isIntLike($code)) {
+            Deprecation::invalidArgument('ResponseInterface::withStatus()', 'int for $code', $code);
+        }
+
+        if (!Deprecation::isString($reasonPhrase) && (Deprecation::isNull($reasonPhrase) || Deprecation::isScalar($reasonPhrase) || Deprecation::isStringableObject($reasonPhrase))) {
+            Deprecation::invalidArgument('ResponseInterface::withStatus()', 'string for $reasonPhrase', $reasonPhrase);
+        }
+
         $this->assertStatusCodeIsInteger($code);
         $code = (int) $code;
         $this->assertStatusCodeRange($code);

@@ -14,6 +14,8 @@ use PHPUnit\Framework\TestCase;
  */
 class ServerRequestTest extends TestCase
 {
+    use DeprecationAssertionTrait;
+
     public static function dataNormalizeFiles(): iterable
     {
         return [
@@ -517,6 +519,20 @@ class ServerRequestTest extends TestCase
         self::assertSame($files, $request2->getUploadedFiles());
     }
 
+    public function testWithUploadedFilesDeprecatesInvalidTree(): void
+    {
+        $request = new ServerRequest('GET', '/');
+
+        $updated = self::assertUserDeprecation(
+            'Passing array to ServerRequestInterface::withUploadedFiles() is deprecated',
+            static function () use ($request) {
+                return $request->withUploadedFiles(['invalid']);
+            }
+        );
+
+        self::assertSame(['invalid'], $updated->getUploadedFiles());
+    }
+
     public function testServerParams(): void
     {
         $params = ['name' => 'value'];
@@ -564,6 +580,20 @@ class ServerRequestTest extends TestCase
         self::assertSame($params, $request2->getParsedBody());
     }
 
+    public function testWithParsedBodyDeprecatesInvalidType(): void
+    {
+        $request = new ServerRequest('GET', '/');
+
+        $updated = self::assertUserDeprecation(
+            'Passing string to ServerRequestInterface::withParsedBody() is deprecated',
+            static function () use ($request) {
+                return $request->withParsedBody('body');
+            }
+        );
+
+        self::assertSame('body', $updated->getParsedBody());
+    }
+
     public function testAttributes(): void
     {
         $request1 = new ServerRequest('GET', '/');
@@ -590,6 +620,20 @@ class ServerRequestTest extends TestCase
         self::assertSame(['name' => 'value'], $request2->getAttributes());
         self::assertSame(['name' => 'value', 'other' => 'otherValue'], $request3->getAttributes());
         self::assertSame(['name' => 'value'], $request4->getAttributes());
+    }
+
+    public function testWithAttributeDeprecatesNonStringName(): void
+    {
+        $request = new ServerRequest('GET', '/');
+
+        $updated = self::assertUserDeprecation(
+            'Passing integer to ServerRequestInterface::withAttribute() is deprecated',
+            static function () use ($request) {
+                return $request->withAttribute(1, 'value');
+            }
+        );
+
+        self::assertSame('value', $updated->getAttribute(1));
     }
 
     public function testNullAttribute(): void

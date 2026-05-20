@@ -15,6 +15,8 @@ use Psr\Http\Message\StreamInterface;
  */
 class ResponseTest extends TestCase
 {
+    use DeprecationAssertionTrait;
+
     public function testDefaultConstructor(): void
     {
         $r = new Response();
@@ -51,10 +53,27 @@ class ResponseTest extends TestCase
 
     public function testStatusCanBeNumericString(): void
     {
-        $r = (new Response())->withStatus('201');
+        $r = self::assertUserDeprecation(
+            'Passing string to ResponseInterface::withStatus() is deprecated',
+            static function () {
+                return (new Response())->withStatus('201');
+            }
+        );
 
         self::assertSame(201, $r->getStatusCode());
         self::assertSame('Created', $r->getReasonPhrase());
+    }
+
+    public function testWithStatusDeprecatesNonStringReasonPhrase(): void
+    {
+        $r = self::assertUserDeprecation(
+            'Passing integer to ResponseInterface::withStatus() is deprecated',
+            static function () {
+                return (new Response())->withStatus(201, 123);
+            }
+        );
+
+        self::assertSame('123', $r->getReasonPhrase());
     }
 
     public function testCanConstructWithHeaders(): void
@@ -168,8 +187,48 @@ class ResponseTest extends TestCase
 
     public function testNumericHeaderValue(): void
     {
-        $r = (new Response())->withHeader('Api-Version', 1);
+        $r = self::assertUserDeprecation(
+            'Passing integer to MessageInterface::withHeader() is deprecated',
+            static function () {
+                return (new Response())->withHeader('Api-Version', 1);
+            }
+        );
+
         self::assertSame(['Api-Version' => ['1']], $r->getHeaders());
+    }
+
+    public function testConstructorDeprecatesNumericHeaderValue(): void
+    {
+        $r = self::assertUserDeprecation(
+            'Passing integer to GuzzleHttp\\Psr7\\Response::__construct() is deprecated',
+            static function () {
+                return new Response(200, ['Api-Version' => 1]);
+            }
+        );
+
+        self::assertSame(['Api-Version' => ['1']], $r->getHeaders());
+    }
+
+    public function testWithAddedHeaderDeprecatesNumericHeaderValue(): void
+    {
+        $r = self::assertUserDeprecation(
+            'Passing integer to MessageInterface::withAddedHeader() is deprecated',
+            static function () {
+                return (new Response())->withAddedHeader('Api-Version', 1);
+            }
+        );
+
+        self::assertSame(['Api-Version' => ['1']], $r->getHeaders());
+    }
+
+    public function testWithProtocolVersionDeprecatesNonStringValue(): void
+    {
+        self::assertInstanceOf(Response::class, self::assertUserDeprecation(
+            'Passing double to MessageInterface::withProtocolVersion() is deprecated',
+            static function () {
+                return (new Response())->withProtocolVersion(1.1);
+            }
+        ));
     }
 
     public function testWithHeaderAsArray(): void

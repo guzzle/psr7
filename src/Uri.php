@@ -496,6 +496,10 @@ class Uri implements UriInterface, \JsonSerializable
 
     public function withPort($port): UriInterface
     {
+        if ($port !== null && !Deprecation::isInt($port)) {
+            Deprecation::invalidArgument('UriInterface::withPort()', 'int|null', $port);
+        }
+
         $port = $this->filterPort($port);
 
         if ($this->port === $port) {

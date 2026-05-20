@@ -267,6 +267,10 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
+        if (!self::isValidUploadedFilesTree($uploadedFiles)) {
+            Deprecation::invalidArgument('ServerRequestInterface::withUploadedFiles()', 'UploadedFileInterface[] tree', $uploadedFiles);
+        }
+
         $new = clone $this;
         $new->uploadedFiles = $uploadedFiles;
 
@@ -309,6 +313,10 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withParsedBody($data): ServerRequestInterface
     {
+        if ($data !== null && !Deprecation::isArray($data) && !Deprecation::isObject($data)) {
+            Deprecation::invalidArgument('ServerRequestInterface::withParsedBody()', 'array|object|null', $data);
+        }
+
         $new = clone $this;
         $new->parsedBody = $data;
 
@@ -334,6 +342,10 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     public function withAttribute($attribute, $value): ServerRequestInterface
     {
+        if (!Deprecation::isString($attribute)) {
+            Deprecation::invalidArgument('ServerRequestInterface::withAttribute()', 'string for $attribute', $attribute);
+        }
+
         $new = clone $this;
         $new->attributes[$attribute] = $value;
 
@@ -350,5 +362,22 @@ class ServerRequest extends Request implements ServerRequestInterface
         unset($new->attributes[$attribute]);
 
         return $new;
+    }
+
+    private static function isValidUploadedFilesTree(array $uploadedFiles): bool
+    {
+        foreach ($uploadedFiles as $uploadedFile) {
+            if ($uploadedFile instanceof UploadedFileInterface) {
+                continue;
+            }
+
+            if (\is_array($uploadedFile) && self::isValidUploadedFilesTree($uploadedFile)) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 }

@@ -110,6 +110,10 @@ class Request implements RequestInterface
 
     public function withUri(UriInterface $uri, $preserveHost = false): RequestInterface
     {
+        if (!Deprecation::isBool($preserveHost)) {
+            Deprecation::invalidArgument('RequestInterface::withUri()', 'bool for $preserveHost', $preserveHost);
+        }
+
         if ($uri === $this->uri) {
             return $this;
         }
