@@ -672,6 +672,55 @@ class UtilsTest extends TestCase
         self::assertSame(['host' => ['custom', 'bar.com']], $modified->getHeaders());
     }
 
+    public function testModifyRequestPreservesNumericHeaderNames(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com', ['123' => 'old']);
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'set_headers' => ['X-Test' => '1'],
+        ]);
+
+        self::assertSame('old', $modified->getHeaderLine('123'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+    }
+
+    public function testModifyRequestReplacesNumericHeaderNames(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com', ['123' => 'old']);
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'set_headers' => ['123' => 'new'],
+        ]);
+
+        self::assertSame('new', $modified->getHeaderLine('123'));
+    }
+
+    public function testModifyRequestRemovesNumericHeaderNames(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com', ['123' => 'old']);
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'remove_headers' => ['123'],
+        ]);
+
+        self::assertFalse($modified->hasHeader('123'));
+    }
+
+    public function testModifyRequestPreservesZeroHeaderNameWithoutParsingListStyleHeader(): void
+    {
+        $request = new Psr7\Request('POST', 'http://example.com', [
+            'Content-type: application/x-www-form-urlencoded',
+        ]);
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'set_headers' => ['X-Test' => '1'],
+        ]);
+
+        self::assertSame('Content-type: application/x-www-form-urlencoded', $modified->getHeaderLine('0'));
+        self::assertSame('', $modified->getHeaderLine('Content-Type'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+    }
+
     public function testModifyServerRequestWithUploadedFiles(): void
     {
         $request = new Psr7\ServerRequest('GET', 'http://example.com/bla');

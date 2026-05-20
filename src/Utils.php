@@ -226,7 +226,7 @@ final class Utils
         if ($headers !== $new->getHeaders()) {
             foreach (array_keys($new->getHeaders()) as $header) {
                 /** @var RequestInterface */
-                $new = $new->withoutHeader($header);
+                $new = $new->withoutHeader((string) $header);
             }
 
             $addedHeaders = [];
