@@ -232,6 +232,7 @@ final class Utils
             $addedHeaders = [];
             foreach ($headers as $header => $value) {
                 $header = (string) $header;
+                $value = self::normalizeHeaderValue($value);
                 $normalized = strtolower($header);
 
                 if (isset($addedHeaders[$normalized])) {
@@ -256,6 +257,47 @@ final class Utils
         }
 
         return $new;
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return string[]
+     */
+    private static function normalizeHeaderValue($value): array
+    {
+        if (!is_array($value)) {
+            return self::trimAndValidateHeaderValues([$value]);
+        }
+
+        return self::trimAndValidateHeaderValues($value);
+    }
+
+    /**
+     * @param mixed[] $values
+     *
+     * @return string[]
+     */
+    private static function trimAndValidateHeaderValues(array $values): array
+    {
+        return array_map(static function ($value): string {
+            if (!is_scalar($value) && null !== $value) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Header value must be scalar or null but %s provided.',
+                    is_object($value) ? get_class($value) : gettype($value)
+                ));
+            }
+
+            $trimmed = trim((string) $value, " \t");
+
+            if (!preg_match('/^[\x20\x09\x21-\x7E\x80-\xFF]*$/D', $trimmed)) {
+                throw new \InvalidArgumentException(
+                    sprintf('"%s" is not valid header value.', $trimmed)
+                );
+            }
+
+            return $trimmed;
+        }, array_values($values));
     }
 
     /**

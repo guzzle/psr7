@@ -8,6 +8,7 @@ use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\FnStream;
 use GuzzleHttp\Psr7\NoSeekStream;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -412,6 +413,47 @@ class UtilsTest extends TestCase
         $r2 = Psr7\Utils::modifyRequest($r1, ['set_headers' => ['User-agent' => 'bar']]);
         self::assertSame('bar', $r2->getHeaderLine('User-Agent'));
         self::assertSame('bar', $r2->getHeaderLine('User-agent'));
+    }
+
+    public function testModifyRequestNormalizesHeaderValuesBeforeApplyingThem(): void
+    {
+        $request = new class('GET', 'http://example.com') extends Psr7\Request {
+            public function withHeader($header, $value): MessageInterface
+            {
+                $this->assertStringHeaderValues($value);
+
+                return parent::withHeader($header, $value);
+            }
+
+            public function withAddedHeader($header, $value): MessageInterface
+            {
+                $this->assertStringHeaderValues($value);
+
+                return parent::withAddedHeader($header, $value);
+            }
+
+            private function assertStringHeaderValues($value): void
+            {
+                if (is_string($value)) {
+                    return;
+                }
+
+                if (!is_array($value) || $value !== array_filter($value, 'is_string')) {
+                    throw new \InvalidArgumentException('Header values must be strings.');
+                }
+            }
+        };
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'set_headers' => [
+                'Content-Length' => 4,
+                'X-Test' => [1, " two\t"],
+                'x-test' => 3,
+            ],
+        ]);
+
+        self::assertSame('4', $modified->getHeaderLine('Content-Length'));
+        self::assertSame(['1', 'two', '3'], $modified->getHeader('X-Test'));
     }
 
     public function testReturnsAsIsWhenNoChanges(): void
