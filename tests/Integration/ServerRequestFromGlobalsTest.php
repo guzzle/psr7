@@ -24,6 +24,7 @@ class ServerRequestFromGlobalsTest extends TestCase
         curl_setopt($curl, CURLOPT_URL, $this->getServerUri());
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_POSTFIELDS, 'foobar');
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['X-Guzzle-Test: header-value']);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($curl);
 
@@ -36,8 +37,12 @@ class ServerRequestFromGlobalsTest extends TestCase
         self::assertIsArray($data);
         self::assertArrayHasKey('method', $data);
         self::assertArrayHasKey('uri', $data);
+        self::assertArrayHasKey('headers', $data);
         self::assertArrayHasKey('body', $data);
 
+        self::assertIsArray($data['headers']);
+        self::assertArrayHasKey('X-Guzzle-Test', $data['headers']);
+        self::assertSame(['header-value'], $data['headers']['X-Guzzle-Test']);
         self::assertEquals('foobar', $data['body']);
     }
 

@@ -427,6 +427,8 @@ class ServerRequestTest extends TestCase
             'QUERY_STRING' => 'id=10&user=foo',
             'DOCUMENT_ROOT' => '/path/to/your/server/root/',
             'CONTENT_TYPE' => 'text/plain',
+            'CONTENT_LENGTH' => '123',
+            'CONTENT_MD5' => 'Q2hlY2sgSW50ZWdyaXR5IQ==',
             'HTTP_HOST' => 'www.example.org',
             'HTTP_ACCEPT' => 'text/html',
             'HTTP_REFERRER' => 'https://example.com',
@@ -469,6 +471,8 @@ class ServerRequestTest extends TestCase
         self::assertEquals([
             'Host' => ['www.example.org'],
             'Content-Type' => ['text/plain'],
+            'Content-Length' => ['123'],
+            'Content-Md5' => ['Q2hlY2sgSW50ZWdyaXR5IQ=='],
             'Accept' => ['text/html'],
             'Referrer' => ['https://example.com'],
             'User-Agent' => ['My User Agent'],
@@ -495,6 +499,184 @@ class ServerRequestTest extends TestCase
         ];
 
         self::assertEquals($expectedFiles, $server->getUploadedFiles());
+    }
+
+    public function testFromGlobalsBuildsHeadersFromServerWhenApacheRequestHeadersUnavailable(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+            'HTTP_CONTENT_TYPE' => 'ignored/content-type',
+            'HTTP_CONTENT_LENGTH' => '999',
+            'HTTP_CONTENT_MD5' => 'ignored-content-md5',
+            'CONTENT_TYPE' => 'application/json',
+            'CONTENT_LENGTH' => '14',
+            'CONTENT_MD5' => 'Q2hlY2sgSW50ZWdyaXR5IQ==',
+            'HTTP_X_EMPTY' => '',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertEquals([
+            'Host' => ['www.example.org'],
+            'Accept-Language' => ['en-US'],
+            'Content-Type' => ['application/json'],
+            'Content-Length' => ['14'],
+            'Content-Md5' => ['Q2hlY2sgSW50ZWdyaXR5IQ=='],
+            'X-Empty' => [''],
+        ], $server->getHeaders());
+    }
+
+    /**
+     * @dataProvider dataAuthorizationHeaderFromServer
+     */
+    public function testFromGlobalsBuildsAuthorizationHeaderFromServerFallback(array $serverParams, string $expected): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = array_merge([
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+        ], $serverParams);
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame([$expected], $server->getHeader('Authorization'));
+    }
+
+    public static function dataAuthorizationHeaderFromServer(): iterable
+    {
+        return [
+            'HTTP_AUTHORIZATION has priority' => [
+                [
+                    'HTTP_AUTHORIZATION' => 'Bearer direct',
+                    'REDIRECT_HTTP_AUTHORIZATION' => 'Bearer redirect',
+                    'PHP_AUTH_USER' => 'user',
+                    'PHP_AUTH_PW' => 'pass',
+                    'PHP_AUTH_DIGEST' => 'Digest digest',
+                ],
+                'Bearer direct',
+            ],
+            'REDIRECT_HTTP_AUTHORIZATION fallback' => [
+                [
+                    'REDIRECT_HTTP_AUTHORIZATION' => 'Bearer redirect',
+                    'PHP_AUTH_USER' => 'user',
+                    'PHP_AUTH_PW' => 'pass',
+                    'PHP_AUTH_DIGEST' => 'Digest digest',
+                ],
+                'Bearer redirect',
+            ],
+            'PHP_AUTH_USER fallback' => [
+                [
+                    'PHP_AUTH_USER' => 'user',
+                    'PHP_AUTH_PW' => 'pass',
+                    'PHP_AUTH_DIGEST' => 'Digest digest',
+                ],
+                'Basic '.base64_encode('user:pass'),
+            ],
+            'PHP_AUTH_USER fallback without password' => [
+                [
+                    'PHP_AUTH_USER' => 'user',
+                ],
+                'Basic '.base64_encode('user:'),
+            ],
+            'PHP_AUTH_DIGEST fallback' => [
+                [
+                    'PHP_AUTH_DIGEST' => 'Digest digest',
+                ],
+                'Digest digest',
+            ],
+        ];
+    }
+
+    public function testFromGlobalsIgnoresNonStringServerHeaders(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+            'HTTP_X_BAD' => ['not a string'],
+            'CONTENT_TYPE' => ['not a string'],
+            'HTTP_CONTENT_TYPE' => 'text/plain',
+            'REDIRECT_HTTP_AUTHORIZATION' => ['not a string'],
+            'PHP_AUTH_USER' => ['not a string'],
+            'PHP_AUTH_DIGEST' => ['not a string'],
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertFalse($server->hasHeader('X-Bad'));
+        self::assertFalse($server->hasHeader('Authorization'));
+        self::assertSame(['text/plain'], $server->getHeader('Content-Type'));
+    }
+
+    /**
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
+    public function testFromGlobalsPrefersApacheRequestHeadersWhenAvailable(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is already available.');
+        }
+
+        eval('function apache_request_headers(): array { return ["X-Native" => "native"]; }');
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+            'HTTP_X_FALLBACK' => 'fallback',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame(['native'], $server->getHeader('X-Native'));
+        self::assertFalse($server->hasHeader('X-Fallback'));
+    }
+
+    /**
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
+    public function testFromGlobalsFallsBackWhenApacheRequestHeadersReturnsFalse(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is already available.');
+        }
+
+        eval('function apache_request_headers() { return false; }');
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+            'HTTP_X_FALLBACK' => 'fallback',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame(['fallback'], $server->getHeader('X-Fallback'));
     }
 
     public function testFromGlobalsDefaultsNonStringMethodAndProtocol(): void

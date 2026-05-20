@@ -9,6 +9,7 @@ $request = GuzzleHttp\Psr7\ServerRequest::fromGlobals();
 $output = [
     'method' => $request->getMethod(),
     'uri' => $request->getUri()->__toString(),
+    'headers' => $request->getHeaders(),
     'body' => $request->getBody()->__toString(),
 ];
 

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Dropped support for PHP 7.2 and 7.3
+- Removed the `ralouphie/getallheaders` dependency
 
 ## 2.11.0 - TBD
 

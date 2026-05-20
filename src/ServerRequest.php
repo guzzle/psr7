@@ -166,7 +166,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public static function fromGlobals(): ServerRequestInterface
     {
         $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
-        $headers = getallheaders();
+        $headers = self::getAllHeaders();
         $uri = self::getUriFromGlobals();
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
         $serverProtocol = self::getServerParam('SERVER_PROTOCOL');
@@ -179,6 +179,94 @@ class ServerRequest extends Request implements ServerRequestInterface
             ->withQueryParams($_GET)
             ->withParsedBody($_POST)
             ->withUploadedFiles(self::normalizeFiles($_FILES));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function getAllHeaders(): array
+    {
+        if (\function_exists('apache_request_headers')) {
+            $headers = \apache_request_headers();
+            if (is_array($headers)) {
+                return self::normalizeHeaderValues($headers);
+            }
+        }
+
+        return self::getHeadersFromServer($_SERVER);
+    }
+
+    /**
+     * @param array<array-key, mixed> $headers
+     *
+     * @return array<string, string>
+     */
+    private static function normalizeHeaderValues(array $headers): array
+    {
+        $normalized = [];
+
+        foreach ($headers as $name => $value) {
+            if (is_string($name) && is_string($value)) {
+                $normalized[$name] = $value;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param array $server Typically the $_SERVER superglobal
+     *
+     * @return array<string, string>
+     */
+    private static function getHeadersFromServer(array $server): array
+    {
+        $headers = [];
+
+        $copyServer = [
+            'CONTENT_TYPE' => 'Content-Type',
+            'CONTENT_LENGTH' => 'Content-Length',
+            'CONTENT_MD5' => 'Content-Md5',
+        ];
+
+        foreach ($server as $key => $value) {
+            if (!is_string($key) || !is_string($value)) {
+                continue;
+            }
+
+            if (substr($key, 0, 5) === 'HTTP_') {
+                $header = substr($key, 5);
+
+                if (isset($copyServer[$header], $server[$header]) && is_string($server[$header])) {
+                    continue;
+                }
+
+                $header = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $header))));
+                $headers[$header] = $value;
+
+                continue;
+            }
+
+            if (isset($copyServer[$key])) {
+                $headers[$copyServer[$key]] = $value;
+            }
+        }
+
+        if (!isset($headers['Authorization'])) {
+            if (isset($server['REDIRECT_HTTP_AUTHORIZATION']) && is_string($server['REDIRECT_HTTP_AUTHORIZATION'])) {
+                $headers['Authorization'] = $server['REDIRECT_HTTP_AUTHORIZATION'];
+            } elseif (isset($server['PHP_AUTH_USER']) && is_string($server['PHP_AUTH_USER'])) {
+                $password = isset($server['PHP_AUTH_PW']) && is_string($server['PHP_AUTH_PW'])
+                    ? $server['PHP_AUTH_PW']
+                    : '';
+
+                $headers['Authorization'] = 'Basic '.base64_encode($server['PHP_AUTH_USER'].':'.$password);
+            } elseif (isset($server['PHP_AUTH_DIGEST']) && is_string($server['PHP_AUTH_DIGEST'])) {
+                $headers['Authorization'] = $server['PHP_AUTH_DIGEST'];
+            }
+        }
+
+        return $headers;
     }
 
     private static function getServerParam(string $key): ?string
@@ -350,8 +438,8 @@ class ServerRequest extends Request implements ServerRequestInterface
     {
         $stack = [$uploadedFiles];
 
-        while ($stack !== []) {
-            foreach (\array_pop($stack) as $uploadedFile) {
+        for ($i = 0; $i < \count($stack); ++$i) {
+            foreach ($stack[$i] as $uploadedFile) {
                 if ($uploadedFile instanceof UploadedFileInterface) {
                     continue;
                 }
