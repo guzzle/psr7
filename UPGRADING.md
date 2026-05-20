@@ -4,6 +4,14 @@ Guzzle PSR-7 Upgrade Guide
 2.x to 3.0
 ----------
 
+#### PHP Version and Dependencies
+
+Guzzle PSR-7 3.0 requires PHP `^7.4 || ^8.0`. Guzzle PSR-7 2.x supported PHP
+`^7.2.5 || ^8.0`.
+
+If your application still supports PHP 7.2 or 7.3, continue using Guzzle PSR-7
+2.x until your minimum PHP version is raised.
+
 #### URI Host and Scheme Validation
 
 URI hosts containing control characters, whitespace, URI delimiters, backslashes,
