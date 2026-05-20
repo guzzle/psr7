@@ -187,10 +187,31 @@ class ServerRequest extends Request implements ServerRequestInterface
     private static function getAllHeaders(): array
     {
         if (\function_exists('apache_request_headers')) {
-            return \apache_request_headers();
+            $headers = \apache_request_headers();
+            if (is_array($headers)) {
+                return self::normalizeHeaderValues($headers);
+            }
         }
 
         return self::getHeadersFromServer($_SERVER);
+    }
+
+    /**
+     * @param array<array-key, mixed> $headers
+     *
+     * @return array<string, string>
+     */
+    private static function normalizeHeaderValues(array $headers): array
+    {
+        $normalized = [];
+
+        foreach ($headers as $name => $value) {
+            if (is_string($name) && is_string($value)) {
+                $normalized[$name] = $value;
+            }
+        }
+
+        return $normalized;
     }
 
     /**
@@ -417,8 +438,8 @@ class ServerRequest extends Request implements ServerRequestInterface
     {
         $stack = [$uploadedFiles];
 
-        while ($stack !== []) {
-            foreach (\array_pop($stack) as $uploadedFile) {
+        for ($i = 0; $i < \count($stack); ++$i) {
+            foreach ($stack[$i] as $uploadedFile) {
                 if ($uploadedFile instanceof UploadedFileInterface) {
                     continue;
                 }

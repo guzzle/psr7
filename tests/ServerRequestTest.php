@@ -653,6 +653,32 @@ class ServerRequestTest extends TestCase
         self::assertFalse($server->hasHeader('X-Fallback'));
     }
 
+    /**
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
+    public function testFromGlobalsFallsBackWhenApacheRequestHeadersReturnsFalse(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is already available.');
+        }
+
+        eval('function apache_request_headers() { return false; }');
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+            'HTTP_X_FALLBACK' => 'fallback',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame(['fallback'], $server->getHeader('X-Fallback'));
+    }
+
     public function testFromGlobalsDefaultsNonStringMethodAndProtocol(): void
     {
         $_SERVER = [
