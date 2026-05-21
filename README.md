@@ -270,7 +270,7 @@ class EofCallbackStream implements StreamInterface
         $this->callback = $cb;
     }
 
-    public function read($length)
+    public function read(int $length): string
     {
         $result = $this->stream->read($length);
 

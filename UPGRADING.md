@@ -88,6 +88,23 @@ Use `withoutHeader()` to remove a header.
 `ServerRequestInterface::withUploadedFiles()` now rejects invalid nested upload
 trees. Every leaf must be an `UploadedFileInterface` instance.
 
+`ServerRequest::normalizeFiles()` and `ServerRequest::fromGlobals()` now reject
+malformed `$_FILES` specifications earlier. Single-file specifications must
+contain non-null `tmp_name`, `size`, and `error` values. Nested specifications
+must provide `tmp_name`, `size`, and `error` as arrays with matching keys. When
+nested `name` or `type` metadata is provided, it must also be an array.
+
+If your tests or adapters build `$_FILES` arrays manually, populate the full
+shape or create `UploadedFile` instances directly.
+
+```php
+// 2.x, no longer accepted in 3.0
+$files = ['file' => ['tmp_name' => '/tmp/php123', 'error' => '0']];
+
+// 3.0
+$files = ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123', 'error' => '0']];
+```
+
 `ServerRequestInterface::withParsedBody()` now rejects values other than
 `array`, `object`, or `null`.
 
@@ -164,6 +181,29 @@ $uri->getPath(); // /valid///path
 
 `Request::getRequestTarget()` applies the same normalization for URI-derived
 origin-form request targets.
+
+#### HTTP Start-line Parsing
+
+`Message::parseRequest()` and `Message::parseResponse()` now validate HTTP
+start-line fields more strictly. Malformed request methods, request targets
+containing whitespace or control characters, malformed protocol versions,
+invalid response status codes, invalid response spacing, and reason phrases
+containing invalid control characters now throw `InvalidArgumentException`.
+
+`Request` and `Response` constructors and mutators apply the same validation to
+protocol versions, request targets, status codes, and reason phrases. If you
+parse raw HTTP messages or construct messages from partially validated input,
+normalize or reject invalid values before passing them to Guzzle PSR-7.
+
+```php
+// 2.x-style tolerant input, no longer accepted in 3.0
+Message::parseRequest("GET /foo bar HTTP/1.1\r\nHost: example.com\r\n\r\n");
+new Response(200, [], null, 'HTTP/1.1');
+
+// 3.0
+Message::parseRequest("GET /foo%20bar HTTP/1.1\r\nHost: example.com\r\n\r\n");
+new Response(200, [], null, '1.1');
+```
 
 #### Query Builder Values
 
