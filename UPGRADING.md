@@ -497,6 +497,16 @@ of depending on package internals.
 its high-water mark. This keeps the method compatible with the `int` return type
 from `StreamInterface::write()`.
 
+Timed-out stream operations now throw
+`GuzzleHttp\Psr7\Exception\TimeoutException`, which extends
+`RuntimeException`. `Stream::read()`, `Utils::copyToStream()`,
+`Utils::copyToString()`, `Utils::hash()`, `Utils::readLine()`, and
+`Utils::tryGetContents()` detect PHP-style stream timeout metadata when a read
+or write operation cannot make progress. Timeout detection is best-effort;
+custom stream implementations that do not expose `timed_out` metadata continue
+to behave as before. Previously, timed-out reads could be treated as EOF or
+return partial results.
+
 Several stream `__toString()` implementations now allow exceptions thrown during
 stringification to be rethrown. Avoid relying on `(string) $stream` to hide read
 failures; call `getContents()` or `read()` and handle exceptions when failures

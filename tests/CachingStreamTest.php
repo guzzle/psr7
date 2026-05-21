@@ -135,6 +135,91 @@ class CachingStreamTest extends TestCase
         self::assertSame('test', $this->body->read(4));
     }
 
+    public function testReadThrowsWhenRemoteStreamTimesOut(): void
+    {
+        $remote = new Psr7\FnStream([
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+        ]);
+        $stream = new CachingStream($remote);
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        $stream->read(1);
+    }
+
+    public function testReadIgnoresRemoteMetadataProbeFailure(): void
+    {
+        $remote = new Psr7\FnStream([
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+        ]);
+        $stream = new CachingStream($remote);
+
+        self::assertSame('', $stream->read(1));
+    }
+
+    public function testReadPreservesRemoteExceptionWhenMetadataProbeFails(): void
+    {
+        $remote = new Psr7\FnStream([
+            'read' => function (): string {
+                throw new \RuntimeException('read failed');
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+        ]);
+        $stream = new CachingStream($remote);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('read failed');
+
+        $stream->read(1);
+    }
+
+    public function testReadThrowsTimeoutWhenRemoteExceptionTimesOut(): void
+    {
+        $remote = new Psr7\FnStream([
+            'read' => function (): string {
+                throw new \RuntimeException('read failed');
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+        ]);
+        $stream = new CachingStream($remote);
+
+        try {
+            $stream->read(1);
+            self::fail('Expected timeout exception');
+        } catch (Psr7\Exception\TimeoutException $e) {
+            self::assertSame('Unable to read from stream: timed out', $e->getMessage());
+            self::assertInstanceOf(\RuntimeException::class, $e->getPrevious());
+            self::assertSame('read failed', $e->getPrevious()->getMessage());
+        }
+    }
+
     public function testWritesToBufferStream(): void
     {
         $this->body->read(2);

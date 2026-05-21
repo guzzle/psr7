@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Psr7;
 
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -105,9 +106,23 @@ final class CachingStream implements StreamInterface
             // been filled from the remote stream, then we must skip bytes on
             // the remote stream to emulate overwriting bytes from that
             // position. This mimics the behavior of other PHP stream wrappers.
-            $remoteData = $this->remoteStream->read(
-                $remaining + $this->skipReadBytes
-            );
+            try {
+                $remoteData = $this->remoteStream->read(
+                    $remaining + $this->skipReadBytes
+                );
+            } catch (TimeoutException $e) {
+                throw $e;
+            } catch (\RuntimeException $e) {
+                if (StreamTimeout::isReadTimedOut($this->remoteStream)) {
+                    throw new TimeoutException('Unable to read from stream: timed out', 0, $e);
+                }
+
+                throw $e;
+            }
+
+            if ($remoteData === '' && StreamTimeout::isReadTimedOut($this->remoteStream)) {
+                throw new TimeoutException('Unable to read from stream: timed out');
+            }
 
             if ($this->skipReadBytes) {
                 $len = strlen($remoteData);

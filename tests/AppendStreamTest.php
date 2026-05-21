@@ -157,6 +157,115 @@ class AppendStreamTest extends TestCase
         self::assertSame('foobarbaz', (string) $a);
     }
 
+    public function testReadThrowsWhenCurrentStreamTimesOut(): void
+    {
+        $stream = new Psr7\FnStream([
+            'isReadable' => function (): bool {
+                return true;
+            },
+            'isSeekable' => function (): bool {
+                return false;
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+        $a = new AppendStream([$stream]);
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        $a->read(1);
+    }
+
+    public function testReadAdvancesPastCurrentStreamWhenMetadataProbeFails(): void
+    {
+        $stream = new Psr7\FnStream([
+            'isReadable' => function (): bool {
+                return true;
+            },
+            'isSeekable' => function (): bool {
+                return false;
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+        ]);
+        $a = new AppendStream([$stream, Psr7\Utils::streamFor('foo')]);
+
+        self::assertSame('foo', $a->read(3));
+    }
+
+    public function testReadPreservesCurrentStreamExceptionWhenMetadataProbeFails(): void
+    {
+        $stream = new Psr7\FnStream([
+            'isReadable' => function (): bool {
+                return true;
+            },
+            'isSeekable' => function (): bool {
+                return false;
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                throw new \RuntimeException('read failed');
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+        ]);
+        $a = new AppendStream([$stream]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('read failed');
+
+        $a->read(1);
+    }
+
+    public function testReadThrowsTimeoutWhenCurrentStreamExceptionTimesOut(): void
+    {
+        $stream = new Psr7\FnStream([
+            'isReadable' => function (): bool {
+                return true;
+            },
+            'isSeekable' => function (): bool {
+                return false;
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                throw new \RuntimeException('read failed');
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+        $a = new AppendStream([$stream]);
+
+        try {
+            $a->read(1);
+            self::fail('Expected timeout exception');
+        } catch (Psr7\Exception\TimeoutException $e) {
+            self::assertSame('Unable to read from stream: timed out', $e->getMessage());
+            self::assertInstanceOf(\RuntimeException::class, $e->getPrevious());
+            self::assertSame('read failed', $e->getPrevious()->getMessage());
+        }
+    }
+
     public function testCanDetermineSizeFromMultipleStreams(): void
     {
         $a = new AppendStream([

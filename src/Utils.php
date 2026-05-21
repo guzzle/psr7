@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Psr7;
 
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
@@ -49,7 +50,7 @@ final class Utils
 
         if ($maxLen === -1) {
             while (!$source->eof()) {
-                $buf = $source->read($bufferSize);
+                $buf = self::read($source, $bufferSize, 'Unable to read from stream: timed out');
                 if ($buf === '') {
                     break;
                 }
@@ -59,7 +60,7 @@ final class Utils
         } else {
             $remaining = $maxLen;
             while ($remaining > 0 && !$source->eof()) {
-                $buf = $source->read(min($bufferSize, $remaining));
+                $buf = self::read($source, min($bufferSize, $remaining), 'Unable to read from stream: timed out');
                 $len = strlen($buf);
                 if (!$len) {
                     break;
@@ -76,8 +77,19 @@ final class Utils
         $len = strlen($buf);
 
         while ($written < $len) {
-            $result = $dest->write(substr($buf, $written));
+            try {
+                $result = $dest->write(substr($buf, $written));
+            } catch (TimeoutException $e) {
+                throw $e;
+            } catch (\RuntimeException $e) {
+                self::throwIfWriteTimedOut($dest, $e);
+
+                throw $e;
+            }
+
             if ($result <= 0) {
+                self::throwIfWriteTimedOut($dest);
+
                 throw new \RuntimeException('Unable to write to stream');
             }
 
@@ -101,7 +113,7 @@ final class Utils
 
         if ($maxLen === -1) {
             while (!$stream->eof()) {
-                $buf = $stream->read(1048576);
+                $buf = self::read($stream, 1048576, 'Unable to read from stream: timed out');
                 if ($buf === '') {
                     break;
                 }
@@ -113,7 +125,7 @@ final class Utils
 
         $len = 0;
         while (!$stream->eof() && $len < $maxLen) {
-            $buf = $stream->read($maxLen - $len);
+            $buf = self::read($stream, $maxLen - $len, 'Unable to read from stream: timed out');
             if ($buf === '') {
                 break;
             }
@@ -146,7 +158,12 @@ final class Utils
 
         $ctx = hash_init($algo);
         while (!$stream->eof()) {
-            hash_update($ctx, $stream->read(1048576));
+            $buf = self::read($stream, 1048576, 'Unable to calculate stream hash: timed out');
+            if ($buf === '') {
+                break;
+            }
+
+            hash_update($ctx, $buf);
         }
 
         $out = hash_final($ctx, $rawOutput);
@@ -292,7 +309,7 @@ final class Utils
         $size = 0;
 
         while (!$stream->eof()) {
-            if ('' === ($byte = $stream->read(1))) {
+            if ('' === ($byte = self::read($stream, 1, 'Unable to read line from stream: timed out'))) {
                 return $buffer;
             }
             $buffer .= $byte;
@@ -495,13 +512,21 @@ final class Utils
             $contents = stream_get_contents($stream);
 
             if ($contents === false) {
-                $ex = new \RuntimeException('Unable to read stream contents');
+                $ex = StreamTimeout::isResourceReadTimedOut($stream)
+                    ? new TimeoutException('Unable to read stream contents: timed out')
+                    : new \RuntimeException('Unable to read stream contents');
+            } elseif (StreamTimeout::isResourceReadTimedOut($stream)) {
+                $ex = new TimeoutException('Unable to read stream contents: timed out');
             }
+        } catch (TimeoutException $e) {
+            $ex = $e;
         } catch (\Throwable $e) {
-            $ex = new \RuntimeException(sprintf(
-                'Unable to read stream contents: %s',
-                $e->getMessage()
-            ), 0, $e);
+            $ex = StreamTimeout::isResourceReadTimedOut($stream)
+                ? new TimeoutException('Unable to read stream contents: timed out', 0, $e)
+                : new \RuntimeException(sprintf(
+                    'Unable to read stream contents: %s',
+                    $e->getMessage()
+                ), 0, $e);
         }
 
         restore_error_handler();
@@ -512,6 +537,42 @@ final class Utils
         }
 
         return $contents;
+    }
+
+    private static function read(StreamInterface $stream, int $length, string $timeoutMessage): string
+    {
+        try {
+            $buffer = $stream->read($length);
+        } catch (TimeoutException $e) {
+            throw $e;
+        } catch (\RuntimeException $e) {
+            self::throwIfReadTimedOut($stream, $timeoutMessage, $e);
+
+            throw $e;
+        }
+
+        if ($buffer === '') {
+            self::throwIfReadTimedOut($stream, $timeoutMessage);
+        }
+
+        return $buffer;
+    }
+
+    private static function throwIfReadTimedOut(
+        StreamInterface $stream,
+        string $message,
+        ?\Throwable $previous = null
+    ): void {
+        if (StreamTimeout::isReadTimedOut($stream)) {
+            throw new TimeoutException($message, 0, $previous);
+        }
+    }
+
+    private static function throwIfWriteTimedOut(StreamInterface $stream, ?\Throwable $previous = null): void
+    {
+        if (StreamTimeout::isWriteTimedOut($stream)) {
+            throw new TimeoutException('Unable to write to stream: timed out', 0, $previous);
+        }
     }
 
     /**
