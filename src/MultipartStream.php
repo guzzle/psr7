@@ -183,16 +183,6 @@ final class MultipartStream implements StreamInterface
                     basename($filename)
                 )
                 : "form-data; name=\"{$name}\"";
-
-            $contentDisposition3 = ($filename === '0' || $filename)
-                ? sprintf(
-                    'form-data; name="%s"; filename="%s"',
-                    self::escapeContentDispositionParameter($name),
-                    self::escapeContentDispositionParameter(basename($filename))
-                )
-                : sprintf('form-data; name="%s"', self::escapeContentDispositionParameter($name));
-
-            self::deprecateInvalidPartHeaderValue($contentDisposition3);
         }
 
         // Set a default content-length header if one was no provided
@@ -296,10 +286,5 @@ final class MultipartStream implements StreamInterface
                 'Passing an invalid multipart part header value to MultipartStream is deprecated; guzzlehttp/psr7 3.0 rejects invalid multipart part header values.'
             );
         }
-    }
-
-    private static function escapeContentDispositionParameter(string $value): string
-    {
-        return str_replace(["\r", "\n", '"'], ['%0D', '%0A', '%22'], $value);
     }
 }
