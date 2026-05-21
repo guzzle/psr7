@@ -80,7 +80,7 @@ class InflateStreamTest extends TestCase
         self::assertSame('test', (string) $nonSeekableInflate);
     }
 
-    private function getGzipStringWithFilename($original_string)
+    private function getGzipStringWithFilename(string $original_string): string
     {
         $gzipped = bin2hex(gzencode($original_string));
 

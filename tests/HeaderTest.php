@@ -59,7 +59,7 @@ class HeaderTest extends TestCase
     /**
      * @dataProvider parseParamsProvider
      */
-    public function testParseParams($header, $result): void
+    public function testParseParams(string $header, array $result): void
     {
         self::assertSame($result, Psr7\Header::parse($header));
     }
@@ -144,8 +144,10 @@ class HeaderTest extends TestCase
 
     /**
      * @dataProvider normalizeProvider
+     *
+     * @param string|string[] $header
      */
-    public function testNormalize($header, $result): void
+    public function testNormalize($header, array $result): void
     {
         self::assertSame($result, Psr7\Header::normalize([$header]));
         self::assertSame($result, Psr7\Header::normalize($header));
@@ -153,8 +155,10 @@ class HeaderTest extends TestCase
 
     /**
      * @dataProvider normalizeProvider
+     *
+     * @param string|string[] $header
      */
-    public function testSplitList($header, $result): void
+    public function testSplitList($header, array $result): void
     {
         self::assertSame($result, Psr7\Header::splitList($header));
     }

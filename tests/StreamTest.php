@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  */
 class StreamTest extends TestCase
 {
-    public static $isFReadError = false;
+    public static bool $isFReadError = false;
 
     public function testConstructorThrowsExceptionOnInvalidArgument(): void
     {
@@ -442,7 +442,12 @@ namespace GuzzleHttp\Psr7;
 
 use GuzzleHttp\Tests\Psr7\StreamTest;
 
-function fread($handle, $length)
+/**
+ * @param resource $handle
+ *
+ * @return string|false
+ */
+function fread($handle, int $length)
 {
     return StreamTest::$isFReadError ? false : \fread($handle, $length);
 }

@@ -207,7 +207,7 @@ class RequestTest extends TestCase
     /**
      * @dataProvider provideHeadersContainingNotAllowedChars
      */
-    public function testContainsNotAllowedCharsOnHeaderField($header): void
+    public function testContainsNotAllowedCharsOnHeaderField(string $header): void
     {
         $this->expectExceptionMessage(
             sprintf(
@@ -232,7 +232,7 @@ class RequestTest extends TestCase
     /**
      * @dataProvider provideHeadersContainsAllowedChar
      */
-    public function testContainsAllowedCharsOnHeaderField($header): void
+    public function testContainsAllowedCharsOnHeaderField(string $header): void
     {
         $r = new Request(
             'GET',

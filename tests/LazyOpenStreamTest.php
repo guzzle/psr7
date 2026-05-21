@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class LazyOpenStreamTest extends TestCase
 {
+    /** @var string|false */
     private $fname;
 
     protected function setUp(): void

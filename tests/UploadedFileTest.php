@@ -14,7 +14,8 @@ use ReflectionProperty;
  */
 class UploadedFileTest extends TestCase
 {
-    private $cleanup;
+    /** @var list<string|false> */
+    private array $cleanup;
 
     protected function setUp(): void
     {
@@ -30,7 +31,7 @@ class UploadedFileTest extends TestCase
         }
     }
 
-    public static function invalidStreams()
+    public static function invalidStreams(): array
     {
         return [
             'null' => [null],
@@ -45,6 +46,8 @@ class UploadedFileTest extends TestCase
 
     /**
      * @dataProvider invalidStreams
+     *
+     * @param mixed $streamOrFile
      */
     public function testRaisesExceptionOnInvalidStreamOrFile($streamOrFile): void
     {
@@ -153,7 +156,7 @@ class UploadedFileTest extends TestCase
     /**
      * @dataProvider nonOkErrorStatus
      */
-    public function testConstructorDoesNotRaiseExceptionForInvalidStreamWhenErrorStatusPresent($status): void
+    public function testConstructorDoesNotRaiseExceptionForInvalidStreamWhenErrorStatusPresent(int $status): void
     {
         $uploadedFile = new UploadedFile('not ok', 0, $status);
         self::assertSame($status, $uploadedFile->getError());
@@ -162,7 +165,7 @@ class UploadedFileTest extends TestCase
     /**
      * @dataProvider nonOkErrorStatus
      */
-    public function testMoveToRaisesExceptionWhenErrorStatusPresent($status): void
+    public function testMoveToRaisesExceptionWhenErrorStatusPresent(int $status): void
     {
         $uploadedFile = new UploadedFile('not ok', 0, $status);
         $this->expectException(\RuntimeException::class);
@@ -173,7 +176,7 @@ class UploadedFileTest extends TestCase
     /**
      * @dataProvider nonOkErrorStatus
      */
-    public function testGetStreamRaisesExceptionWhenErrorStatusPresent($status): void
+    public function testGetStreamRaisesExceptionWhenErrorStatusPresent(int $status): void
     {
         $uploadedFile = new UploadedFile('not ok', 0, $status);
         $this->expectException(\RuntimeException::class);
