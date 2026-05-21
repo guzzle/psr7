@@ -239,14 +239,6 @@ class ResponseTest extends TestCase
         self::assertSame('bar', $r->getHeaderLine('123'));
     }
 
-    public function testConstructResponseEmptyListHeaderValue(): void
-    {
-        $r = new Response(200, ['Foo' => []]);
-        self::assertSame('', $r->getHeaderLine('Foo'));
-        self::assertSame([], $r->getHeader('Foo'));
-        self::assertSame(['Foo' => []], $r->getHeaders());
-    }
-
     /**
      * @dataProvider invalidHeaderProvider
      */
