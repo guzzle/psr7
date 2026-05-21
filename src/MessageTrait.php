@@ -186,11 +186,7 @@ trait MessageTrait
     private function normalizeHeaderValue($value): array
     {
         if (is_array($value) && $value === []) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.11',
-                'Passing an empty array as a header value is deprecated; guzzlehttp/psr7 3.0 rejects empty header value arrays.'
-            );
+            throw new \InvalidArgumentException('Header value must be a non-empty array or string.');
         }
 
         if (!is_array($value)) {

@@ -44,7 +44,7 @@ class Request implements RequestInterface
             $uri = new Uri($uri);
         }
 
-        $this->method = strtoupper($method);
+        $this->method = $method;
         $this->uri = $uri;
         $this->setHeaders($headers);
         $this->protocol = $version;
@@ -64,7 +64,7 @@ class Request implements RequestInterface
             return $this->requestTarget;
         }
 
-        $target = $this->uri->getPath();
+        $target = self::normalizePathForOriginForm($this->uri->getPath());
         if ($target === '') {
             $target = '/';
         }
@@ -98,7 +98,7 @@ class Request implements RequestInterface
     {
         $this->assertMethod($method);
         $new = clone $this;
-        $new->method = strtoupper($method);
+        $new->method = $method;
 
         return $new;
     }
@@ -154,5 +154,14 @@ class Request implements RequestInterface
         if ($method === '') {
             throw new InvalidArgumentException('Method must be a non-empty string.');
         }
+    }
+
+    private static function normalizePathForOriginForm(string $path): string
+    {
+        if (isset($path[1]) && $path[0] === '/' && $path[1] === '/') {
+            return '/'.ltrim($path, '/');
+        }
+
+        return $path;
     }
 }

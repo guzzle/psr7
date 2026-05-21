@@ -229,6 +229,8 @@ class UriTest extends TestCase
         }
 
         yield 'ascii 0x7F' => ['ht'.chr(0x7F).'tp'];
+        yield 'starts with digit' => ['0'];
+        yield 'contains underscore' => ['ht_tp'];
     }
 
     public function testFromPartsRejectsSchemeWithControlCharacter(): void
@@ -731,12 +733,35 @@ class UriTest extends TestCase
     public function testPathStartingWithTwoSlashes(): void
     {
         $uri = new Uri('http://example.org//path-not-host.com');
-        self::assertSame('//path-not-host.com', $uri->getPath());
+        self::assertSame('/path-not-host.com', $uri->getPath());
+        self::assertSame('http://example.org//path-not-host.com', (string) $uri);
 
         $uri = $uri->withScheme('');
         self::assertSame('//example.org//path-not-host.com', (string) $uri); // This is still valid
         $this->expectException(\InvalidArgumentException::class);
         $uri->withHost(''); // Now it becomes invalid
+    }
+
+    public function testGetPathNormalizesMultipleLeadingSlashes(): void
+    {
+        $uri = new Uri('http://example.org//valid///path');
+
+        self::assertSame('/valid///path', $uri->getPath());
+    }
+
+    public function testStringRepresentationPreservesMultipleLeadingSlashes(): void
+    {
+        $uri = new Uri('http://example.org//valid///path');
+
+        self::assertSame('http://example.org//valid///path', (string) $uri);
+    }
+
+    public function testGetPathPreservesInternalMultipleSlashes(): void
+    {
+        $uri = new Uri('http://example.org/valid///path');
+
+        self::assertSame('/valid///path', $uri->getPath());
+        self::assertSame('http://example.org/valid///path', (string) $uri);
     }
 
     public function testRelativeUriWithPathBeginngWithColonSegmentIsInvalid(): void

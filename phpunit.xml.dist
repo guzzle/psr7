@@ -12,12 +12,16 @@
         <testsuite name="Guzzle PSR-7 Unit Test Suite">
             <directory>tests</directory>
             <exclude>tests/Integration</exclude>
+            <exclude>tests/Psr7Integration</exclude>
         </testsuite>
         <testsuite name="Guzzle PSR-7 Integration Test Suite">
             <directory>tests/Integration</directory>
         </testsuite>
         <testsuite name="PSR-17 Integration Test Suite">
             <directory>./vendor/http-interop/http-factory-tests/test</directory>
+        </testsuite>
+        <testsuite name="PSR-7 Integration Test Suite">
+            <directory>tests/Psr7Integration</directory>
         </testsuite>
     </testsuites>
     <coverage>

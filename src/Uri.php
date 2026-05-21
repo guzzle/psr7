@@ -470,6 +470,10 @@ class Uri implements UriInterface, \JsonSerializable
 
     public function getPath(): string
     {
+        if (isset($this->path[1]) && $this->path[0] === '/' && $this->path[1] === '/') {
+            return '/'.ltrim($this->path, '/');
+        }
+
         return $this->path;
     }
 

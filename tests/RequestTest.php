@@ -73,16 +73,16 @@ class RequestTest extends TestCase
         self::assertSame($body, $r->getBody());
     }
 
-    public function testCapitalizesMethod(): void
+    public function testPreservesMethodCase(): void
     {
         $r = new Request('get', '/');
-        self::assertSame('GET', $r->getMethod());
+        self::assertSame('get', $r->getMethod());
     }
 
-    public function testCapitalizesWithMethod(): void
+    public function testWithMethodPreservesMethodCase(): void
     {
         $r = new Request('GET', '/');
-        self::assertSame('PUT', $r->withMethod('put')->getMethod());
+        self::assertSame('put', $r->withMethod('put')->getMethod());
     }
 
     public function testWithUri(): void
@@ -140,6 +140,33 @@ class RequestTest extends TestCase
         self::assertSame('/baz?0', $r1->getRequestTarget());
     }
 
+    public function testRequestTargetNormalizesMultipleLeadingSlashesForGuzzleUri(): void
+    {
+        $request = new Request('GET', 'http://example.org//valid///path?x=1');
+
+        self::assertSame('/valid///path?x=1', $request->getRequestTarget());
+    }
+
+    public function testRequestTargetNormalizesMultipleLeadingSlashesForArbitraryUri(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getPath')->willReturn('//valid///path');
+        $uri->method('getQuery')->willReturn('x=1');
+        $uri->method('getHost')->willReturn('');
+        $uri->method('getPort')->willReturn(null);
+
+        $request = new Request('GET', $uri);
+
+        self::assertSame('/valid///path?x=1', $request->getRequestTarget());
+    }
+
+    public function testRequestTargetPreservesInternalRepeatedSlashes(): void
+    {
+        $request = new Request('GET', 'http://example.org/valid///path?x=1');
+
+        self::assertSame('/valid///path?x=1', $request->getRequestTarget());
+    }
+
     public function testHostIsAddedFirst(): void
     {
         $r = new Request('GET', 'http://foo.com/baz?bar=bam', ['Foo' => 'Bar']);
@@ -158,6 +185,14 @@ class RequestTest extends TestCase
             'Host' => ['example.com'],
             'User-Agent' => ['Linux f0f489981e90 5.10.104-linuxkit 1 SMP Wed Mar 9 19:05:23 UTC 2022 x86_64'],
         ], $r->getHeaders());
+    }
+
+    public function testEmptyListHeaderValueIsRejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Header value must be a non-empty array or string.');
+
+        new Request('GET', 'https://example.com/', ['Foo' => []]);
     }
 
     public function testCanGetHeaderAsCsv(): void
