@@ -53,6 +53,24 @@ class HeaderTest extends TestCase
                 '',
                 [],
             ],
+            [
+                'foo="a;b"; bar=baz',
+                [
+                    ['foo' => 'a;b', 'bar' => 'baz'],
+                ],
+            ],
+            [
+                'foo=bar;;baz=qux',
+                [
+                    ['foo' => 'bar', 'baz' => 'qux'],
+                ],
+            ],
+            [
+                'foo=bar; ;baz=qux',
+                [
+                    ['foo' => 'bar', 0 => '', 'baz' => 'qux'],
+                ],
+            ],
         ];
     }
 
@@ -62,6 +80,19 @@ class HeaderTest extends TestCase
     public function testParseParams($header, $result): void
     {
         self::assertSame($result, Psr7\Header::parse($header));
+    }
+
+    public function testParseManyQuotedSemicolonParameters(): void
+    {
+        $parameters = [];
+        $expected = [];
+
+        for ($i = 0; $i < 200; ++$i) {
+            $parameters[] = 'p'.$i.'="v'.$i.';x"';
+            $expected['p'.$i] = 'v'.$i.';x';
+        }
+
+        self::assertSame([$expected], Psr7\Header::parse(\implode('; ', $parameters)));
     }
 
     public static function normalizeProvider(): array

@@ -22,7 +22,7 @@ final class Header
         foreach ((array) $header as $value) {
             foreach (self::splitList($value) as $val) {
                 $part = [];
-                foreach (preg_split('/;(?=([^"]*"[^"]*")*[^"]*$)/', $val) ?: [] as $kvp) {
+                foreach (self::splitParameters($val) as $kvp) {
                     if (preg_match_all('/<[^>]+>|[^=]+/', $kvp, $matches)) {
                         $m = $matches[0];
                         if (isset($m[1])) {
@@ -39,6 +39,35 @@ final class Header
         }
 
         return $params;
+    }
+
+    /**
+     * Split a header value into semicolon-separated parameters.
+     *
+     * @return string[]
+     */
+    private static function splitParameters(string $value): array
+    {
+        $values = [];
+        $start = 0;
+        $quotesRemaining = \substr_count($value, '"');
+
+        for ($i = 0, $max = \strlen($value); $i < $max; ++$i) {
+            if ($value[$i] === '"') {
+                --$quotesRemaining;
+
+                continue;
+            }
+
+            if ($value[$i] === ';' && $quotesRemaining % 2 === 0) {
+                $values[] = \substr($value, $start, $i - $start);
+                $start = $i + 1;
+            }
+        }
+
+        $values[] = \substr($value, $start);
+
+        return $values;
     }
 
     /**
