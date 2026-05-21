@@ -729,6 +729,25 @@ class ServerRequestTest extends TestCase
         self::assertSame('http://up.example:8080/admin?x=1', $request->getRequestTarget());
     }
 
+    public function testFromGlobalsNormalizesAbsoluteFormRequestTargetWithControlCharacter(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => "http://up.example/admin\x7Fpath",
+            'HTTP_HOST' => 'good.example',
+        ];
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('http://up.example/admin%7Fpath', (string) $request->getUri());
+        self::assertSame('http://up.example/admin%7Fpath', $request->getRequestTarget());
+    }
+
     public static function dataInvalidServerPort(): iterable
     {
         yield 'empty' => [''];
@@ -1155,6 +1174,58 @@ class ServerRequestTest extends TestCase
 
         self::assertSame('GET', $server->getMethod());
         self::assertSame('1.1', $server->getProtocolVersion());
+    }
+
+    /**
+     * @dataProvider invalidRequestMethodFromGlobalsProvider
+     */
+    public function testFromGlobalsRejectsInvalidStringMethod(string $method): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => $method,
+            'REQUEST_URI' => '/',
+            'SERVER_PORT' => '80',
+        ];
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        ServerRequest::fromGlobals();
+    }
+
+    public static function invalidRequestMethodFromGlobalsProvider(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'space' => ['GET POST'];
+        yield 'newline' => ["GET\r\nX-Injected: yes"];
+        yield 'slash' => ['GET/'];
+    }
+
+    /**
+     * @dataProvider invalidServerProtocolFromGlobalsProvider
+     */
+    public function testFromGlobalsRejectsInvalidStringServerProtocol(string $serverProtocol): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'SERVER_PROTOCOL' => $serverProtocol,
+            'REQUEST_URI' => '/',
+            'SERVER_PORT' => '80',
+        ];
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        ServerRequest::fromGlobals();
+    }
+
+    public static function invalidServerProtocolFromGlobalsProvider(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'text' => ['HTTP/foo'];
+        yield 'trailing space' => ['HTTP/1.1 '];
+        yield 'newline' => ["HTTP/1.1\r\nX-Injected: yes"];
+        yield 'repeated prefix' => ['HTTP/HTTP/1.1'];
     }
 
     public function testUploadedFiles(): void

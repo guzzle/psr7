@@ -209,7 +209,10 @@ class ServerRequest extends Request implements ServerRequestInterface
         [$uri, $requestTarget] = self::getUriAndRequestTargetFromGlobals($method);
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
         $serverProtocol = self::getServerParam('SERVER_PROTOCOL');
-        $protocol = $serverProtocol !== null ? str_replace('HTTP/', '', $serverProtocol) : '1.1';
+        $protocol = '1.1';
+        if ($serverProtocol !== null) {
+            $protocol = strpos($serverProtocol, 'HTTP/') === 0 ? substr($serverProtocol, 5) : $serverProtocol;
+        }
 
         $serverRequest = new ServerRequest($method, $uri, $headers, $body, $protocol, $_SERVER);
         if ($requestTarget !== null) {
@@ -542,7 +545,7 @@ class ServerRequest extends Request implements ServerRequestInterface
 
                 // Preserve the received absolute-form target unless it cannot be used
                 // as a PSR-7 request target without normalization.
-                return [$targetUri, preg_match('#\s#', $requestTarget) ? (string) $targetUri : $requestTarget];
+                return [$targetUri, preg_match('/[\x00-\x20\x7F]/', $requestTarget) ? (string) $targetUri : $requestTarget];
             }
         }
 

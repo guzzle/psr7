@@ -34,6 +34,8 @@ trait MessageTrait
      */
     public function withProtocolVersion(string $version): MessageInterface
     {
+        $this->assertProtocolVersion($version);
+
         if ($this->protocol === $version) {
             return $this;
         }
@@ -245,6 +247,13 @@ trait MessageTrait
             throw new \InvalidArgumentException(
                 sprintf('"%s" is not valid header name.', $header)
             );
+        }
+    }
+
+    private function assertProtocolVersion(string $version): void
+    {
+        if (!preg_match('/^\d+(?:\.\d+)?$/D', $version)) {
+            throw new \InvalidArgumentException('Protocol version must be a valid HTTP version number.');
         }
     }
 

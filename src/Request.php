@@ -40,9 +40,12 @@ class Request implements RequestInterface
         string $version = '1.1'
     ) {
         $this->assertMethod($method);
+        $this->assertProtocolVersion($version);
+
         if (!$uri instanceof UriInterface) {
             $uri = new Uri($uri);
         }
+        self::getRequestTargetFromUri($uri);
 
         $this->method = $method;
         $this->uri = $uri;
@@ -64,24 +67,12 @@ class Request implements RequestInterface
             return $this->requestTarget;
         }
 
-        $target = self::normalizePathForOriginForm($this->uri->getPath());
-        if ($target === '') {
-            $target = '/';
-        }
-        if ($this->uri->getQuery() != '') {
-            $target .= '?'.$this->uri->getQuery();
-        }
-
-        return $target;
+        return self::getRequestTargetFromUri($this->uri);
     }
 
     public function withRequestTarget(string $requestTarget): RequestInterface
     {
-        if (preg_match('#\s#', $requestTarget)) {
-            throw new InvalidArgumentException(
-                'Invalid request target provided; cannot contain whitespace'
-            );
-        }
+        self::assertRequestTarget($requestTarget);
 
         $new = clone $this;
         $new->requestTarget = $requestTarget;
@@ -112,6 +103,10 @@ class Request implements RequestInterface
     {
         if ($uri === $this->uri) {
             return $this;
+        }
+
+        if ($this->requestTarget === null) {
+            self::getRequestTargetFromUri($uri);
         }
 
         $new = clone $this;
@@ -151,8 +146,32 @@ class Request implements RequestInterface
 
     private function assertMethod(string $method): void
     {
-        if ($method === '') {
-            throw new InvalidArgumentException('Method must be a non-empty string.');
+        if (!preg_match('/^[!#$%&\'*+.^_`|~0-9A-Za-z-]+$/D', $method)) {
+            throw new InvalidArgumentException('Method must be a valid HTTP token.');
+        }
+    }
+
+    private static function getRequestTargetFromUri(UriInterface $uri): string
+    {
+        $target = self::normalizePathForOriginForm($uri->getPath());
+        if ($target === '') {
+            $target = '/';
+        }
+        if ($uri->getQuery() != '') {
+            $target .= '?'.$uri->getQuery();
+        }
+
+        self::assertRequestTarget($target);
+
+        return $target;
+    }
+
+    private static function assertRequestTarget(string $requestTarget): void
+    {
+        if ($requestTarget === '' || preg_match('/[\x00-\x20\x7F]/', $requestTarget)) {
+            throw new InvalidArgumentException(
+                'Invalid request target provided; cannot be empty or contain whitespace or control characters'
+            );
         }
     }
 

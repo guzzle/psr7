@@ -175,6 +175,28 @@ class MessageTest extends TestCase
         Psr7\Message::parseRequest("HTTP/1.1 200 OK\r\n\r\n");
     }
 
+    /**
+     * @dataProvider invalidRequestStartLineProvider
+     */
+    public function testParseRequestRejectsInvalidStartLine(string $startLine): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequest($startLine."\r\nHost: foo.com\r\n\r\n");
+    }
+
+    public static function invalidRequestStartLineProvider(): iterable
+    {
+        yield 'invalid method' => ['GET/ / HTTP/1.1'];
+        yield 'target space' => ['GET /foo bar HTTP/1.1'];
+        yield 'target tab' => ["GET /foo\tbar HTTP/1.1"];
+        yield 'target nul' => ["GET /foo\0bar HTTP/1.1"];
+        yield 'target delete' => ["GET /foo\x7Fbar HTTP/1.1"];
+        yield 'invalid protocol text' => ['GET / HTTP/foo'];
+        yield 'invalid protocol segments' => ['GET / HTTP/1.1.1'];
+        yield 'missing version' => ['GET /'];
+    }
+
     public function testParsesResponseMessages(): void
     {
         $res = "HTTP/1.0 200 OK\r\nFoo: Bar\r\nBaz: Bam\r\nBaz: Qux\r\n\r\nTest";
@@ -251,6 +273,46 @@ class MessageTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         Psr7\Message::parseResponse("GET / HTTP/1.1\r\n\r\n");
+    }
+
+    public function testParsesResponseWithAllowedCustomReasonPhraseCharacters(): void
+    {
+        $response = Psr7\Message::parseResponse("HTTP/1.1 200 OK\tFine\x80\r\n\r\n");
+
+        self::assertSame("OK\tFine\x80", $response->getReasonPhrase());
+    }
+
+    public function testParsesBoundaryResponseStatusCodes(): void
+    {
+        $informationalResponse = Psr7\Message::parseResponse("HTTP/1.1 100 Continue\r\n\r\n");
+        $customServerErrorResponse = Psr7\Message::parseResponse("HTTP/1.1 599 Custom\r\n\r\n");
+
+        self::assertSame(100, $informationalResponse->getStatusCode());
+        self::assertSame(599, $customServerErrorResponse->getStatusCode());
+    }
+
+    /**
+     * @dataProvider invalidResponseStartLineProvider
+     */
+    public function testParseResponseRejectsInvalidStartLine(string $startLine): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseResponse($startLine."\r\n\r\n");
+    }
+
+    public static function invalidResponseStartLineProvider(): iterable
+    {
+        yield 'invalid protocol text' => ['HTTP/foo 200 OK'];
+        yield 'invalid protocol segments' => ['HTTP/1.1.1 200 OK'];
+        yield 'status below range' => ['HTTP/1.1 099 OK'];
+        yield 'status above range' => ['HTTP/1.1 600 OK'];
+        yield 'status 700' => ['HTTP/1.1 700 OK'];
+        yield 'status 999' => ['HTTP/1.1 999 OK'];
+        yield 'non-numeric status' => ['HTTP/1.1 20x OK'];
+        yield 'tab before reason' => ["HTTP/1.1 200\tOK"];
+        yield 'reason nul' => ["HTTP/1.1 200 OK\0"];
+        yield 'reason delete' => ["HTTP/1.1 200 OK\x7F"];
     }
 
     public function testMessageBodySummaryWithSmallBody(): void

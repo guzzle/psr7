@@ -99,6 +99,7 @@ class Response implements ResponseInterface
         ?string $reason = null
     ) {
         $this->assertStatusCodeRange($status);
+        $this->assertProtocolVersion($version);
 
         $this->statusCode = $status;
 
@@ -108,10 +109,13 @@ class Response implements ResponseInterface
 
         $this->setHeaders($headers);
         if ($reason == '' && isset(self::PHRASES[$this->statusCode])) {
-            $this->reasonPhrase = self::PHRASES[$this->statusCode];
+            $reasonPhrase = self::PHRASES[$this->statusCode];
         } else {
-            $this->reasonPhrase = (string) $reason;
+            $reasonPhrase = (string) $reason;
         }
+
+        $this->assertReasonPhrase($reasonPhrase);
+        $this->reasonPhrase = $reasonPhrase;
 
         $this->protocol = $version;
     }
@@ -135,6 +139,7 @@ class Response implements ResponseInterface
         if ($reasonPhrase === '' && isset(self::PHRASES[$new->statusCode])) {
             $reasonPhrase = self::PHRASES[$new->statusCode];
         }
+        $this->assertReasonPhrase($reasonPhrase);
         $new->reasonPhrase = $reasonPhrase;
 
         return $new;
@@ -144,6 +149,13 @@ class Response implements ResponseInterface
     {
         if ($statusCode < 100 || $statusCode >= 600) {
             throw new \InvalidArgumentException('Status code must be an integer value between 1xx and 5xx.');
+        }
+    }
+
+    private function assertReasonPhrase(string $reasonPhrase): void
+    {
+        if (!preg_match('/^[\x09\x20-\x7E\x80-\xFF]*$/D', $reasonPhrase)) {
+            throw new \InvalidArgumentException('Reason phrase must not contain invalid control characters.');
         }
     }
 }
