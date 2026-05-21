@@ -35,6 +35,46 @@ class UtilsTest extends TestCase
         self::assertSame('', $result);
     }
 
+    public function testCopyToStringThrowsWhenReadTimesOut(): void
+    {
+        $s = new FnStream([
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        Psr7\Utils::copyToString($s);
+    }
+
+    public function testCopyToStringIgnoresStaleTimeoutMetadataAfterSuccessfulRead(): void
+    {
+        $read = false;
+        $s = new FnStream([
+            'eof' => function () use (&$read): bool {
+                return $read;
+            },
+            'read' => function () use (&$read): string {
+                $read = true;
+
+                return 'foo';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+
+        self::assertSame('foo', Psr7\Utils::copyToString($s));
+    }
+
     public function testCopiesToStream(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
@@ -87,6 +127,82 @@ class UtilsTest extends TestCase
 
         self::assertSame('foo', (string) $sink);
         self::assertSame(3, $writes);
+    }
+
+    public function testCopyToStreamThrowsWhenReadTimesOut(): void
+    {
+        $s1 = new FnStream([
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+        $s2 = Psr7\Utils::streamFor('');
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        Psr7\Utils::copyToStream($s1, $s2);
+    }
+
+    public function testCopyToStreamThrowsWhenReadTimesOutWithMaxLen(): void
+    {
+        $s1 = new FnStream([
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+        $s2 = Psr7\Utils::streamFor('');
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        Psr7\Utils::copyToStream($s1, $s2, 10);
+    }
+
+    public function testCopyToStreamThrowsWhenWriteTimesOut(): void
+    {
+        $s1 = Psr7\Utils::streamFor('foobaz');
+        $s2 = Psr7\Utils::streamFor('');
+        $s2 = FnStream::decorate($s2, [
+            'write' => function (): int {
+                return 0;
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to write to stream: timed out');
+
+        Psr7\Utils::copyToStream($s1, $s2);
+    }
+
+    public function testCopyToStreamIgnoresStaleTimeoutMetadataAfterMaxLenIsSatisfied(): void
+    {
+        $s1 = Psr7\Utils::streamFor('foobaz');
+        $s1 = FnStream::decorate($s1, [
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+        $s2 = Psr7\Utils::streamFor('');
+
+        Psr7\Utils::copyToStream($s1, $s2, 3);
+
+        self::assertSame('foo', (string) $s2);
     }
 
     public function testCopyToStreamThrowsWhenWriteFails(): void
@@ -201,6 +317,19 @@ class UtilsTest extends TestCase
         self::assertSame('h', Psr7\Utils::readLine($s));
     }
 
+    public function testReadLineThrowsWhenReadTimesOut(): void
+    {
+        $s = $this->createMock(StreamInterface::class);
+        $s->method('read')->willReturn('');
+        $s->method('eof')->willReturn(false);
+        $s->method('getMetadata')->with('timed_out')->willReturn(true);
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read line from stream: timed out');
+
+        Psr7\Utils::readLine($s);
+    }
+
     public function testRedactUserInfo(): void
     {
         $uri = new Psr7\Uri('http://my_user:secretPass@localhost/');
@@ -232,6 +361,32 @@ class UtilsTest extends TestCase
         $s->seek(4);
         self::assertSame(md5('foobazbar'), Psr7\Utils::hash($s, 'md5'));
         self::assertSame(4, $s->tell());
+    }
+
+    public function testCalculatesHashThrowsWhenReadTimesOut(): void
+    {
+        $s = $this->createMock(StreamInterface::class);
+        $s->method('tell')->willReturn(0);
+        $s->method('eof')->willReturn(false);
+        $s->method('read')->willReturn('');
+        $s->method('getMetadata')->with('timed_out')->willReturn(true);
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to calculate stream hash: timed out');
+
+        Psr7\Utils::hash($s, 'md5');
+    }
+
+    public function testCalculatesHashStopsWhenReadReturnsEmptyString(): void
+    {
+        $s = $this->createMock(StreamInterface::class);
+        $s->method('tell')->willReturn(0);
+        $s->method('eof')->willReturn(false);
+        $s->method('read')->willReturn('');
+        $s->method('getMetadata')->with('timed_out')->willReturn(false);
+        $s->expects(self::once())->method('seek')->with(0);
+
+        self::assertSame(md5(''), Psr7\Utils::hash($s, 'md5'));
     }
 
     public function testOpensFilesSuccessfully(): void

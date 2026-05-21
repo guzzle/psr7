@@ -132,12 +132,7 @@ final class PumpStream implements StreamInterface
 
     public function getContents(): string
     {
-        $result = '';
-        while (!$this->eof()) {
-            $result .= $this->read(1000000);
-        }
-
-        return $result;
+        return Utils::copyToString($this);
     }
 
     /**

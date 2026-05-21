@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Psr7;
 
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -108,6 +109,13 @@ final class CachingStream implements StreamInterface
             $remoteData = $this->remoteStream->read(
                 $remaining + $this->skipReadBytes
             );
+
+            if ($remoteData === ''
+                && $this->remoteStream->getMetadata('timed_out') === true
+                && !$this->remoteStream->eof()
+            ) {
+                throw new TimeoutException('Unable to read from stream: timed out');
+            }
 
             if ($this->skipReadBytes) {
                 $len = strlen($remoteData);

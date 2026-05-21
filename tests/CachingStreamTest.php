@@ -135,6 +135,27 @@ class CachingStreamTest extends TestCase
         self::assertSame('test', $this->body->read(4));
     }
 
+    public function testReadThrowsWhenRemoteStreamTimesOut(): void
+    {
+        $remote = new Psr7\FnStream([
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+        ]);
+        $stream = new CachingStream($remote);
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        $stream->read(1);
+    }
+
     public function testWritesToBufferStream(): void
     {
         $this->body->read(2);

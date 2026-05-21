@@ -462,6 +462,9 @@ Remove the items given by the keys, case insensitively from the data.
 Copy the contents of a stream into another stream until the given number
 of bytes have been read.
 
+Throws `GuzzleHttp\Psr7\Exception\TimeoutException` if a source read or
+destination write times out.
+
 
 ## `GuzzleHttp\Psr7\Utils::copyToString`
 
@@ -469,6 +472,8 @@ of bytes have been read.
 
 Copy the contents of a stream into a string until the given number of
 bytes have been read.
+
+Throws `GuzzleHttp\Psr7\Exception\TimeoutException` if a stream read times out.
 
 
 ## `GuzzleHttp\Psr7\Utils::hash`
@@ -479,6 +484,8 @@ Calculate a hash of a stream.
 
 This method reads the entire stream to calculate a rolling hash, based on
 PHP's `hash_init` functions.
+
+Throws `GuzzleHttp\Psr7\Exception\TimeoutException` if a stream read times out.
 
 
 ## `GuzzleHttp\Psr7\Utils::modifyRequest`
@@ -504,6 +511,8 @@ a message.
 `public static function readLine(StreamInterface $stream, ?int $maxLength = null): string`
 
 Read a line from the stream up to the maximum allowed buffer length.
+
+Throws `GuzzleHttp\Psr7\Exception\TimeoutException` if a stream read times out.
 
 
 ## `GuzzleHttp\Psr7\Utils::redactUserInfo`
@@ -580,6 +589,8 @@ Safely gets the contents of a given stream.
 When stream_get_contents fails, PHP normally raises a warning. This
 function adds an error handler that checks for errors and throws an
 exception instead.
+
+Throws `GuzzleHttp\Psr7\Exception\TimeoutException` if the stream read times out.
 
 
 ## `GuzzleHttp\Psr7\Utils::uriFor`

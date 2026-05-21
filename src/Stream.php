@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Psr7;
 
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -221,12 +222,26 @@ class Stream implements StreamInterface
 
         try {
             $string = fread($this->stream, $length);
+        } catch (TimeoutException $e) {
+            throw $e;
         } catch (\Exception $e) {
+            if ($this->timedOut()) {
+                throw new TimeoutException('Unable to read from stream: timed out', 0, $e);
+            }
+
             throw new \RuntimeException('Unable to read from stream', 0, $e);
         }
 
         if (false === $string) {
+            if ($this->timedOut()) {
+                throw new TimeoutException('Unable to read from stream: timed out');
+            }
+
             throw new \RuntimeException('Unable to read from stream');
+        }
+
+        if ($string === '' && $this->timedOut()) {
+            throw new TimeoutException('Unable to read from stream: timed out');
         }
 
         return $string;
@@ -268,5 +283,13 @@ class Stream implements StreamInterface
         $meta = stream_get_meta_data($this->stream);
 
         return $meta[$key] ?? null;
+    }
+
+    private function timedOut(): bool
+    {
+        /** @var array<string, mixed> $meta */
+        $meta = stream_get_meta_data($this->stream);
+
+        return ($meta['timed_out'] ?? false) === true && !feof($this->stream);
     }
 }

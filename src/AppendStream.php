@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Psr7;
 
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -196,6 +197,12 @@ final class AppendStream implements StreamInterface
             $result = $this->streams[$this->current]->read($remaining);
 
             if ($result === '') {
+                if ($this->streams[$this->current]->getMetadata('timed_out') === true
+                    && !$this->streams[$this->current]->eof()
+                ) {
+                    throw new TimeoutException('Unable to read from stream: timed out');
+                }
+
                 $progressToNext = true;
                 continue;
             }
