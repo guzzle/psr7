@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate iterator chunks passed to `Utils::streamFor()`
 - Validate unsupported values passed to `Query::build()`
 - Stop adding default `Content-Length` headers to `multipart/form-data` parts to comply with RFC 7578 section 4.8
+- Escape generated multipart `Content-Disposition` parameters and reject unsafe multipart boundary and part header metadata
 
 ### Removed
 

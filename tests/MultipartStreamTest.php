@@ -22,6 +22,59 @@ class MultipartStreamTest extends TestCase
         self::assertSame('foo', $b->getBoundary());
     }
 
+    /**
+     * @dataProvider validCustomBoundaryProvider
+     */
+    public function testCanProvideRfc2046Boundary(string $boundary): void
+    {
+        $b = new MultipartStream([], $boundary);
+        self::assertSame($boundary, $b->getBoundary());
+    }
+
+    public static function validCustomBoundaryProvider(): iterable
+    {
+        yield 'letters and digits' => ['abc123'];
+        yield 'zero' => ['0'];
+        yield 'apostrophe' => ["abc'def"];
+        yield 'parentheses' => ['abc(def)'];
+        yield 'plus' => ['abc+def'];
+        yield 'underscore' => ['abc_def'];
+        yield 'comma' => ['abc,def'];
+        yield 'hyphen' => ['abc-def'];
+        yield 'period' => ['abc.def'];
+        yield 'slash' => ['abc/def'];
+        yield 'colon' => ['abc:def'];
+        yield 'equals' => ['abc=def'];
+        yield 'question mark' => ['abc?def'];
+        yield 'internal space' => ['abc def'];
+        yield 'seventy bytes' => [str_repeat('a', 70)];
+    }
+
+    /**
+     * @dataProvider invalidCustomBoundaryProvider
+     */
+    public function testRejectsInvalidCustomBoundary(string $boundary): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid multipart boundary.');
+
+        new MultipartStream([], $boundary);
+    }
+
+    public static function invalidCustomBoundaryProvider(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'seventy one bytes' => [str_repeat('a', 71)];
+        yield 'trailing space' => ['abc '];
+        yield 'carriage return' => ["abc\rdef"];
+        yield 'line feed' => ["abc\ndef"];
+        yield 'nul' => ["abc\0def"];
+        yield 'quote' => ['abc"def'];
+        yield 'backslash' => ['abc\\def'];
+        yield 'semicolon' => ['abc;def'];
+        yield 'non ascii' => ["abc\xC3\xA9def"];
+    }
+
     public function testIsNotWritable(): void
     {
         $b = new MultipartStream();
@@ -87,6 +140,39 @@ class MultipartStreamTest extends TestCase
         ]);
 
         self::assertSame($expected, (string) $b);
+    }
+
+    public function testEscapesGeneratedContentDispositionName(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => "field\"\r\nname",
+                'contents' => 'value',
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"field%22%0D%0Aname\"\r\n",
+            "\r\n",
+            "value\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testRejectsGeneratedContentDispositionNameWithNul(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('is not valid multipart part header value.');
+
+        new MultipartStream([
+            [
+                'name' => "field\0name",
+                'contents' => 'value',
+            ],
+        ], 'boundary');
     }
 
     public function testSerializesNonStringFields(): void
@@ -561,6 +647,69 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testEscapesGeneratedContentDispositionFilename(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'upload',
+                'contents' => 'body',
+                'filename' => "avatar\"\r\n.txt",
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"upload\"; filename=\"avatar%22%0D%0A.txt\"\r\n",
+            "Content-Type: text/plain\r\n",
+            "\r\n",
+            "body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testEscapesUriDerivedContentDispositionFilename(): void
+    {
+        $file = Psr7\FnStream::decorate(Psr7\Utils::streamFor('body'), [
+            'getMetadata' => static function (): string {
+                return "/foo/avatar\"\r\n.txt";
+            },
+        ]);
+
+        $b = new MultipartStream([
+            [
+                'name' => 'upload',
+                'contents' => $file,
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"upload\"; filename=\"avatar%22%0D%0A.txt\"\r\n",
+            "Content-Type: text/plain\r\n",
+            "\r\n",
+            "body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testRejectsGeneratedContentDispositionFilenameWithNul(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('is not valid multipart part header value.');
+
+        new MultipartStream([
+            [
+                'name' => 'upload',
+                'contents' => 'body',
+                'filename' => "avatar\0.txt",
+            ],
+        ], 'boundary');
+    }
+
     public function testSerializesFilesWithMixedNewlines(): void
     {
         $content = "LF\nCRLF\r\nCR\r";
@@ -714,6 +863,69 @@ class MultipartStreamTest extends TestCase
         ]);
 
         self::assertSame($expected, (string) $b);
+    }
+
+    /**
+     * @dataProvider invalidCustomPartHeaderNameProvider
+     */
+    public function testRejectsInvalidCustomPartHeaderNames(string $header): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('is not valid multipart part header name.');
+
+        new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => 'body',
+                'headers' => [$header => 'value'],
+            ],
+        ], 'boundary');
+    }
+
+    public static function invalidCustomPartHeaderNameProvider(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'space' => ['Bad Header'];
+        yield 'carriage return' => ["Bad\rHeader"];
+        yield 'line feed' => ["Bad\nHeader"];
+    }
+
+    /**
+     * @dataProvider invalidCustomPartHeaderValueProvider
+     */
+    public function testRejectsInvalidCustomPartHeaderValues(string $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('is not valid multipart part header value.');
+
+        new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => 'body',
+                'headers' => ['X-Test' => $value],
+            ],
+        ], 'boundary');
+    }
+
+    public static function invalidCustomPartHeaderValueProvider(): iterable
+    {
+        yield 'carriage return' => ["ok\rX-Injected: yes"];
+        yield 'line feed' => ["ok\nX-Injected: yes"];
+        yield 'nul' => ["ok\0bad"];
+    }
+
+    public function testRejectsNonStringCustomPartHeaderValue(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Multipart part header value must be a string.');
+
+        new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => 'body',
+                'headers' => ['X-Test' => 123],
+            ],
+        ], 'boundary');
     }
 
     public function testCanCreateWithNoneMetadataStreamField(): void
