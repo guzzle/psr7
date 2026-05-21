@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Deprecated invalid PSR-7 arguments that guzzlehttp/psr7 3.0 will require native types for
 - Deprecated non-string header values that guzzlehttp/psr7 3.0 will reject
+- Deprecated empty header value arrays that guzzlehttp/psr7 3.0 will reject
+- Deprecated URI schemes that do not match guzzlehttp/psr7 3.0 syntax requirements
 
 ## 2.10.1 - 2026-05-20
 
