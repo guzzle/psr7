@@ -234,6 +234,23 @@ final class Message
      */
     public static function parseRequestUri(string $path, array $headers): string
     {
+        $host = self::getHostFromHeaders($headers);
+
+        // If no host is found, then a full URI cannot be constructed.
+        if ($host === null) {
+            return $path;
+        }
+
+        $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
+
+        return $scheme.'://'.$host.'/'.ltrim($path, '/');
+    }
+
+    /**
+     * @param array $headers Array of headers (each value an array).
+     */
+    private static function getHostFromHeaders(array $headers): ?string
+    {
         $hostKey = array_filter(array_keys($headers), function ($k) {
             // Numeric array keys are converted to int by PHP.
             $k = (string) $k;
@@ -241,15 +258,26 @@ final class Message
             return strtolower($k) === 'host';
         });
 
-        // If no host is found, then a full URI cannot be constructed.
         if (!$hostKey) {
-            return $path;
+            return null;
         }
 
-        $host = $headers[reset($hostKey)][0];
+        return $headers[reset($hostKey)][0];
+    }
+
+    /**
+     * @param array $headers Array of headers (each value an array).
+     */
+    private static function parseRequestAuthorityUri(array $headers): string
+    {
+        $host = self::getHostFromHeaders($headers);
+        if ($host === null) {
+            return '';
+        }
+
         $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
 
-        return $scheme.'://'.$host.'/'.ltrim($path, '/');
+        return $scheme.'://'.$host;
     }
 
     /**
@@ -261,19 +289,119 @@ final class Message
     {
         $data = self::parseMessage($message);
         $matches = [];
-        if (!preg_match('/^(?P<method>[!#$%&\'*+.^_`|~0-9A-Za-z-]+) (?P<target>(?:[A-Za-z][A-Za-z0-9+.-]*:\/\/|\/)[^\x00-\x20\x7F]*) HTTP\/(?P<version>\d+(?:\.\d+)?)$/D', $data['start-line'], $matches)) {
+        if (!preg_match('/^(?P<method>[!#$%&\'*+.^_`|~0-9A-Za-z-]+) (?P<target>[^\x00-\x20\x7F]+) HTTP\/(?P<version>\d+(?:\.\d+)?)$/D', $data['start-line'], $matches)) {
             throw new \InvalidArgumentException('Invalid request string');
         }
 
-        $request = new Request(
-            $matches['method'],
-            $matches['target'][0] === '/' ? self::parseRequestUri($matches['target'], $data['headers']) : $matches['target'],
-            $data['headers'],
-            $data['body'],
-            $matches['version']
-        );
+        if ($matches['target'][0] === '/') {
+            return new Request(
+                $matches['method'],
+                self::parseRequestUri($matches['target'], $data['headers']),
+                $data['headers'],
+                $data['body'],
+                $matches['version']
+            );
+        }
 
-        return $matches['target'][0] === '/' ? $request : $request->withRequestTarget($matches['target']);
+        if (self::isAbsoluteFormRequestTarget($matches['target'])) {
+            return (new Request(
+                $matches['method'],
+                $matches['target'],
+                $data['headers'],
+                $data['body'],
+                $matches['version']
+            ))->withRequestTarget($matches['target']);
+        }
+
+        if (self::isAsteriskFormRequestTarget($matches['method'], $matches['target'])) {
+            return (new Request(
+                $matches['method'],
+                self::parseRequestAuthorityUri($data['headers']),
+                $data['headers'],
+                $data['body'],
+                $matches['version']
+            ))->withRequestTarget($matches['target']);
+        }
+
+        $connectUri = self::parseConnectAuthorityFormRequestTarget($matches['method'], $matches['target']);
+        if ($connectUri !== null) {
+            return (new Request(
+                $matches['method'],
+                $connectUri,
+                $data['headers'],
+                $data['body'],
+                $matches['version']
+            ))->withRequestTarget($matches['target']);
+        }
+
+        throw new \InvalidArgumentException('Invalid request string');
+    }
+
+    private static function isAbsoluteFormRequestTarget(string $target): bool
+    {
+        return preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:\/\//D', $target) === 1;
+    }
+
+    private static function isAsteriskFormRequestTarget(string $method, string $target): bool
+    {
+        return $method === 'OPTIONS' && $target === '*';
+    }
+
+    private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?Uri
+    {
+        if ($method !== 'CONNECT' || strpbrk($target, '/?#') !== false) {
+            return null;
+        }
+
+        $host = $target;
+        $port = null;
+
+        if ($target === '') {
+            return null;
+        }
+
+        if ($target[0] === '[') {
+            $closingBracket = strpos($target, ']');
+            if ($closingBracket === false || !isset($target[$closingBracket + 1]) || $target[$closingBracket + 1] !== ':') {
+                return null;
+            }
+
+            $host = substr($target, 0, $closingBracket + 1);
+            $port = self::parseAuthorityPort(substr($target, $closingBracket + 2));
+        } elseif (false !== ($colon = strrpos($target, ':'))) {
+            $host = substr($target, 0, $colon);
+            $port = self::parseAuthorityPort(substr($target, $colon + 1));
+        }
+
+        if ($host === '' || $port === null) {
+            return null;
+        }
+
+        try {
+            Uri::assertValidHost($host);
+
+            return new Uri('//'.$host.':'.$port);
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
+    }
+
+    private static function parseAuthorityPort(string $port): ?int
+    {
+        if ($port === '' || !ctype_digit($port)) {
+            return null;
+        }
+
+        $port = ltrim($port, '0');
+        if ($port === '') {
+            return null;
+        }
+
+        if (strlen($port) > 5 || (int) $port > 0xFFFF) {
+            return null;
+        }
+
+        return (int) $port;
     }
 
     /**

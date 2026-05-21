@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tighten `ServerRequest::getUriFromGlobals()` validation for malformed `HTTP_HOST` and `SERVER_PORT` values
 - Stop preserving malformed `Host` headers when building server requests from globals
 - Normalize server request URI reconstruction from globals
+- Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
 - Reject malformed HTTP start-line fields
 - Reject hosts with embedded ports in `Uri::withHost()`
 - Validate iterator chunks passed to `Utils::streamFor()`
