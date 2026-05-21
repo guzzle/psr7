@@ -380,11 +380,29 @@ class ServerRequest extends Request implements ServerRequestInterface
 
         $port = ltrim($port, '0');
         if ($port === '') {
-            return 0;
+            return null;
         }
 
         if (strlen($port) > 5 || (int) $port > 0xFFFF) {
             return null;
+        }
+
+        return (int) $port;
+    }
+
+    private static function parseServerPort(string $port): int
+    {
+        if ($port === '' || !ctype_digit($port)) {
+            throw new InvalidArgumentException('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
+        }
+
+        $port = ltrim($port, '0');
+        if ($port === '') {
+            throw new InvalidArgumentException('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
+        }
+
+        if (strlen($port) > 5 || (int) $port > 0xFFFF) {
+            throw new InvalidArgumentException('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
         }
 
         return (int) $port;
@@ -448,8 +466,8 @@ class ServerRequest extends Request implements ServerRequestInterface
         }
 
         $serverPort = self::getServerParam('SERVER_PORT');
-        if (!$hasPort && $serverPort !== null && preg_match('/^[+-]?\d+$/', $serverPort) === 1) {
-            $uri = $uri->withPort((int) $serverPort);
+        if (!$hasPort && $serverPort !== null) {
+            $uri = $uri->withPort(self::parseServerPort($serverPort));
         }
 
         $hasQuery = false;
