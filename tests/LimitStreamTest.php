@@ -16,11 +16,9 @@ use PHPUnit\Framework\TestCase;
  */
 class LimitStreamTest extends TestCase
 {
-    /** @var LimitStream */
-    private $body;
+    private LimitStream $body;
 
-    /** @var Stream */
-    private $decorated;
+    private Stream $decorated;
 
     protected function setUp(): void
     {

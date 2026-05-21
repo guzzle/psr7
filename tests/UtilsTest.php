@@ -526,8 +526,7 @@ class UtilsTest extends TestCase
     public function testModifyRequestPreservesConcreteRequestSubclass(): void
     {
         $request = new class('GET', 'http://example.com', 'user-123') extends Psr7\Request {
-            /** @var string */
-            private $userId;
+            private string $userId;
 
             public function __construct(string $method, $uri, string $userId)
             {
@@ -567,8 +566,7 @@ class UtilsTest extends TestCase
     public function testModifyRequestPreservesConcreteServerRequestSubclass(): void
     {
         $request = new class('GET', 'http://example.com', [], null, '1.1', ['server' => 'value'], 'ctx') extends Psr7\ServerRequest {
-            /** @var string */
-            private $context;
+            private string $context;
 
             public function __construct(
                 string $method,

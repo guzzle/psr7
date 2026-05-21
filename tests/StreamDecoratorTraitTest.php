@@ -13,8 +13,7 @@ class Str implements StreamInterface
 {
     use StreamDecoratorTrait;
 
-    /** @var StreamInterface */
-    private $stream;
+    private StreamInterface $stream;
 }
 
 /**
@@ -22,10 +21,8 @@ class Str implements StreamInterface
  */
 class StreamDecoratorTraitTest extends TestCase
 {
-    /** @var StreamInterface */
-    private $a;
-    /** @var StreamInterface */
-    private $b;
+    private StreamInterface $a;
+    private StreamInterface $b;
     /** @var resource */
     private $c;
 

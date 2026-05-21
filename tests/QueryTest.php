@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class QueryTest extends TestCase
 {
-    public static function parseQueryProvider()
+    public static function parseQueryProvider(): array
     {
         return [
             // Does not need to parse when the string is empty
@@ -53,7 +53,7 @@ class QueryTest extends TestCase
     /**
      * @dataProvider parseQueryProvider
      */
-    public function testParsesQueries($input, $output): void
+    public function testParsesQueries(string $input, array $output): void
     {
         $result = Psr7\Query::parse($input);
         self::assertSame($output, $result);
@@ -69,7 +69,7 @@ class QueryTest extends TestCase
     /**
      * @dataProvider parseQueryProvider
      */
-    public function testParsesAndBuildsQueries($input): void
+    public function testParsesAndBuildsQueries(string $input): void
     {
         $result = Psr7\Query::parse($input, false);
         self::assertSame($input, Psr7\Query::build($result, false));

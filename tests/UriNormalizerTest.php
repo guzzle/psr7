@@ -59,7 +59,7 @@ class UriNormalizerTest extends TestCase
     /**
      * @dataProvider getEmptyPathTestCases
      */
-    public function testConvertEmptyPath($uri, $expected): void
+    public function testConvertEmptyPath(string $uri, string $expected): void
     {
         $normalizedUri = UriNormalizer::normalize(new Uri($uri), UriNormalizer::CONVERT_EMPTY_PATH);
 

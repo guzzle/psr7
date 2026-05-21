@@ -279,7 +279,7 @@ class ServerRequestTest extends TestCase
     /**
      * @dataProvider dataNormalizeFiles
      */
-    public function testNormalizeFiles($files, $expected): void
+    public function testNormalizeFiles(array $files, array $expected): void
     {
         $result = ServerRequest::normalizeFiles($files);
 
@@ -408,7 +408,7 @@ class ServerRequestTest extends TestCase
     /**
      * @dataProvider dataGetUriFromGlobals
      */
-    public function testGetUriFromGlobals($expected, $serverParams): void
+    public function testGetUriFromGlobals(string $expected, array $serverParams): void
     {
         $_SERVER = $serverParams;
 
@@ -760,6 +760,8 @@ class ServerRequestTest extends TestCase
 
     /**
      * @dataProvider validParsedBodyProvider
+     *
+     * @param array|object|null $value
      */
     public function testWithParsedBodyAcceptsValidValues($value): void
     {
@@ -781,6 +783,8 @@ class ServerRequestTest extends TestCase
 
     /**
      * @dataProvider invalidParsedBodyProvider
+     *
+     * @param bool|float|int|string $value
      */
     public function testWithParsedBodyRejectsInvalidValues($value): void
     {

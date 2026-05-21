@@ -46,6 +46,9 @@ class ServerRequestFromGlobalsTest extends TestCase
         self::assertEquals('foobar', $data['body']);
     }
 
+    /**
+     * @return string|false
+     */
     private function getServerUri()
     {
         return $_SERVER['TEST_SERVER'] ?? false;

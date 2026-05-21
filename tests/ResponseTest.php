@@ -249,8 +249,10 @@ class ResponseTest extends TestCase
 
     /**
      * @dataProvider invalidHeaderProvider
+     *
+     * @param mixed $headerValue
      */
-    public function testConstructResponseInvalidHeader($header, $headerValue, $expectedMessage): void
+    public function testConstructResponseInvalidHeader(string $header, $headerValue, string $expectedMessage): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage($expectedMessage);
@@ -272,8 +274,10 @@ class ResponseTest extends TestCase
 
     /**
      * @dataProvider invalidWithHeaderProvider
+     *
+     * @param mixed $headerValue
      */
-    public function testWithInvalidHeader($header, $headerValue, $expectedMessage): void
+    public function testWithInvalidHeader(string $header, $headerValue, string $expectedMessage): void
     {
         $r = new Response();
         $this->expectException(\InvalidArgumentException::class);
@@ -297,8 +301,10 @@ class ResponseTest extends TestCase
 
     /**
      * @dataProvider invalidWithHeaderProvider
+     *
+     * @param mixed $headerValue
      */
-    public function testWithInvalidAddedHeader($header, $headerValue, $expectedMessage): void
+    public function testWithInvalidAddedHeader(string $header, $headerValue, string $expectedMessage): void
     {
         $r = new Response();
         $this->expectException(\InvalidArgumentException::class);
@@ -330,10 +336,8 @@ class ResponseTest extends TestCase
 
     /**
      * @dataProvider invalidStatusCodeRangeProvider
-     *
-     * @param mixed $invalidValues
      */
-    public function testConstructResponseWithInvalidRangeStatusCode($invalidValues): void
+    public function testConstructResponseWithInvalidRangeStatusCode(int $invalidValues): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Status code must be an integer value between 1xx and 5xx.');
@@ -342,10 +346,8 @@ class ResponseTest extends TestCase
 
     /**
      * @dataProvider invalidStatusCodeRangeProvider
-     *
-     * @param mixed $invalidValues
      */
-    public function testResponseChangeStatusCodeWithWithInvalidRange($invalidValues): void
+    public function testResponseChangeStatusCodeWithWithInvalidRange(int $invalidValues): void
     {
         $response = new Response();
         $this->expectException(\InvalidArgumentException::class);

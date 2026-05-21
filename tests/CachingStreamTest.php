@@ -14,10 +14,8 @@ use PHPUnit\Framework\TestCase;
  */
 class CachingStreamTest extends TestCase
 {
-    /** @var CachingStream */
-    private $body;
-    /** @var Stream */
-    private $decorated;
+    private CachingStream $body;
+    private Stream $decorated;
 
     protected function setUp(): void
     {
