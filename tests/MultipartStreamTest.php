@@ -655,6 +655,50 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    /**
+     * @dataProvider unstringableCustomHeaderValueProvider
+     */
+    public function testRejectsUnstringableCustomHeaderValues($value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Multipart part header value must be a string or stringable value');
+
+        new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => 'body',
+                'headers' => ['X-Test' => $value],
+            ],
+        ], 'boundary');
+    }
+
+    public static function unstringableCustomHeaderValueProvider(): iterable
+    {
+        yield 'array' => [['value']];
+        yield 'object' => [new \stdClass()];
+    }
+
+    public function testRejectsResourceCustomHeaderValue(): void
+    {
+        $resource = fopen('php://temp', 'r');
+        self::assertIsResource($resource);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Multipart part header value must be a string or stringable value');
+
+        try {
+            new MultipartStream([
+                [
+                    'name' => 'field',
+                    'contents' => 'body',
+                    'headers' => ['X-Test' => $resource],
+                ],
+            ], 'boundary');
+        } finally {
+            fclose($resource);
+        }
+    }
+
     public function testSerializesFilesWithCustomHeadersAndMultipleValues(): void
     {
         $f1 = Psr7\FnStream::decorate(Psr7\Utils::streamFor('foo'), [
