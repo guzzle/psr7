@@ -444,6 +444,14 @@ class ServerRequestTest extends TestCase
                 'https://www.example.org:8324/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'www.example.org:8324']),
             ],
+            'Host header with zero port falls back to SERVER_NAME' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'bad.example.org:0']),
+            ],
+            'Host header with zero padded zero port falls back to SERVER_NAME' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'bad.example.org:0000']),
+            ],
             'IPv6 local loopback address' => [
                 'https://[::1]:8000/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => '[::1]:8000']),
@@ -468,9 +476,17 @@ class ServerRequestTest extends TestCase
                 'https://www.example.org:8324/blog/article.php?id=10&user=foo',
                 array_merge($server, ['SERVER_PORT' => '8324']),
             ],
-            'Invalid SERVER_PORT is ignored instead of coerced to zero' => [
-                'https://www.example.org/blog/article.php?id=10&user=foo',
-                array_merge($server, ['SERVER_PORT' => 'not-a-port']),
+            'SERVER_PORT with leading zeroes' => [
+                'https://www.example.org:8324/blog/article.php?id=10&user=foo',
+                array_merge($server, ['SERVER_PORT' => '008324']),
+            ],
+            'SERVER_PORT with maximum valid port' => [
+                'https://www.example.org:65535/blog/article.php?id=10&user=foo',
+                array_merge($server, ['SERVER_PORT' => '65535']),
+            ],
+            'HTTP_HOST port takes precedence over malformed SERVER_PORT' => [
+                'https://www.example.org:8324/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'www.example.org:8324', 'SERVER_PORT' => '+443']),
             ],
             'Non-string SERVER_PORT is ignored' => [
                 'https://www.example.org/blog/article.php?id=10&user=foo',
@@ -511,6 +527,44 @@ class ServerRequestTest extends TestCase
         $_SERVER = $serverParams;
 
         self::assertEquals(new Uri($expected), ServerRequest::getUriFromGlobals());
+    }
+
+    public static function dataInvalidServerPort(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'zero' => ['0'];
+        yield 'zero padded zero' => ['0000'];
+        yield 'negative' => ['-1'];
+        yield 'leading plus' => ['+443'];
+        yield 'out of range' => ['65536'];
+        yield 'too large' => ['999999'];
+        yield 'non numeric' => ['not-a-port'];
+        yield 'trailing junk' => ['443abc'];
+        yield 'leading whitespace' => [' 443'];
+        yield 'decimal' => ['4.5'];
+    }
+
+    /**
+     * @dataProvider dataInvalidServerPort
+     */
+    public function testGetUriFromGlobalsRejectsInvalidServerPort(string $serverPort): void
+    {
+        $_SERVER = [
+            'REQUEST_URI' => '/blog/article.php?id=10&user=foo',
+            'SERVER_PORT' => $serverPort,
+            'SERVER_ADDR' => '217.112.82.20',
+            'SERVER_NAME' => 'www.example.org',
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'REQUEST_METHOD' => 'POST',
+            'QUERY_STRING' => 'id=10&user=foo',
+            'HTTP_HOST' => 'www.example.org',
+            'HTTPS' => 'on',
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid SERVER_PORT');
+
+        ServerRequest::getUriFromGlobals();
     }
 
     public function testFromGlobals(): void
