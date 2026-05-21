@@ -49,9 +49,12 @@ final class Utils
 
         if ($maxLen === -1) {
             while (!$source->eof()) {
-                if (!$dest->write($source->read($bufferSize))) {
+                $buf = $source->read($bufferSize);
+                if ($buf === '') {
                     break;
                 }
+
+                self::writeAll($dest, $buf);
             }
         } else {
             $remaining = $maxLen;
@@ -62,8 +65,23 @@ final class Utils
                     break;
                 }
                 $remaining -= $len;
-                $dest->write($buf);
+                self::writeAll($dest, $buf);
             }
+        }
+    }
+
+    private static function writeAll(StreamInterface $dest, string $buf): void
+    {
+        $written = 0;
+        $len = strlen($buf);
+
+        while ($written < $len) {
+            $result = $dest->write(substr($buf, $written));
+            if ($result <= 0) {
+                throw new \RuntimeException('Unable to write to stream');
+            }
+
+            $written += $result;
         }
     }
 

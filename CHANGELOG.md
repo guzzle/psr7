@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.11.0 - TBD
 
+### Changed
+
+- Changed `Utils::copyToStream()` to retry short destination writes and throw when destination streams cannot make progress
+
 ### Deprecated
 
 - Deprecated invalid PSR-7 arguments that guzzlehttp/psr7 3.0 will require native types for
