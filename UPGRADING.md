@@ -209,7 +209,7 @@ $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 $stream = Utils::streamFor(new ArrayIterator(['body']));
 ```
 
-#### Multipart Content-Length Headers
+#### Multipart Part Headers and Metadata
 
 `MultipartStream` no longer adds default `Content-Length` headers to individual
 `multipart/form-data` parts. RFC 7578 section 4.8 says multipart form-data
@@ -246,6 +246,32 @@ $body = new MultipartStream([
     ],
 ]);
 ```
+
+`MultipartStream` now escapes generated `Content-Disposition` `name` and
+`filename` parameters before serializing multipart part headers. Double quotes,
+carriage returns, and line feeds are encoded as `%22`, `%0D`, and `%0A`.
+
+```php
+// Before: these values were interpolated into the generated part header.
+$body = new MultipartStream([
+    [
+        'name' => "field\"\r\nname",
+        'filename' => "avatar\"\r\n.txt",
+        'contents' => 'body',
+    ],
+]);
+
+// After: the generated Content-Disposition parameters contain
+// field%22%0D%0Aname and avatar%22%0D%0A.txt.
+```
+
+Explicit custom boundaries are now validated using RFC 2046 multipart boundary
+syntax. Omit the boundary or pass `null` to continue using a generated random
+boundary.
+
+Custom multipart part header names and values are also validated before
+serialization. Header names must be valid HTTP tokens, and header values must be
+strings without CR, LF, or other invalid control bytes.
 
 1.x to 2.0
 ----------
