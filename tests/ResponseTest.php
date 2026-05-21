@@ -95,12 +95,35 @@ class ResponseTest extends TestCase
 
         $r = new Response(200, [], null, '1.1', '0');
         self::assertSame('0', $r->getReasonPhrase(), 'Falsey reason works');
+
+        $r = new Response(200, [], null, '1.1', "OK\tFine\x80");
+        self::assertSame("OK\tFine\x80", $r->getReasonPhrase());
     }
 
     public function testCanConstructWithProtocolVersion(): void
     {
         $r = new Response(200, [], null, '1000');
         self::assertSame('1000', $r->getProtocolVersion());
+    }
+
+    /**
+     * @dataProvider invalidProtocolVersionProvider
+     */
+    public function testConstructorRejectsInvalidProtocolVersion(string $version): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Response(200, [], null, $version);
+    }
+
+    /**
+     * @dataProvider invalidReasonPhraseProvider
+     */
+    public function testConstructorRejectsInvalidReasonPhrase(string $reasonPhrase): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Response(200, [], null, '1.1', $reasonPhrase);
     }
 
     public function testWithStatusCodeAndNoReason(): void
@@ -119,12 +142,62 @@ class ResponseTest extends TestCase
         $r = (new Response())->withStatus(201, '0');
         self::assertSame(201, $r->getStatusCode());
         self::assertSame('0', $r->getReasonPhrase(), 'Falsey reason works');
+
+        $r = (new Response())->withStatus(201, "Fine\t\x80");
+        self::assertSame(201, $r->getStatusCode());
+        self::assertSame("Fine\t\x80", $r->getReasonPhrase());
     }
 
     public function testWithProtocolVersion(): void
     {
         $r = (new Response())->withProtocolVersion('1000');
         self::assertSame('1000', $r->getProtocolVersion());
+    }
+
+    /**
+     * @dataProvider invalidProtocolVersionProvider
+     */
+    public function testWithProtocolVersionRejectsInvalidVersion(string $version): void
+    {
+        $response = new Response();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $response->withProtocolVersion($version);
+    }
+
+    /**
+     * @dataProvider invalidReasonPhraseProvider
+     */
+    public function testWithStatusRejectsInvalidReasonPhrase(string $reasonPhrase): void
+    {
+        $response = new Response();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $response->withStatus(200, $reasonPhrase);
+    }
+
+    public static function invalidProtocolVersionProvider(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'with prefix' => ['HTTP/1.1'];
+        yield 'trailing space' => ['1.1 '];
+        yield 'text suffix' => ['1.1foo'];
+        yield 'newline' => ["1.1\r\nX-Injected: yes"];
+        yield 'missing minor' => ['1.'];
+        yield 'missing major' => ['.1'];
+        yield 'too many segments' => ['1.1.1'];
+        yield 'leading plus' => ['+1.1'];
+    }
+
+    public static function invalidReasonPhraseProvider(): iterable
+    {
+        yield 'newline' => ["OK\r\nX-Injected: yes"];
+        yield 'line feed' => ["OK\nX-Injected: yes"];
+        yield 'carriage return' => ["OK\rX-Injected: yes"];
+        yield 'nul' => ["OK\0"];
+        yield 'delete' => ["OK\x7F"];
     }
 
     public function testSameInstanceWhenSameProtocol(): void

@@ -261,21 +261,19 @@ final class Message
     {
         $data = self::parseMessage($message);
         $matches = [];
-        if (!preg_match('/^[\S]+\s+([a-zA-Z]+:\/\/|\/).*/', $data['start-line'], $matches)) {
+        if (!preg_match('/^(?P<method>[!#$%&\'*+.^_`|~0-9A-Za-z-]+) (?P<target>(?:[A-Za-z][A-Za-z0-9+.-]*:\/\/|\/)[^\x00-\x20\x7F]*) HTTP\/(?P<version>\d+(?:\.\d+)?)$/D', $data['start-line'], $matches)) {
             throw new \InvalidArgumentException('Invalid request string');
         }
-        $parts = explode(' ', $data['start-line'], 3);
-        $version = isset($parts[2]) ? explode('/', $parts[2])[1] : '1.1';
 
         $request = new Request(
-            $parts[0],
-            $matches[1] === '/' ? self::parseRequestUri($parts[1], $data['headers']) : $parts[1],
+            $matches['method'],
+            $matches['target'][0] === '/' ? self::parseRequestUri($matches['target'], $data['headers']) : $matches['target'],
             $data['headers'],
             $data['body'],
-            $version
+            $matches['version']
         );
 
-        return $matches[1] === '/' ? $request : $request->withRequestTarget($parts[1]);
+        return $matches['target'][0] === '/' ? $request : $request->withRequestTarget($matches['target']);
     }
 
     /**
@@ -289,17 +287,16 @@ final class Message
         // According to https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.2
         // the space between status-code and reason-phrase is required. But
         // browsers accept responses without space and reason as well.
-        if (!preg_match('/^HTTP\/.* [0-9]{3}( .*|$)/', $data['start-line'])) {
+        if (!preg_match('/^HTTP\/(?P<version>\d+(?:\.\d+)?) (?P<status>[1-5][0-9]{2})(?: (?P<reason>[\x09\x20-\x7E\x80-\xFF]*))?$/D', $data['start-line'], $matches)) {
             throw new \InvalidArgumentException('Invalid response string: '.$data['start-line']);
         }
-        $parts = explode(' ', $data['start-line'], 3);
 
         return new Response(
-            (int) $parts[1],
+            (int) $matches['status'],
             $data['headers'],
             $data['body'],
-            explode('/', $parts[0])[1],
-            $parts[2] ?? null
+            $matches['version'],
+            $matches['reason'] ?? null
         );
     }
 }

@@ -85,6 +85,82 @@ class RequestTest extends TestCase
         self::assertSame('put', $r->withMethod('put')->getMethod());
     }
 
+    /**
+     * @dataProvider validCustomMethodProvider
+     */
+    public function testAcceptsValidCustomMethodTokens(string $method): void
+    {
+        $request = new Request($method, '/');
+
+        self::assertSame($method, $request->getMethod());
+    }
+
+    /**
+     * @dataProvider validCustomMethodProvider
+     */
+    public function testWithMethodAcceptsValidCustomMethodTokens(string $method): void
+    {
+        $request = new Request('GET', '/');
+
+        self::assertSame($method, $request->withMethod($method)->getMethod());
+    }
+
+    public static function validCustomMethodProvider(): iterable
+    {
+        yield 'hyphen' => ['M-SEARCH'];
+        yield 'underscore' => ['GET_DATA'];
+        yield 'dot' => ['custom.method'];
+        yield 'plus' => ['foo+bar'];
+    }
+
+    /**
+     * @dataProvider invalidMethodProvider
+     */
+    public function testConstructorRejectsInvalidMethod(string $method): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request($method, '/');
+    }
+
+    /**
+     * @dataProvider invalidMethodProvider
+     */
+    public function testWithMethodRejectsInvalidMethod(string $method): void
+    {
+        $request = new Request('GET', '/');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $request->withMethod($method);
+    }
+
+    public static function invalidMethodProvider(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'space' => ['GET POST'];
+        yield 'newline' => ["GET\r\nX-Injected: yes"];
+        yield 'slash' => ['GET/'];
+        yield 'colon' => ['GET:'];
+        yield 'nul' => ["GET\0"];
+    }
+
+    public function testConstructorRejectsInvalidProtocolVersion(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request('GET', '/', [], null, "1.1\r\nX-Injected: yes");
+    }
+
+    public function testWithProtocolVersionRejectsInvalidProtocolVersion(): void
+    {
+        $request = new Request('GET', '/');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $request->withProtocolVersion("1.1\r\nX-Injected: yes");
+    }
+
     public function testWithUri(): void
     {
         $r1 = new Request('GET', '/');
@@ -116,6 +192,73 @@ class RequestTest extends TestCase
         $r1 = new Request('GET', '/');
         $this->expectException(\InvalidArgumentException::class);
         $r1->withRequestTarget('/foo bar');
+    }
+
+    public function testRequestTargetDoesNotAllowEmptyString(): void
+    {
+        $r1 = new Request('GET', '/');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $r1->withRequestTarget('');
+    }
+
+    /**
+     * @dataProvider invalidRequestTargetProvider
+     */
+    public function testRequestTargetDoesNotAllowControlCharacters(string $requestTarget): void
+    {
+        $r1 = new Request('GET', '/');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $r1->withRequestTarget($requestTarget);
+    }
+
+    public static function invalidRequestTargetProvider(): iterable
+    {
+        yield 'nul' => ["/foo\0bar"];
+        yield 'delete' => ["/foo\x7Fbar"];
+        yield 'newline' => ["/foo\r\nbar"];
+        yield 'tab' => ["/foo\tbar"];
+    }
+
+    public function testConstructorRejectsInvalidRequestTargetFromUriPath(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getPath')->willReturn("/foo\r\nbar");
+        $uri->method('getQuery')->willReturn('');
+        $uri->method('getHost')->willReturn('');
+        $uri->method('getPort')->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request('GET', $uri);
+    }
+
+    public function testConstructorRejectsInvalidRequestTargetFromUriQuery(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getPath')->willReturn('/foo');
+        $uri->method('getQuery')->willReturn("x=1\0");
+        $uri->method('getHost')->willReturn('');
+        $uri->method('getPort')->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request('GET', $uri);
+    }
+
+    public function testWithUriRejectsInvalidDerivedRequestTarget(): void
+    {
+        $request = new Request('GET', '/');
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getPath')->willReturn("/foo\x7Fbar");
+        $uri->method('getQuery')->willReturn('');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $request->withUri($uri);
     }
 
     public function testRequestTargetDefaultsToSlash(): void
