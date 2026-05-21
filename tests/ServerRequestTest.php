@@ -576,6 +576,15 @@ class ServerRequestTest extends TestCase
             'x=1',
         ];
 
+        yield 'absolute-form ignores empty QUERY_STRING when request uri has no query' => [
+            ['REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => '', 'HTTP_HOST' => 'good.example'],
+            'http://up.example/admin',
+            'up.example',
+            null,
+            '/admin',
+            '',
+        ];
+
         yield 'asterisk-form has no uri path' => [
             ['REQUEST_METHOD' => 'OPTIONS', 'REQUEST_URI' => '*', 'HTTP_HOST' => 'good.example'],
             'http://good.example',
@@ -659,6 +668,12 @@ class ServerRequestTest extends TestCase
             ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
             'http://up.example/admin?x=1',
             'http://up.example/admin?x=1',
+        ];
+
+        yield 'absolute-form target ignores empty query string fallback' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => '', 'HTTP_HOST' => 'good.example'],
+            'http://up.example/admin',
+            'http://up.example/admin',
         ];
 
         yield 'asterisk-form target is preserved' => [

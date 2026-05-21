@@ -535,11 +535,13 @@ class ServerRequest extends Request implements ServerRequestInterface
 
             if ($targetUri !== null && $targetUri->getHost() !== '') {
                 $requestTarget = self::removeRequestTargetFragment($requestUri);
-                if (strpos($requestTarget, '?') === false && $queryString !== null) {
+                if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
                     $targetUri = $targetUri->withQuery($queryString);
                     $requestTarget .= '?'.$queryString;
                 }
 
+                // Preserve the received absolute-form target unless it cannot be used
+                // as a PSR-7 request target without normalization.
                 return [$targetUri, preg_match('#\s#', $requestTarget) ? (string) $targetUri : $requestTarget];
             }
         }
