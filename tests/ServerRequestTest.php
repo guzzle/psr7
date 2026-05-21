@@ -529,6 +529,206 @@ class ServerRequestTest extends TestCase
         self::assertEquals(new Uri($expected), ServerRequest::getUriFromGlobals());
     }
 
+    public static function dataGetUriFromGlobalsRequestTargetForms(): iterable
+    {
+        yield 'origin-form' => [
+            ['REQUEST_URI' => '/admin?x=1', 'HTTP_HOST' => 'good.example'],
+            'http://good.example/admin?x=1',
+            'good.example',
+            null,
+            '/admin',
+            'x=1',
+        ];
+
+        yield 'slashless origin-form is recovered' => [
+            ['REQUEST_URI' => 'admin?x=1', 'HTTP_HOST' => 'good.example'],
+            'http://good.example/admin?x=1',
+            'good.example',
+            null,
+            '/admin',
+            'x=1',
+        ];
+
+        yield 'query-only origin-form is recovered' => [
+            ['REQUEST_URI' => '?x=1', 'HTTP_HOST' => 'good.example'],
+            'http://good.example?x=1',
+            'good.example',
+            null,
+            '',
+            'x=1',
+        ];
+
+        yield 'absolute-form target supplies authority' => [
+            ['REQUEST_URI' => 'http://up.example:8080/admin?x=1', 'HTTP_HOST' => 'good.example'],
+            'http://up.example:8080/admin?x=1',
+            'up.example',
+            8080,
+            '/admin',
+            'x=1',
+        ];
+
+        yield 'absolute-form uses QUERY_STRING when request uri has no query' => [
+            ['REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
+            'http://up.example/admin?x=1',
+            'up.example',
+            null,
+            '/admin',
+            'x=1',
+        ];
+
+        yield 'absolute-form ignores empty QUERY_STRING when request uri has no query' => [
+            ['REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => '', 'HTTP_HOST' => 'good.example'],
+            'http://up.example/admin',
+            'up.example',
+            null,
+            '/admin',
+            '',
+        ];
+
+        yield 'asterisk-form has no uri path' => [
+            ['REQUEST_METHOD' => 'OPTIONS', 'REQUEST_URI' => '*', 'HTTP_HOST' => 'good.example'],
+            'http://good.example',
+            'good.example',
+            null,
+            '',
+            '',
+        ];
+
+        yield 'connect authority-form supplies authority' => [
+            ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
+            'http://up.example:443',
+            'up.example',
+            443,
+            '',
+            '',
+        ];
+
+        yield 'request uri query wins over query string' => [
+            ['REQUEST_URI' => '/admin?from_uri=1', 'QUERY_STRING' => 'from_query=1', 'HTTP_HOST' => 'good.example'],
+            'http://good.example/admin?from_uri=1',
+            'good.example',
+            null,
+            '/admin',
+            'from_uri=1',
+        ];
+
+        yield 'explicit empty request uri query wins over query string' => [
+            ['REQUEST_URI' => '/admin?', 'QUERY_STRING' => 'from_query=1', 'HTTP_HOST' => 'good.example'],
+            'http://good.example/admin',
+            'good.example',
+            null,
+            '/admin',
+            '',
+        ];
+    }
+
+    /**
+     * @dataProvider dataGetUriFromGlobalsRequestTargetForms
+     */
+    public function testGetUriFromGlobalsRequestTargetForms(
+        array $serverParams,
+        string $expectedUri,
+        string $expectedHost,
+        ?int $expectedPort,
+        string $expectedPath,
+        string $expectedQuery
+    ): void {
+        $_SERVER = $serverParams;
+
+        $uri = ServerRequest::getUriFromGlobals();
+
+        self::assertSame($expectedUri, (string) $uri);
+        self::assertSame($expectedHost, $uri->getHost());
+        self::assertSame($expectedPort, $uri->getPort());
+        self::assertSame($expectedPath, $uri->getPath());
+        self::assertSame($expectedQuery, $uri->getQuery());
+    }
+
+    public static function dataFromGlobalsRequestTargetForms(): iterable
+    {
+        yield 'slashless origin-form is normalized' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'admin?x=1', 'HTTP_HOST' => 'good.example'],
+            '/admin?x=1',
+            'http://good.example/admin?x=1',
+        ];
+
+        yield 'query-only origin-form is normalized' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '?x=1', 'HTTP_HOST' => 'good.example'],
+            '/?x=1',
+            'http://good.example?x=1',
+        ];
+
+        yield 'absolute-form target is preserved' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example:8080/admin?x=1', 'HTTP_HOST' => 'good.example'],
+            'http://up.example:8080/admin?x=1',
+            'http://up.example:8080/admin?x=1',
+        ];
+
+        yield 'absolute-form target uses query string fallback' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
+            'http://up.example/admin?x=1',
+            'http://up.example/admin?x=1',
+        ];
+
+        yield 'absolute-form target ignores empty query string fallback' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => '', 'HTTP_HOST' => 'good.example'],
+            'http://up.example/admin',
+            'http://up.example/admin',
+        ];
+
+        yield 'asterisk-form target is preserved' => [
+            ['REQUEST_METHOD' => 'OPTIONS', 'REQUEST_URI' => '*', 'HTTP_HOST' => 'good.example'],
+            '*',
+            'http://good.example',
+        ];
+
+        yield 'connect authority-form target is preserved' => [
+            ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
+            'up.example:443',
+            'http://up.example:443',
+        ];
+
+        yield 'query string is used when request uri is missing' => [
+            ['REQUEST_METHOD' => 'GET', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
+            '/?x=1',
+            'http://good.example?x=1',
+        ];
+    }
+
+    /**
+     * @dataProvider dataFromGlobalsRequestTargetForms
+     */
+    public function testFromGlobalsRequestTargetForms(array $serverParams, string $expectedRequestTarget, string $expectedUri): void
+    {
+        $_SERVER = $serverParams;
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame($expectedRequestTarget, $request->getRequestTarget());
+        self::assertSame($expectedUri, (string) $request->getUri());
+    }
+
+    public function testFromGlobalsKeepsValidHostHeaderWhenAbsoluteFormAuthorityDiffers(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'http://up.example:8080/admin?x=1',
+            'HTTP_HOST' => 'good.example',
+        ];
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('up.example', $request->getUri()->getHost());
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+        self::assertSame('http://up.example:8080/admin?x=1', $request->getRequestTarget());
+    }
+
     public static function dataInvalidServerPort(): iterable
     {
         yield 'empty' => [''];

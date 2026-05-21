@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Harden URI host and scheme validation, including rejecting schemes that do not begin with a letter
 - Tighten `ServerRequest::getUriFromGlobals()` validation for malformed `HTTP_HOST` and `SERVER_PORT` values
 - Stop preserving malformed `Host` headers when building server requests from globals
+- Normalize server request URI reconstruction from globals
 - Reject hosts with embedded ports in `Uri::withHost()`
 - Validate iterator chunks passed to `Utils::streamFor()`
 - Validate unsupported values passed to `Query::build()`
