@@ -265,6 +265,7 @@ final class MultipartStream implements StreamInterface
 
     private static function escapeContentDispositionParameter(string $value): string
     {
+        // Match WHATWG browser multipart/form-data behavior: escape CR, LF, and DQUOTE only.
         return str_replace(["\r", "\n", '"'], ['%0D', '%0A', '%22'], $value);
     }
 }
