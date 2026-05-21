@@ -49,6 +49,46 @@ class UtilsTest extends TestCase
         self::assertSame('foobaz', (string) $s2);
     }
 
+    public function testCopyToStreamRetriesShortWrites(): void
+    {
+        $s1 = Psr7\Utils::streamFor('foobaz');
+        $sink = Psr7\Utils::streamFor('');
+        $writes = 0;
+
+        $s2 = FnStream::decorate($sink, [
+            'write' => function (string $string) use ($sink, &$writes): int {
+                ++$writes;
+
+                return $sink->write(substr($string, 0, 1));
+            },
+        ]);
+
+        Psr7\Utils::copyToStream($s1, $s2);
+
+        self::assertSame('foobaz', (string) $sink);
+        self::assertSame(6, $writes);
+    }
+
+    public function testCopyToStreamRetriesShortWritesWithMaxLen(): void
+    {
+        $s1 = Psr7\Utils::streamFor('foobaz');
+        $sink = Psr7\Utils::streamFor('');
+        $writes = 0;
+
+        $s2 = FnStream::decorate($sink, [
+            'write' => function (string $string) use ($sink, &$writes): int {
+                ++$writes;
+
+                return $sink->write(substr($string, 0, 1));
+            },
+        ]);
+
+        Psr7\Utils::copyToStream($s1, $s2, 3);
+
+        self::assertSame('foo', (string) $sink);
+        self::assertSame(3, $writes);
+    }
+
     public function testStopsCopyToStreamWhenWriteFails(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
@@ -58,11 +98,14 @@ class UtilsTest extends TestCase
                 return 0;
             },
         ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to write to stream');
+
         Psr7\Utils::copyToStream($s1, $s2);
-        self::assertSame('', (string) $s2);
     }
 
-    public function testStopsCopyToSteamWhenWriteFailsWithMaxLen(): void
+    public function testStopsCopyToStreamWhenWriteFailsWithMaxLen(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
         $s2 = Psr7\Utils::streamFor('');
@@ -71,8 +114,11 @@ class UtilsTest extends TestCase
                 return 0;
             },
         ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to write to stream');
+
         Psr7\Utils::copyToStream($s1, $s2, 10);
-        self::assertSame('', (string) $s2);
     }
 
     public function testCopyToStreamReadsInChunksInsteadOfAllInMemory(): void
