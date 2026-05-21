@@ -268,38 +268,38 @@ class UriTest extends TestCase
         yield 'unbalanced closing bracket' => ['example]com'];
     }
 
-    public function testCanParseFalseyUriParts(): void
+    public function testCanParseFalseyUriPartsExceptScheme(): void
     {
-        $uri = new Uri('0://0:0@0/0?0#0');
+        $uri = new Uri('x://0:0@0/0?0#0');
 
-        self::assertSame('0', $uri->getScheme());
+        self::assertSame('x', $uri->getScheme());
         self::assertSame('0:0@0', $uri->getAuthority());
         self::assertSame('0:0', $uri->getUserInfo());
         self::assertSame('0', $uri->getHost());
         self::assertSame('/0', $uri->getPath());
         self::assertSame('0', $uri->getQuery());
         self::assertSame('0', $uri->getFragment());
-        self::assertSame('0://0:0@0/0?0#0', (string) $uri);
+        self::assertSame('x://0:0@0/0?0#0', (string) $uri);
     }
 
-    public function testCanConstructFalseyUriParts(): void
+    public function testCanConstructFalseyUriPartsExceptScheme(): void
     {
         $uri = (new Uri())
-            ->withScheme('0')
+            ->withScheme('x')
             ->withUserInfo('0', '0')
             ->withHost('0')
             ->withPath('/0')
             ->withQuery('0')
             ->withFragment('0');
 
-        self::assertSame('0', $uri->getScheme());
+        self::assertSame('x', $uri->getScheme());
         self::assertSame('0:0@0', $uri->getAuthority());
         self::assertSame('0:0', $uri->getUserInfo());
         self::assertSame('0', $uri->getHost());
         self::assertSame('/0', $uri->getPath());
         self::assertSame('0', $uri->getQuery());
         self::assertSame('0', $uri->getFragment());
-        self::assertSame('0://0:0@0/0?0#0', (string) $uri);
+        self::assertSame('x://0:0@0/0?0#0', (string) $uri);
     }
 
     /**

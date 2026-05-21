@@ -637,7 +637,8 @@ class Uri implements UriInterface, \JsonSerializable
     private function filterScheme(string $scheme): string
     {
         $scheme = \strtr($scheme, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
-        if (preg_match('/[\x00-\x20\x7F]/', $scheme)) {
+
+        if ($scheme !== '' && !preg_match('/^[a-z][a-z0-9.+-]*$/D', $scheme)) {
             throw new \InvalidArgumentException(sprintf('Invalid scheme: "%s"', $scheme));
         }
 
