@@ -209,6 +209,44 @@ $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 $stream = Utils::streamFor(new ArrayIterator(['body']));
 ```
 
+#### Multipart Content-Length Headers
+
+`MultipartStream` no longer adds default `Content-Length` headers to individual
+`multipart/form-data` parts. RFC 7578 section 4.8 says multipart form-data
+parts must not include `Content-*` headers other than the supported multipart
+part headers, so 3.0 stops generating per-part `Content-Length` by default.
+
+If your tests compare raw multipart payloads, remove the generated
+`Content-Length` lines from expected strings:
+
+```text
+// 2.x generated:
+--boundary\r\n
+Content-Disposition: form-data; name="foo"\r\n
+Content-Length: 3\r\n
+\r\n
+bar\r\n
+
+// 3.0 generates:
+--boundary\r\n
+Content-Disposition: form-data; name="foo"\r\n
+\r\n
+bar\r\n
+```
+
+Applications can still pass an explicit `Content-Length` header in a multipart
+element's `headers` array if a non-standard peer requires it:
+
+```php
+$body = new MultipartStream([
+    [
+        'name' => 'foo',
+        'contents' => 'bar',
+        'headers' => ['Content-Length' => '3'],
+    ],
+]);
+```
+
 1.x to 2.0
 ----------
 
