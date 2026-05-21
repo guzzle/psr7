@@ -89,7 +89,7 @@ class UtilsTest extends TestCase
         self::assertSame(3, $writes);
     }
 
-    public function testStopsCopyToStreamWhenWriteFails(): void
+    public function testCopyToStreamThrowsWhenWriteFails(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
         $s2 = Psr7\Utils::streamFor('');
@@ -105,7 +105,7 @@ class UtilsTest extends TestCase
         Psr7\Utils::copyToStream($s1, $s2);
     }
 
-    public function testStopsCopyToStreamWhenWriteFailsWithMaxLen(): void
+    public function testCopyToStreamThrowsWhenWriteFailsWithMaxLen(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
         $s2 = Psr7\Utils::streamFor('');
