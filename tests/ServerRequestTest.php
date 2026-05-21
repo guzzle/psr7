@@ -653,6 +653,85 @@ class ServerRequestTest extends TestCase
         self::assertEquals($expectedFiles, $server->getUploadedFiles());
     }
 
+    public static function dataInvalidHostHeaderFromGlobals(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'space' => ['bad host'];
+        yield 'newline' => ["bad.example\r\nX-Evil: yes"];
+        yield 'multiple ports' => ['bad.example:443:8443'];
+        yield 'zero port' => ['bad.example:0'];
+        yield 'zero padded zero port' => ['bad.example:0000'];
+    }
+
+    /**
+     * @dataProvider dataInvalidHostHeaderFromGlobals
+     */
+    public function testFromGlobalsDropsInvalidHostHeaderWhenUriFallsBack(string $host): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => $host,
+            'SERVER_NAME' => 'good.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('good.example', $request->getUri()->getHost());
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+    }
+
+    public function testFromGlobalsPreservesValidHostHeader(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org:8324',
+            'SERVER_NAME' => 'good.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('www.example.org', $request->getUri()->getHost());
+        self::assertSame(8324, $request->getUri()->getPort());
+        self::assertSame('www.example.org:8324', $request->getHeaderLine('Host'));
+    }
+
+    public function testFromGlobalsDerivesHostHeaderWhenHostHeaderMissing(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'SERVER_NAME' => 'good.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('good.example', $request->getUri()->getHost());
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+    }
+
     public function testFromGlobalsBuildsHeadersFromServerWhenApacheRequestHeadersUnavailable(): void
     {
         if (\function_exists('apache_request_headers')) {
@@ -803,6 +882,36 @@ class ServerRequestTest extends TestCase
 
         self::assertSame(['native'], $server->getHeader('X-Native'));
         self::assertFalse($server->hasHeader('X-Fallback'));
+    }
+
+    /**
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
+    public function testFromGlobalsDropsInvalidApacheHostHeaderWhenUriFallsBack(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is already available.');
+        }
+
+        eval('function apache_request_headers(): array { return ["Host" => "bad.example:443:8443", "X-Native" => "native"]; }');
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'bad.example:443:8443',
+            'SERVER_NAME' => 'good.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame('good.example', $server->getUri()->getHost());
+        self::assertSame('good.example', $server->getHeaderLine('Host'));
+        self::assertSame(['native'], $server->getHeader('X-Native'));
     }
 
     /**
