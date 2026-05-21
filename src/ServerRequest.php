@@ -205,7 +205,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public static function fromGlobals(): ServerRequestInterface
     {
         $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
-        $headers = self::getAllHeaders();
+        $headers = self::removeInvalidHostHeader(self::getAllHeaders());
         $uri = self::getUriFromGlobals();
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
         $serverProtocol = self::getServerParam('SERVER_PROTOCOL');
@@ -310,6 +310,27 @@ class ServerRequest extends Request implements ServerRequestInterface
                 $headers['Authorization'] = 'Basic '.base64_encode($server['PHP_AUTH_USER'].':'.$password);
             } elseif (isset($server['PHP_AUTH_DIGEST']) && is_string($server['PHP_AUTH_DIGEST'])) {
                 $headers['Authorization'] = $server['PHP_AUTH_DIGEST'];
+            }
+        }
+
+        return $headers;
+    }
+
+    /**
+     * @param array<string, string> $headers
+     *
+     * @return array<string, string>
+     */
+    private static function removeInvalidHostHeader(array $headers): array
+    {
+        foreach ($headers as $name => $value) {
+            if (strtolower($name) !== 'host') {
+                continue;
+            }
+
+            [$host] = self::extractHostAndPortFromAuthority($value);
+            if ($host === null) {
+                unset($headers[$name]);
             }
         }
 
