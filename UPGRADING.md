@@ -12,6 +12,11 @@ Guzzle PSR-7 3.0 requires PHP `^7.4 || ^8.0`. Guzzle PSR-7 2.x supported PHP
 If your application still supports PHP 7.2 or 7.3, continue using Guzzle PSR-7
 2.x until your minimum PHP version is raised.
 
+Before requiring `guzzlehttp/psr7:^3.0`, make sure production, deployment,
+local development, and CI runtimes use PHP 7.4 or newer. Also check that any
+Composer `config.platform.php` values are not pinned below PHP 7.4 and that
+dependent packages allow `guzzlehttp/psr7` 3.x.
+
 Guzzle PSR-7 3.0 requires `psr/http-message:^2.0` and `psr/http-factory:^1.1`.
 If your dependency constraints pin `psr/http-message` to v1, update them before
 upgrading.
@@ -207,6 +212,44 @@ $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 
 // After: false and null are stream chunks. End the iterator to signal EOF.
 $stream = Utils::streamFor(new ArrayIterator(['body']));
+```
+
+#### Multipart Content-Length Headers
+
+`MultipartStream` no longer adds default `Content-Length` headers to individual
+`multipart/form-data` parts. RFC 7578 section 4.8 says multipart form-data
+parts must not include `Content-*` headers other than the supported multipart
+part headers, so 3.0 stops generating per-part `Content-Length` by default.
+
+If your tests compare raw multipart payloads, remove the generated
+`Content-Length` lines from expected strings:
+
+```text
+// 2.x generated:
+--boundary\r\n
+Content-Disposition: form-data; name="foo"\r\n
+Content-Length: 3\r\n
+\r\n
+bar\r\n
+
+// 3.0 generates:
+--boundary\r\n
+Content-Disposition: form-data; name="foo"\r\n
+\r\n
+bar\r\n
+```
+
+Applications can still pass an explicit `Content-Length` header in a multipart
+element's `headers` array if a non-standard peer requires it:
+
+```php
+$body = new MultipartStream([
+    [
+        'name' => 'foo',
+        'contents' => 'bar',
+        'headers' => ['Content-Length' => '3'],
+    ],
+]);
 ```
 
 1.x to 2.0
