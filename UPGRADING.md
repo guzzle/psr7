@@ -249,7 +249,9 @@ $body = new MultipartStream([
 
 `MultipartStream` now escapes generated `Content-Disposition` `name` and
 `filename` parameters before serializing multipart part headers. Double quotes,
-carriage returns, and line feeds are encoded as `%22`, `%0D`, and `%0A`.
+carriage returns, and line feeds are encoded as `%22`, `%0D`, and `%0A`. Literal
+backslashes and other characters are serialized unchanged, matching browser
+multipart form submission behavior.
 
 ```php
 // Before: these values were interpolated into the generated part header.

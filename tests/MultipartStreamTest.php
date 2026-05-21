@@ -162,6 +162,26 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testSerializesLiteralBackslashesUnchangedInGeneratedContentDispositionName(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'field\\name',
+                'contents' => 'value',
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"field\\name\"\r\n",
+            "\r\n",
+            "value\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
     public function testRejectsGeneratedContentDispositionNameWithNul(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -669,6 +689,28 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testSerializesLiteralBackslashesUnchangedInGeneratedContentDispositionFilename(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'upload',
+                'contents' => 'body',
+                'filename' => 'avatar\\name.txt',
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"upload\"; filename=\"avatar\\name.txt\"\r\n",
+            "Content-Type: text/plain\r\n",
+            "\r\n",
+            "body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
     public function testEscapesUriDerivedContentDispositionFilename(): void
     {
         $file = Psr7\FnStream::decorate(Psr7\Utils::streamFor('body'), [
@@ -687,6 +729,33 @@ class MultipartStreamTest extends TestCase
         $expected = \implode('', [
             "--boundary\r\n",
             "Content-Disposition: form-data; name=\"upload\"; filename=\"avatar%22%0D%0A.txt\"\r\n",
+            "Content-Type: text/plain\r\n",
+            "\r\n",
+            "body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
+    public function testSerializesLiteralBackslashesUnchangedInUriDerivedContentDispositionFilename(): void
+    {
+        $file = Psr7\FnStream::decorate(Psr7\Utils::streamFor('body'), [
+            'getMetadata' => static function (): string {
+                return '/foo/avatar\\name.txt';
+            },
+        ]);
+
+        $b = new MultipartStream([
+            [
+                'name' => 'upload',
+                'contents' => $file,
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"upload\"; filename=\"avatar\\name.txt\"\r\n",
             "Content-Type: text/plain\r\n",
             "\r\n",
             "body\r\n",
