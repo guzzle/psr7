@@ -779,7 +779,7 @@ class MultipartStreamTest extends TestCase
     public function testRejectsUnstringableCustomHeaderValues($value): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Multipart part header value must be a string or stringable value');
+        $this->expectExceptionMessage('Multipart part header value must be a string.');
 
         new MultipartStream([
             [
@@ -802,7 +802,7 @@ class MultipartStreamTest extends TestCase
         self::assertIsResource($resource);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Multipart part header value must be a string or stringable value');
+        $this->expectExceptionMessage('Multipart part header value must be a string.');
 
         try {
             new MultipartStream([
@@ -815,6 +815,28 @@ class MultipartStreamTest extends TestCase
         } finally {
             fclose($resource);
         }
+    }
+
+    public function testSerializesNumericCustomHeaderNames(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => 'body',
+                'headers' => [123 => 'value'],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "123: value\r\n",
+            "Content-Disposition: form-data; name=\"field\"\r\n",
+            "\r\n",
+            "body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
     }
 
     public function testSerializesFilesWithCustomHeadersAndMultipleValues(): void

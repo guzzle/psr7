@@ -271,7 +271,7 @@ boundary.
 
 Custom multipart part header names and values are also validated before
 serialization. Header names must be valid HTTP tokens, and header values must be
-strings without control characters.
+strings without CR, LF, or other invalid control bytes.
 
 1.x to 2.0
 ----------
