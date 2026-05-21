@@ -287,9 +287,6 @@ class Stream implements StreamInterface
 
     private function timedOut(): bool
     {
-        /** @var array<string, mixed> $meta */
-        $meta = stream_get_meta_data($this->stream);
-
-        return ($meta['timed_out'] ?? false) === true && !feof($this->stream);
+        return StreamTimeout::isResourceReadTimedOut($this->stream);
     }
 }

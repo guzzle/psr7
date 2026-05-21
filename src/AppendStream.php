@@ -194,12 +194,20 @@ final class AppendStream implements StreamInterface
                 ++$this->current;
             }
 
-            $result = $this->streams[$this->current]->read($remaining);
+            try {
+                $result = $this->streams[$this->current]->read($remaining);
+            } catch (TimeoutException $e) {
+                throw $e;
+            } catch (\RuntimeException $e) {
+                if (StreamTimeout::isReadTimedOut($this->streams[$this->current])) {
+                    throw new TimeoutException('Unable to read from stream: timed out', 0, $e);
+                }
+
+                throw $e;
+            }
 
             if ($result === '') {
-                if ($this->streams[$this->current]->getMetadata('timed_out') === true
-                    && !$this->streams[$this->current]->eof()
-                ) {
+                if (StreamTimeout::isReadTimedOut($this->streams[$this->current])) {
                     throw new TimeoutException('Unable to read from stream: timed out');
                 }
 

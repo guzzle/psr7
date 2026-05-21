@@ -75,6 +75,83 @@ class UtilsTest extends TestCase
         self::assertSame('foo', Psr7\Utils::copyToString($s));
     }
 
+    public function testCopyToStringIgnoresMetadataProbeFailure(): void
+    {
+        $s = new FnStream([
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+        ]);
+
+        self::assertSame('', Psr7\Utils::copyToString($s));
+    }
+
+    public function testCopyToStringPreservesReadExceptionWhenMetadataProbeFails(): void
+    {
+        $s = new FnStream([
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                throw new \RuntimeException('read failed');
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('read failed');
+
+        Psr7\Utils::copyToString($s);
+    }
+
+    public function testCopyToStringIgnoresEofProbeFailureDuringTimeoutDetection(): void
+    {
+        $eofCalls = 0;
+        $s = new FnStream([
+            'eof' => function () use (&$eofCalls): bool {
+                ++$eofCalls;
+                if ($eofCalls > 1) {
+                    throw new \RuntimeException('eof failed');
+                }
+
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+
+        self::assertSame('', Psr7\Utils::copyToString($s));
+    }
+
+    public function testCopyToStringIgnoresNonBooleanTimedOutMetadata(): void
+    {
+        $s = new FnStream([
+            'eof' => function (): bool {
+                return false;
+            },
+            'read' => function (): string {
+                return '';
+            },
+            'getMetadata' => function (?string $key = null) {
+                return $key === 'timed_out' ? 1 : null;
+            },
+        ]);
+
+        self::assertSame('', Psr7\Utils::copyToString($s));
+    }
+
     public function testCopiesToStream(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
@@ -186,6 +263,44 @@ class UtilsTest extends TestCase
 
         $this->expectException(Psr7\Exception\TimeoutException::class);
         $this->expectExceptionMessage('Unable to write to stream: timed out');
+
+        Psr7\Utils::copyToStream($s1, $s2);
+    }
+
+    public function testCopyToStreamPreservesWriteFailureWhenMetadataProbeFails(): void
+    {
+        $s1 = Psr7\Utils::streamFor('foobaz');
+        $s2 = Psr7\Utils::streamFor('');
+        $s2 = FnStream::decorate($s2, [
+            'write' => function (): int {
+                return 0;
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to write to stream');
+
+        Psr7\Utils::copyToStream($s1, $s2);
+    }
+
+    public function testCopyToStreamPreservesThrownWriteExceptionWhenMetadataProbeFails(): void
+    {
+        $s1 = Psr7\Utils::streamFor('foobaz');
+        $s2 = Psr7\Utils::streamFor('');
+        $s2 = FnStream::decorate($s2, [
+            'write' => function (): int {
+                throw new \RuntimeException('write failed');
+            },
+            'getMetadata' => function (): void {
+                throw new \RuntimeException('metadata failed');
+            },
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('write failed');
 
         Psr7\Utils::copyToStream($s1, $s2);
     }
@@ -328,6 +443,16 @@ class UtilsTest extends TestCase
         $this->expectExceptionMessage('Unable to read line from stream: timed out');
 
         Psr7\Utils::readLine($s);
+    }
+
+    public function testReadLineIgnoresMetadataProbeFailure(): void
+    {
+        $s = $this->createMock(StreamInterface::class);
+        $s->method('read')->willReturn('');
+        $s->method('eof')->willReturn(false);
+        $s->method('getMetadata')->with('timed_out')->willThrowException(new \RuntimeException('metadata failed'));
+
+        self::assertSame('', Psr7\Utils::readLine($s));
     }
 
     public function testRedactUserInfo(): void

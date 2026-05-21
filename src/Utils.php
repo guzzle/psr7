@@ -512,16 +512,16 @@ final class Utils
             $contents = stream_get_contents($stream);
 
             if ($contents === false) {
-                $ex = self::resourceTimedOut($stream)
+                $ex = StreamTimeout::isResourceReadTimedOut($stream)
                     ? new TimeoutException('Unable to read stream contents: timed out')
                     : new \RuntimeException('Unable to read stream contents');
-            } elseif (self::resourceTimedOut($stream)) {
+            } elseif (StreamTimeout::isResourceReadTimedOut($stream)) {
                 $ex = new TimeoutException('Unable to read stream contents: timed out');
             }
         } catch (TimeoutException $e) {
             $ex = $e;
         } catch (\Throwable $e) {
-            $ex = self::resourceTimedOut($stream)
+            $ex = StreamTimeout::isResourceReadTimedOut($stream)
                 ? new TimeoutException('Unable to read stream contents: timed out', 0, $e)
                 : new \RuntimeException(sprintf(
                     'Unable to read stream contents: %s',
@@ -563,40 +563,15 @@ final class Utils
         string $message,
         ?\Throwable $previous = null
     ): void {
-        if ($stream->getMetadata('timed_out') !== true) {
-            return;
+        if (StreamTimeout::isReadTimedOut($stream)) {
+            throw new TimeoutException($message, 0, $previous);
         }
-
-        try {
-            if ($stream->eof()) {
-                return;
-            }
-        } catch (\RuntimeException $e) {
-            // Fall through to the timeout exception if EOF cannot be checked.
-        }
-
-        throw new TimeoutException($message, 0, $previous);
     }
 
     private static function throwIfWriteTimedOut(StreamInterface $stream, ?\Throwable $previous = null): void
     {
-        if ($stream->getMetadata('timed_out') === true) {
+        if (StreamTimeout::isWriteTimedOut($stream)) {
             throw new TimeoutException('Unable to write to stream: timed out', 0, $previous);
-        }
-    }
-
-    /**
-     * @param resource $stream
-     */
-    private static function resourceTimedOut($stream): bool
-    {
-        try {
-            /** @var array<string, mixed> $metadata */
-            $metadata = stream_get_meta_data($stream);
-
-            return ($metadata['timed_out'] ?? false) === true && !feof($stream);
-        } catch (\Throwable $e) {
-            return false;
         }
     }
 
