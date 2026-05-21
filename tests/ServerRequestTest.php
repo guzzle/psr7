@@ -37,6 +37,22 @@ class ServerRequestTest extends TestCase
                     ),
                 ],
             ],
+            'Single file without optional metadata' => [
+                [
+                    'file' => [
+                        'tmp_name' => '/tmp/php/php1h4j1o',
+                        'error' => '0',
+                        'size' => '123',
+                    ],
+                ],
+                [
+                    'file' => new UploadedFile(
+                        '/tmp/php/php1h4j1o',
+                        123,
+                        UPLOAD_ERR_OK
+                    ),
+                ],
+            ],
             'Empty file' => [
                 [
                     'image_file' => [
@@ -163,7 +179,6 @@ class ServerRequestTest extends TestCase
                         'tmp_name' => [
                             0 => '/tmp/php/hp9hskjhf',
                             1 => '/tmp/php/php1h4j1o',
-                            2 => '/tmp/php/w0ensl4ar',
                         ],
                         'error' => [
                             0 => '0',
@@ -172,11 +187,6 @@ class ServerRequestTest extends TestCase
                         'size' => [
                             0 => '123',
                             1 => '7349',
-                        ],
-                    ],
-                    'minimum_data' => [
-                        'tmp_name' => [
-                            0 => '/tmp/php/hp9hskjhf',
                         ],
                     ],
                     'nested' => [
@@ -233,18 +243,6 @@ class ServerRequestTest extends TestCase
                             'Image.png',
                             'image/png'
                         ),
-                        2 => new UploadedFile(
-                            '/tmp/php/w0ensl4ar',
-                            null,
-                            UPLOAD_ERR_OK
-                        ),
-                    ],
-                    'minimum_data' => [
-                        0 => new UploadedFile(
-                            '/tmp/php/hp9hskjhf',
-                            0,
-                            UPLOAD_ERR_OK
-                        ),
                     ],
                     'nested' => [
                         'other' => new UploadedFile(
@@ -273,6 +271,30 @@ class ServerRequestTest extends TestCase
                     ],
                 ],
             ],
+            'Nested files without optional metadata' => [
+                [
+                    'file' => [
+                        'tmp_name' => [
+                            0 => '/tmp/php/hp9hskjhf',
+                        ],
+                        'error' => [
+                            0 => '0',
+                        ],
+                        'size' => [
+                            0 => '123',
+                        ],
+                    ],
+                ],
+                [
+                    'file' => [
+                        0 => new UploadedFile(
+                            '/tmp/php/hp9hskjhf',
+                            123,
+                            UPLOAD_ERR_OK
+                        ),
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -286,11 +308,87 @@ class ServerRequestTest extends TestCase
         self::assertEquals($expected, $result);
     }
 
-    public function testNormalizeFilesRaisesException(): void
+    /**
+     * @dataProvider invalidFileSpecifications
+     */
+    public function testNormalizeFilesRaisesException(array $files, string $expectedMessage): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid value in files specification');
-        ServerRequest::normalizeFiles(['test' => 'something']);
+        $this->expectExceptionMessage($expectedMessage);
+
+        ServerRequest::normalizeFiles($files);
+    }
+
+    public static function invalidFileSpecifications(): iterable
+    {
+        yield 'invalid scalar' => [
+            ['test' => 'something'],
+            'Invalid value in files specification',
+        ];
+
+        yield 'single file missing size' => [
+            ['file' => ['tmp_name' => '/tmp/php123', 'error' => '0']],
+            'Invalid file specification',
+        ];
+
+        yield 'single file missing error' => [
+            ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123']],
+            'Invalid file specification',
+        ];
+
+        yield 'nested file missing size array' => [
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'error' => [0 => '0']]],
+            'Invalid file specification',
+        ];
+
+        yield 'nested file missing error array' => [
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => [0 => '123']]],
+            'Invalid file specification',
+        ];
+
+        yield 'nested file scalar size' => [
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => '123', 'error' => [0 => '0']]],
+            'Invalid nested file specification',
+        ];
+
+        yield 'nested file scalar error' => [
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => [0 => '123'], 'error' => '0']],
+            'Invalid nested file specification',
+        ];
+
+        yield 'nested file missing size key' => [
+            [
+                'file' => [
+                    'tmp_name' => [0 => '/tmp/a', 1 => '/tmp/b'],
+                    'size' => [0 => '123'],
+                    'error' => [0 => '0', 1 => '0'],
+                ],
+            ],
+            'matching keys',
+        ];
+
+        yield 'nested file missing error key' => [
+            [
+                'file' => [
+                    'tmp_name' => [0 => '/tmp/a', 1 => '/tmp/b'],
+                    'size' => [0 => '123', 1 => '456'],
+                    'error' => [0 => '0'],
+                ],
+            ],
+            'matching keys',
+        ];
+
+        yield 'nested file scalar name' => [
+            [
+                'file' => [
+                    'tmp_name' => [0 => '/tmp/a'],
+                    'size' => [0 => '123'],
+                    'error' => [0 => '0'],
+                    'name' => 'a.txt',
+                ],
+            ],
+            'expected key "name" to be an array',
+        ];
     }
 
     public static function dataGetUriFromGlobals(): iterable
