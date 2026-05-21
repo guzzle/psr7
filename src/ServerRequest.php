@@ -206,12 +206,16 @@ class ServerRequest extends Request implements ServerRequestInterface
     {
         $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
         $headers = self::removeInvalidHostHeader(self::getAllHeaders());
-        $uri = self::getUriFromGlobals();
+        [$uri, $requestTarget] = self::getUriAndRequestTargetFromGlobals($method);
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
         $serverProtocol = self::getServerParam('SERVER_PROTOCOL');
         $protocol = $serverProtocol !== null ? str_replace('HTTP/', '', $serverProtocol) : '1.1';
 
         $serverRequest = new ServerRequest($method, $uri, $headers, $body, $protocol, $_SERVER);
+        if ($requestTarget !== null) {
+            /** @var ServerRequestInterface $serverRequest */
+            $serverRequest = $serverRequest->withRequestTarget($requestTarget);
+        }
 
         return $serverRequest
             ->withCookieParams($_COOKIE)
@@ -445,10 +449,7 @@ class ServerRequest extends Request implements ServerRequestInterface
         }
     }
 
-    /**
-     * Get a Uri populated with values from $_SERVER.
-     */
-    public static function getUriFromGlobals(): UriInterface
+    private static function getAuthorityUriFromGlobals(): UriInterface
     {
         $uri = new Uri('');
 
@@ -491,23 +492,129 @@ class ServerRequest extends Request implements ServerRequestInterface
             $uri = $uri->withPort(self::parseServerPort($serverPort));
         }
 
-        $hasQuery = false;
+        return $uri;
+    }
+
+    /**
+     * @return array{0: UriInterface, 1: string|null}
+     */
+    private static function getUriAndRequestTargetFromGlobals(string $method): array
+    {
+        $uri = self::getAuthorityUriFromGlobals();
         $requestUri = self::getServerParam('REQUEST_URI');
-        if ($requestUri !== null) {
-            $requestUriParts = explode('?', $requestUri, 2);
-            $uri = $uri->withPath($requestUriParts[0]);
-            if (isset($requestUriParts[1])) {
-                $hasQuery = true;
-                $uri = $uri->withQuery($requestUriParts[1]);
+        $queryString = self::getServerParam('QUERY_STRING');
+
+        if ($requestUri === null) {
+            if ($queryString !== null) {
+                $uri = $uri->withQuery($queryString);
+            }
+
+            return [$uri, null];
+        }
+
+        if (self::isAsteriskFormRequestTarget($method, $requestUri)) {
+            return [$uri->withPath('')->withQuery(''), '*'];
+        }
+
+        $connectAuthority = self::parseConnectAuthorityFormRequestTarget($method, $requestUri);
+        if ($connectAuthority !== null) {
+            [$host, $port] = $connectAuthority;
+
+            return [
+                $uri->withHost($host)->withPort($port)->withPath('')->withQuery(''),
+                $requestUri,
+            ];
+        }
+
+        if (self::isAbsoluteFormRequestTarget($requestUri)) {
+            try {
+                $targetUri = (new Uri($requestUri))->withFragment('');
+            } catch (InvalidArgumentException $e) {
+                $targetUri = null;
+            }
+
+            if ($targetUri !== null && $targetUri->getHost() !== '') {
+                $requestTarget = self::removeRequestTargetFragment($requestUri);
+                if (strpos($requestTarget, '?') === false && $queryString !== null) {
+                    $targetUri = $targetUri->withQuery($queryString);
+                    $requestTarget .= '?'.$queryString;
+                }
+
+                return [$targetUri, preg_match('#\s#', $requestTarget) ? (string) $targetUri : $requestTarget];
             }
         }
 
-        $queryString = self::getServerParam('QUERY_STRING');
-        if (!$hasQuery && $queryString !== null) {
+        [$path, $query, $hasQuery] = self::splitRequestTargetQuery($requestUri);
+        $uri = $uri->withPath(self::normalizeOriginFormPathFromGlobals($path));
+
+        if ($hasQuery) {
+            $uri = $uri->withQuery($query);
+        } elseif ($queryString !== null) {
             $uri = $uri->withQuery($queryString);
         }
 
-        return $uri;
+        return [$uri, null];
+    }
+
+    private static function isAbsoluteFormRequestTarget(string $target): bool
+    {
+        return preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:\/\//D', $target) === 1;
+    }
+
+    private static function isAsteriskFormRequestTarget(string $method, string $target): bool
+    {
+        return strcasecmp($method, 'OPTIONS') === 0 && $target === '*';
+    }
+
+    /**
+     * @return array{0: string, 1: int}|null
+     */
+    private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?array
+    {
+        if (strcasecmp($method, 'CONNECT') !== 0 || strpbrk($target, '/?#') !== false) {
+            return null;
+        }
+
+        [$host, $port] = self::extractHostAndPortFromAuthority($target);
+        if ($host === null || $port === null) {
+            return null;
+        }
+
+        return [$host, $port];
+    }
+
+    private static function removeRequestTargetFragment(string $target): string
+    {
+        return explode('#', $target, 2)[0];
+    }
+
+    /**
+     * @return array{0: string, 1: string, 2: bool}
+     */
+    private static function splitRequestTargetQuery(string $target): array
+    {
+        $parts = explode('?', $target, 2);
+
+        return [$parts[0], $parts[1] ?? '', isset($parts[1])];
+    }
+
+    private static function normalizeOriginFormPathFromGlobals(string $path): string
+    {
+        if ($path === '' || $path[0] === '/') {
+            return $path;
+        }
+
+        return '/'.$path;
+    }
+
+    /**
+     * Get a Uri populated with values from $_SERVER.
+     */
+    public static function getUriFromGlobals(): UriInterface
+    {
+        $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
+
+        return self::getUriAndRequestTargetFromGlobals($method)[0];
     }
 
     public function getServerParams(): array
