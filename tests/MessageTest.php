@@ -119,6 +119,65 @@ class MessageTest extends TestCase
         self::assertSame('https://www.google.com/search?q=foobar', (string) $request->getUri());
     }
 
+    public function testParsesOptionsAsteriskFormRequestTarget(): void
+    {
+        $req = "OPTIONS * HTTP/1.1\r\nHost: foo.com\r\n\r\n";
+        $request = Psr7\Message::parseRequest($req);
+
+        self::assertSame('OPTIONS', $request->getMethod());
+        self::assertSame('*', $request->getRequestTarget());
+        self::assertSame('1.1', $request->getProtocolVersion());
+        self::assertSame('foo.com', $request->getHeaderLine('Host'));
+        self::assertSame('', (string) $request->getBody());
+        self::assertSame('http://foo.com', (string) $request->getUri());
+    }
+
+    public function testParsesOptionsAsteriskFormRequestTargetWithoutHost(): void
+    {
+        $req = "OPTIONS * HTTP/1.1\r\n\r\n";
+        $request = Psr7\Message::parseRequest($req);
+
+        self::assertSame('OPTIONS', $request->getMethod());
+        self::assertSame('*', $request->getRequestTarget());
+        self::assertSame('', $request->getHeaderLine('Host'));
+        self::assertSame('', (string) $request->getUri());
+    }
+
+    public function testParsesConnectAuthorityFormRequestTarget(): void
+    {
+        $req = "CONNECT up.example:443 HTTP/1.1\r\nHost: up.example:443\r\n\r\n";
+        $request = Psr7\Message::parseRequest($req);
+
+        self::assertSame('CONNECT', $request->getMethod());
+        self::assertSame('up.example:443', $request->getRequestTarget());
+        self::assertSame('1.1', $request->getProtocolVersion());
+        self::assertSame('up.example:443', $request->getHeaderLine('Host'));
+        self::assertSame('', (string) $request->getBody());
+        self::assertSame('//up.example:443', (string) $request->getUri());
+    }
+
+    public function testParsesConnectAuthorityFormRequestTargetWithIpv6(): void
+    {
+        $req = "CONNECT [::1]:443 HTTP/1.1\r\nHost: [::1]:443\r\n\r\n";
+        $request = Psr7\Message::parseRequest($req);
+
+        self::assertSame('CONNECT', $request->getMethod());
+        self::assertSame('[::1]:443', $request->getRequestTarget());
+        self::assertSame('[::1]:443', $request->getHeaderLine('Host'));
+        self::assertSame('//[::1]:443', (string) $request->getUri());
+    }
+
+    public function testParsesConnectAuthorityFormRequestTargetWithLeadingZeroPort(): void
+    {
+        $req = "CONNECT up.example:000443 HTTP/1.1\r\nHost: up.example:000443\r\n\r\n";
+        $request = Psr7\Message::parseRequest($req);
+
+        self::assertSame('CONNECT', $request->getMethod());
+        self::assertSame('up.example:000443', $request->getRequestTarget());
+        self::assertSame('up.example:000443', $request->getHeaderLine('Host'));
+        self::assertSame('//up.example:443', (string) $request->getUri());
+    }
+
     public function testParsesRequestMessagesWithCustomMethod(): void
     {
         $req = "GET_DATA / HTTP/1.1\r\nFoo: Bar\r\nHost: foo.com\r\n\r\n";
@@ -192,6 +251,15 @@ class MessageTest extends TestCase
         yield 'target tab' => ["GET /foo\tbar HTTP/1.1"];
         yield 'target nul' => ["GET /foo\0bar HTTP/1.1"];
         yield 'target delete' => ["GET /foo\x7Fbar HTTP/1.1"];
+        yield 'asterisk non-options' => ['GET * HTTP/1.1'];
+        yield 'lowercase options asterisk' => ['options * HTTP/1.1'];
+        yield 'authority-form non-connect' => ['GET up.example:443 HTTP/1.1'];
+        yield 'lowercase connect authority-form' => ['connect up.example:443 HTTP/1.1'];
+        yield 'connect missing port' => ['CONNECT up.example HTTP/1.1'];
+        yield 'connect zero port' => ['CONNECT up.example:0 HTTP/1.1'];
+        yield 'connect user info' => ['CONNECT user@up.example:443 HTTP/1.1'];
+        yield 'connect path' => ['CONNECT up.example:443/ HTTP/1.1'];
+        yield 'connect query' => ['CONNECT up.example:443?x=1 HTTP/1.1'];
         yield 'invalid protocol text' => ['GET / HTTP/foo'];
         yield 'invalid protocol segments' => ['GET / HTTP/1.1.1'];
         yield 'missing version' => ['GET /'];
