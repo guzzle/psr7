@@ -742,6 +742,10 @@ provided key are removed.
 
 Determines if a modified URL should be considered cross-origin with respect to an original URL.
 
+Two URLs are cross-origin when their scheme, host, or effective port differ. Host comparison is case-insensitive, and missing ports use the default port for `http` or `https`.
+
+This helper only compares URI origins. It does not implement redirect handling or credential policy.
+
 ## Reference Resolution
 
 `GuzzleHttp\Psr7\UriResolver` provides methods to resolve a URI reference in the context of a base URI according
