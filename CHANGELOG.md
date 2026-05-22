@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed `Utils::copyToStream()` to retry short destination writes and throw when destination streams cannot make progress
 - Changed `Header::parse()` to split semicolon-separated parameters without repeated regular expression lookaheads
+- Clarified cross-origin URI comparison behavior in the documentation
 
 ### Deprecated
 
