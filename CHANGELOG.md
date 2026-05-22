@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Require `psr/http-message:^2.0` and add its native parameter types
 - Require `psr/http-factory:^1.1`
-- Preserve HTTP request method casing instead of uppercasing methods automatically
+- Preserve HTTP request method casing for explicitly constructed requests while continuing to uppercase `ServerRequest::fromGlobals()` methods for server-global compatibility
 - Reject empty arrays and non-string values as header values
 - Reject invalid uploaded file trees and invalid parsed body values
 - Reject malformed uploaded file specifications missing `tmp_name`, `size`, or `error`
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Harden URI host and scheme validation, including rejecting schemes that do not begin with a letter
 - Tighten `ServerRequest::getUriFromGlobals()` validation for malformed `HTTP_HOST` and `SERVER_PORT` values
 - Stop preserving malformed `Host` headers when building server requests from globals
-- Normalize server request URI reconstruction from globals
+- Normalize server request URI reconstruction from globals, including `REQUEST_METHOD` values used for request-target parsing
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
 - Reject malformed HTTP start-line fields
 - Reject hosts with embedded ports in `Uri::withHost()`

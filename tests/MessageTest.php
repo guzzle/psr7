@@ -253,8 +253,10 @@ class MessageTest extends TestCase
         yield 'target delete' => ["GET /foo\x7Fbar HTTP/1.1"];
         yield 'asterisk non-options' => ['GET * HTTP/1.1'];
         yield 'lowercase options asterisk' => ['options * HTTP/1.1'];
+        yield 'mixed-case options asterisk' => ['OpTiOnS * HTTP/1.1'];
         yield 'authority-form non-connect' => ['GET up.example:443 HTTP/1.1'];
         yield 'lowercase connect authority-form' => ['connect up.example:443 HTTP/1.1'];
+        yield 'mixed-case connect authority-form' => ['CoNnEcT up.example:443 HTTP/1.1'];
         yield 'connect missing port' => ['CONNECT up.example HTTP/1.1'];
         yield 'connect zero port' => ['CONNECT up.example:0 HTTP/1.1'];
         yield 'connect user info' => ['CONNECT user@up.example:443 HTTP/1.1'];
