@@ -594,8 +594,44 @@ class ServerRequestTest extends TestCase
             '',
         ];
 
+        yield 'asterisk-form lowercase method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'options', 'REQUEST_URI' => '*', 'HTTP_HOST' => 'good.example'],
+            'http://good.example',
+            'good.example',
+            null,
+            '',
+            '',
+        ];
+
+        yield 'asterisk-form mixed-case method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'OpTiOnS', 'REQUEST_URI' => '*', 'HTTP_HOST' => 'good.example'],
+            'http://good.example',
+            'good.example',
+            null,
+            '',
+            '',
+        ];
+
         yield 'connect authority-form supplies authority' => [
             ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
+            'http://up.example:443',
+            'up.example',
+            443,
+            '',
+            '',
+        ];
+
+        yield 'connect authority-form lowercase method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'connect', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
+            'http://up.example:443',
+            'up.example',
+            443,
+            '',
+            '',
+        ];
+
+        yield 'connect authority-form mixed-case method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'CoNnEcT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
             'http://up.example:443',
             'up.example',
             443,
@@ -682,8 +718,32 @@ class ServerRequestTest extends TestCase
             'http://good.example',
         ];
 
+        yield 'asterisk-form target with lowercase method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'options', 'REQUEST_URI' => '*', 'HTTP_HOST' => 'good.example'],
+            '*',
+            'http://good.example',
+        ];
+
+        yield 'asterisk-form target with mixed-case method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'OpTiOnS', 'REQUEST_URI' => '*', 'HTTP_HOST' => 'good.example'],
+            '*',
+            'http://good.example',
+        ];
+
         yield 'connect authority-form target is preserved' => [
             ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
+            'up.example:443',
+            'http://up.example:443',
+        ];
+
+        yield 'connect authority-form target with lowercase method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'connect', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
+            'up.example:443',
+            'http://up.example:443',
+        ];
+
+        yield 'connect authority-form target with mixed-case method is normalized from globals' => [
+            ['REQUEST_METHOD' => 'CoNnEcT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
             'up.example:443',
             'http://up.example:443',
         ];
@@ -870,6 +930,30 @@ class ServerRequestTest extends TestCase
         ];
 
         self::assertEquals($expectedFiles, $server->getUploadedFiles());
+    }
+
+    /**
+     * @dataProvider requestMethodFromGlobalsProvider
+     */
+    public function testFromGlobalsNormalizesRequestMethod(string $requestMethod, string $expectedMethod): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => $requestMethod,
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+        ];
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame($expectedMethod, $server->getMethod());
+    }
+
+    public static function requestMethodFromGlobalsProvider(): iterable
+    {
+        yield 'lowercase' => ['post', 'POST'];
+        yield 'mixed case' => ['OpTiOnS', 'OPTIONS'];
+        yield 'custom method' => ['custom.method', 'CUSTOM.METHOD'];
     }
 
     public static function dataInvalidHostHeaderFromGlobals(): iterable

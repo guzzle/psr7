@@ -56,9 +56,17 @@ $response = $response->withStatus(201);
 $uri = $uri->withPort(8080);
 ```
 
-Request methods are no longer uppercased by `Request` or `withMethod()`. If your
-application requires uppercase methods, normalize methods before constructing or
-modifying requests.
+Request methods passed explicitly to `Request`, `ServerRequest`, `withMethod()`,
+`Message::parseRequest()`, and the PSR-17 factories are no longer uppercased.
+PSR-7 treats method names as case-sensitive, so these APIs now preserve the
+method exactly as provided. If your application requires uppercase methods,
+normalize methods before constructing or modifying requests.
+
+`ServerRequest::fromGlobals()` is the compatibility-oriented exception. It
+continues to uppercase string `REQUEST_METHOD` values read from PHP server
+globals, matching Guzzle PSR-7 2.x and common server request behavior. This
+normalization only applies when hydrating from globals; it does not apply to
+methods passed explicitly to constructors, factories, or `withMethod()`.
 
 ```php
 // 2.x
@@ -68,6 +76,11 @@ $request->getMethod(); // GET
 // 3.0
 $request = new Request('get', '/');
 $request->getMethod(); // get
+
+// 3.0, server globals
+$_SERVER['REQUEST_METHOD'] = 'post';
+$request = ServerRequest::fromGlobals();
+$request->getMethod(); // POST
 ```
 
 Header values must now be strings or non-empty arrays of strings. Scalars, `null`,

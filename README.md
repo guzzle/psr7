@@ -30,6 +30,14 @@ composer require guzzlehttp/psr7
 
 See [UPGRADING.md](UPGRADING.md) for package upgrade notes.
 
+## HTTP Method Casing
+
+HTTP method names are case-sensitive in PSR-7. Requests created explicitly with
+`Request`, `ServerRequest`, `withMethod()`, `Message::parseRequest()`, or the
+PSR-17 factories preserve the method string as provided. `ServerRequest::fromGlobals()`
+normalizes `$_SERVER['REQUEST_METHOD']` to uppercase for compatibility when
+hydrating requests from PHP server globals.
+
 
 ## AppendStream
 

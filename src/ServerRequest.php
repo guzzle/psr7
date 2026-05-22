@@ -204,7 +204,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public static function fromGlobals(): ServerRequestInterface
     {
-        $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
+        $method = self::getRequestMethodFromGlobals();
         $headers = self::removeInvalidHostHeader(self::getAllHeaders());
         [$uri, $requestTarget] = self::getUriAndRequestTargetFromGlobals($method);
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
@@ -347,6 +347,11 @@ class ServerRequest extends Request implements ServerRequestInterface
     private static function getServerParam(string $key): ?string
     {
         return isset($_SERVER[$key]) && is_string($_SERVER[$key]) ? $_SERVER[$key] : null;
+    }
+
+    private static function getRequestMethodFromGlobals(): string
+    {
+        return strtoupper(self::getServerParam('REQUEST_METHOD') ?? 'GET');
     }
 
     /**
@@ -568,7 +573,7 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     private static function isAsteriskFormRequestTarget(string $method, string $target): bool
     {
-        return strcasecmp($method, 'OPTIONS') === 0 && $target === '*';
+        return $method === 'OPTIONS' && $target === '*';
     }
 
     /**
@@ -576,7 +581,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?array
     {
-        if (strcasecmp($method, 'CONNECT') !== 0 || strpbrk($target, '/?#') !== false) {
+        if ($method !== 'CONNECT' || strpbrk($target, '/?#') !== false) {
             return null;
         }
 
@@ -617,7 +622,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public static function getUriFromGlobals(): UriInterface
     {
-        $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
+        $method = self::getRequestMethodFromGlobals();
 
         return self::getUriAndRequestTargetFromGlobals($method)[0];
     }
