@@ -4,6 +4,12 @@ Guzzle PSR-7 Upgrade Guide
 2.x to 3.0
 ----------
 
+Guzzle PSR-7 3.0 is a major release that raises the minimum PHP version,
+updates to the PSR-7 v2 interfaces, validates header values more strictly,
+preserves explicit request method casing, and rejects several invalid URI,
+request, response, upload, query, stream, and multipart values that 2.x
+previously accepted or cast.
+
 #### PHP Version and Dependencies
 
 Guzzle PSR-7 3.0 requires PHP `^7.4 || ^8.0`. Guzzle PSR-7 2.x supported PHP
@@ -12,9 +18,10 @@ Guzzle PSR-7 3.0 requires PHP `^7.4 || ^8.0`. Guzzle PSR-7 2.x supported PHP
 If your application still supports PHP 7.2 or 7.3, continue using Guzzle PSR-7
 2.x until your minimum PHP version is raised.
 
-Guzzle PSR-7 3.0 requires `psr/http-message:^2.0` and `psr/http-factory:^1.1`.
-If your dependency constraints pin `psr/http-message` to v1, update them before
-upgrading.
+Guzzle PSR-7 3.0 requires `psr/http-message:^2.0` and
+`psr/http-factory:^1.1`. Guzzle PSR-7 2.x supported
+`psr/http-message:^1.1 || ^2.0` and `psr/http-factory:^1.0`. If your dependency
+constraints pin `psr/http-message` to v1, update them before upgrading.
 
 Guzzle PSR-7 no longer depends on `ralouphie/getallheaders` and no longer
 provides a transitive global `getallheaders()` polyfill.
@@ -22,39 +29,25 @@ provides a transitive global `getallheaders()` polyfill.
 Applications that call `getallheaders()` directly on SAPIs where PHP does not
 provide it should require their own polyfill.
 
-#### PSR-7 Argument Types and Values
+#### Header Values
 
-Guzzle PSR-7 3.0 requires the argument types documented by PSR-7 more strictly.
-It adds the native parameter types from `psr/http-message` v2 and rejects several
-values that 2.x previously cast or accepted. Code passing invalid argument types
-may now receive PHP `TypeError` exceptions instead of package-specific
-`InvalidArgumentException` exceptions or implicit casts.
-
-Native parameter type changes include:
-
-- `MessageInterface::withProtocolVersion()` now requires `string`.
-- Message header names now require `string`.
-- `RequestInterface::withRequestTarget()` and `withMethod()` now require `string`.
-- `RequestInterface::withUri()` now requires `bool` for `$preserveHost`.
-- `ResponseInterface::withStatus()` now requires `int` status codes and `string` reason phrases.
-- Server request attribute names now require `string`.
-- `UriInterface::withPort()` now requires `int|null`.
-- URI scheme, user info, host, path, query, and fragment mutators now require strings.
-- Stream `seek()`, `read()`, `write()`, and `getMetadata()` now require their PSR-7 v2 parameter types.
-- `UploadedFileInterface::moveTo()` now requires a string target path.
-
-Update callers to pass values of the documented type before calling these
-methods:
+Header values must now be strings or non-empty arrays of strings. Empty strings
+remain valid explicit header values, but empty arrays, `null`, `false`, integers,
+floats, and other non-string values are no longer cast or accepted.
 
 ```php
-// 2.x, no longer supported in 3.0
-$response = $response->withStatus('201');
-$uri = $uri->withPort('8080');
+// 2.x, no longer accepted in 3.0
+$response = $response->withHeader('Api-Version', 1);
+$response = $response->withHeader('Empty-List', []);
 
 // 3.0
-$response = $response->withStatus(201);
-$uri = $uri->withPort(8080);
+$response = $response->withHeader('Api-Version', '1');
+$response = $response->withHeader('Empty-Value', '');
 ```
+
+Use `withoutHeader()` to remove a header.
+
+#### Request Method Casing
 
 Request methods passed explicitly to `Request`, `ServerRequest`, `withMethod()`,
 `Message::parseRequest()`, and the PSR-17 factories are no longer uppercased.
@@ -83,20 +76,40 @@ $request = ServerRequest::fromGlobals();
 $request->getMethod(); // POST
 ```
 
-Header values must now be strings or non-empty arrays of strings. Scalars, `null`,
-`false`, and empty arrays are no longer cast or accepted.
+#### Native PSR-7 Parameter Types
+
+Guzzle PSR-7 3.0 requires the argument types documented by PSR-7 more strictly.
+It adds the native parameter types from `psr/http-message` v2. Code passing
+invalid argument types may now receive PHP `TypeError` exceptions instead of
+package-specific `InvalidArgumentException` exceptions or implicit casts.
+
+Native parameter type changes include:
+
+- `MessageInterface::withProtocolVersion()` now requires `string`.
+- Message header names now require `string`.
+- `RequestInterface::withRequestTarget()` and `withMethod()` now require `string`.
+- `RequestInterface::withUri()` now requires `bool` for `$preserveHost`.
+- `ResponseInterface::withStatus()` now requires `int` status codes and `string` reason phrases.
+- Server request attribute names now require `string`.
+- `UriInterface::withPort()` now requires `int|null`.
+- URI scheme, user info, host, path, query, and fragment mutators now require strings.
+- Stream `seek()`, `read()`, `write()`, and `getMetadata()` now require their PSR-7 v2 parameter types.
+- `UploadedFileInterface::moveTo()` now requires a string target path.
+
+Update callers to pass values of the documented type before calling these
+methods:
 
 ```php
-// 2.x, no longer accepted in 3.0
-$response = $response->withHeader('Api-Version', 1);
-$response = $response->withHeader('Empty-List', []);
+// 2.x, no longer supported in 3.0
+$response = $response->withStatus('201');
+$uri = $uri->withPort('8080');
 
 // 3.0
-$response = $response->withHeader('Api-Version', '1');
-$response = $response->withHeader('Empty-Value', '');
+$response = $response->withStatus(201);
+$uri = $uri->withPort(8080);
 ```
 
-Use `withoutHeader()` to remove a header.
+#### Uploaded Files
 
 `ServerRequestInterface::withUploadedFiles()` now rejects invalid nested upload
 trees. Every leaf must be an `UploadedFileInterface` instance.
@@ -117,6 +130,8 @@ $files = ['file' => ['tmp_name' => '/tmp/php123', 'error' => '0']];
 // 3.0
 $files = ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123', 'error' => '0']];
 ```
+
+#### Parsed Body Values
 
 `ServerRequestInterface::withParsedBody()` now rejects values other than
 `array`, `object`, or `null`.
