@@ -44,6 +44,7 @@ class Request implements RequestInterface
             $uri = new Uri($uri);
         }
 
+        self::warnOnMethodCasingChange($method);
         $this->method = strtoupper($method);
         $this->uri = $uri;
         $this->setHeaders($headers);
@@ -97,6 +98,7 @@ class Request implements RequestInterface
     public function withMethod($method): RequestInterface
     {
         $this->assertMethod($method);
+        self::warnOnMethodCasingChange($method);
         $new = clone $this;
         $new->method = strtoupper($method);
 
@@ -163,6 +165,17 @@ class Request implements RequestInterface
     {
         if (!is_string($method) || $method === '') {
             throw new InvalidArgumentException('Method must be a non-empty string.');
+        }
+    }
+
+    private static function warnOnMethodCasingChange(string $method): void
+    {
+        if ($method !== strtoupper($method)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing a non-uppercase HTTP method is deprecated; guzzlehttp/psr7 3.0 preserves method casing and will no longer uppercase it. Normalize the method before constructing or modifying requests if uppercase is required.'
+            );
         }
     }
 }
