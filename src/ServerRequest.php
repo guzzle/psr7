@@ -165,7 +165,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public static function fromGlobals(): ServerRequestInterface
     {
-        $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
+        $method = strtoupper(self::getServerParam('REQUEST_METHOD') ?? 'GET');
         $headers = getallheaders();
         $uri = self::getUriFromGlobals();
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
