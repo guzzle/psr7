@@ -162,6 +162,60 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testGeneratedContentDispositionNameCannotSmuggleAdditionalParts(): void
+    {
+        $evilName = \implode('', [
+            "x\"\r\n\r\n--BOUND\r\n",
+            "Content-Disposition: form-data; name=\"role\"\r\n\r\n",
+            "admin\r\n--BOUND\r\n",
+            "Content-Disposition: form-data; name=\"_ignore",
+        ]);
+
+        $body = new MultipartStream([
+            [
+                'name' => $evilName,
+                'contents' => '',
+            ],
+            [
+                'name' => 'realfield',
+                'contents' => 'real-value',
+            ],
+        ], 'BOUND');
+
+        $serialized = (string) $body;
+        $escapedName = \implode('', [
+            'x%22%0D%0A%0D%0A--BOUND%0D%0A',
+            'Content-Disposition: form-data; name=%22role%22%0D%0A%0D%0A',
+            'admin%0D%0A--BOUND%0D%0A',
+            'Content-Disposition: form-data; name=%22_ignore',
+        ]);
+
+        self::assertSame(
+            3,
+            \preg_match_all('/(?:^|\r\n)--BOUND(?:\r\n|--\r\n)/', $serialized)
+        );
+
+        self::assertSame(
+            2,
+            \preg_match_all('/(?:^|\r\n)Content-Disposition: form-data; /', $serialized)
+        );
+
+        self::assertStringNotContainsString(
+            "\r\n--BOUND\r\nContent-Disposition: form-data; name=\"role\"\r\n\r\nadmin",
+            $serialized
+        );
+
+        self::assertStringContainsString(
+            "Content-Disposition: form-data; name=\"{$escapedName}\"",
+            $serialized
+        );
+
+        self::assertStringContainsString(
+            "Content-Disposition: form-data; name=\"realfield\"\r\n\r\nreal-value",
+            $serialized
+        );
+    }
+
     public function testSerializesLiteralBackslashesUnchangedInGeneratedContentDispositionName(): void
     {
         $b = new MultipartStream([
