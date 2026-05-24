@@ -339,13 +339,14 @@ final class Utils
      *   the object will be cast to a string and then a stream will be returned that
      *   uses the string value.
      * - `NULL`: When `null` is passed, an empty stream object is returned.
-     * - `callable`: When a callable array, closure, or invokable object is passed,
-     *   a read-only stream object will be created that invokes the given callable.
-     *   The callable is invoked with the suggested number of bytes to read. The
-     *   callable can return fewer or more bytes than requested, but MUST return
-     *   `false` or `null` when there is no more data to return. Any additional
-     *   bytes will be buffered and used in subsequent reads. String inputs are
-     *   always treated as string bodies, even when they name callable functions.
+     * - `callable`: When a callable array, closure, or invokable object is passed
+     *   and no earlier resource or object rule applies, a read-only stream object
+     *   will be created that invokes the given callable. The callable is invoked
+     *   with the suggested number of bytes to read. The callable can return fewer
+     *   or more bytes than requested, but MUST return `false` or `null` when there
+     *   is no more data to return. Any additional bytes will be buffered and used
+     *   in subsequent reads. String inputs are always treated as string bodies,
+     *   even when they name callable functions.
      *
      * @param resource|string|int|float|bool|StreamInterface|callable|\Iterator|null $resource Entity body data
      * @param array{size?: int, metadata?: array}                                    $options  Additional options
