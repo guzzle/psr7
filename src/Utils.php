@@ -11,6 +11,10 @@ use Psr\Http\Message\UriInterface;
 
 final class Utils
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Remove the items given by the keys, case insensitively from the data.
      *

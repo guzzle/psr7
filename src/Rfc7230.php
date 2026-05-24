@@ -9,6 +9,10 @@ namespace GuzzleHttp\Psr7;
  */
 final class Rfc7230
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Header related regular expressions (based on amphp/http package)
      *

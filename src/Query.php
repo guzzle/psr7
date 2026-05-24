@@ -6,6 +6,10 @@ namespace GuzzleHttp\Psr7;
 
 final class Query
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Parse a query string into an associative array.
      *

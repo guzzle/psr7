@@ -6,6 +6,10 @@ namespace GuzzleHttp\Psr7;
 
 final class MimeType
 {
+    private function __construct()
+    {
+    }
+
     private const MIME_TYPES = [
         '123' => 'application/vnd.lotus-1-2-3',
         '1km' => 'application/vnd.1000minds.decision-model+xml',
