@@ -194,25 +194,6 @@ Applications that need to reject malformed inbound `Host` headers should
 validate the request host before calling `getUriFromGlobals()` or inspect the
 original server parameters.
 
-#### URI Userinfo Redaction
-
-`Utils::redactUserInfo()` now redacts all non-empty URI userinfo, including
-username-only userinfo. In 2.x, it only redacted the password portion when
-userinfo contained a password delimiter.
-
-```php
-use GuzzleHttp\Psr7\Uri;
-use GuzzleHttp\Psr7\Utils;
-
-// 2.x: https://TOKEN@example.com
-// 3.0: https://***@example.com
-(string) Utils::redactUserInfo(new Uri('https://TOKEN@example.com'));
-
-// 2.x: https://user:***@example.com
-// 3.0: https://***@example.com
-(string) Utils::redactUserInfo(new Uri('https://user:pass@example.com'));
-```
-
 #### URI Paths and Request Targets
 
 `Uri::getPath()` now normalizes multiple leading slashes to one slash when
@@ -361,6 +342,25 @@ boundary.
 Custom multipart part header names and values are also validated before
 serialization. Header names must be valid HTTP tokens, and header values must be
 strings without CR, LF, or other invalid control bytes.
+
+#### URI Userinfo Redaction
+
+`Utils::redactUserInfo()` now redacts all non-empty URI userinfo, including
+username-only userinfo. In 2.x, it only redacted the password portion when
+userinfo contained a password delimiter.
+
+```php
+use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\Utils;
+
+// 2.x: https://TOKEN@example.com
+// 3.0: https://***@example.com
+(string) Utils::redactUserInfo(new Uri('https://TOKEN@example.com'));
+
+// 2.x: https://user:***@example.com
+// 3.0: https://***@example.com
+(string) Utils::redactUserInfo(new Uri('https://user:pass@example.com'));
+```
 
 1.x to 2.0
 ----------
