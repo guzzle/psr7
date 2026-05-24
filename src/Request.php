@@ -138,6 +138,8 @@ class Request implements RequestInterface
             $host .= ':'.$port;
         }
 
+        $this->assertValue($host);
+
         if (isset($this->headerNames['host'])) {
             $header = $this->headerNames['host'];
         } else {

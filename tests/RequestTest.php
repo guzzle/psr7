@@ -326,6 +326,17 @@ class RequestTest extends TestCase
         new Request('GET', $uri);
     }
 
+    public function testGeneratedHostHeaderValidatesAssembledHostWithPort(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getHost')->willReturn('example.com');
+        $uri->method('getPort')->willReturn(8080);
+
+        $request = new Request('GET', $uri);
+
+        self::assertSame('example.com:8080', $request->getHeaderLine('Host'));
+    }
+
     /**
      * @dataProvider provideHeaderValuesContainingNotAllowedChars
      */
