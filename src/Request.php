@@ -132,6 +132,8 @@ class Request implements RequestInterface
             return;
         }
 
+        Uri::assertValidHost($host);
+
         if (($port = $this->uri->getPort()) !== null) {
             $host .= ':'.$port;
         }
