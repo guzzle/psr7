@@ -6,6 +6,10 @@ namespace GuzzleHttp\Psr7;
 
 final class Header
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Parse an array of header values containing ";" separated data into an
      * array of associative arrays representing the header key value pair data

@@ -10,6 +10,10 @@ use Psr\Http\Message\ResponseInterface;
 
 final class Message
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Returns the string representation of an HTTP message.
      *

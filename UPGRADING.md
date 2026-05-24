@@ -362,6 +362,12 @@ use GuzzleHttp\Psr7\Utils;
 (string) Utils::redactUserInfo(new Uri('https://user:pass@example.com'));
 ```
 
+#### Non-instantiable Utility Classes
+
+Static utility and constant classes such as `Header`, `Message`, `MimeType`,
+`Query`, `Rfc7230`, and `Utils` now have private constructors. Replace any
+accidental instantiation with static method calls or constant access.
+
 1.x to 2.0
 ----------
 
