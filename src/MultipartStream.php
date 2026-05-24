@@ -26,9 +26,8 @@ final class MultipartStream implements StreamInterface
      * @param array       $elements Array of associative arrays, each containing a
      *                              required "name" key mapping to the form field,
      *                              name, a required "contents" key mapping to any
-     *                              value accepted by Utils::streamFor() (scalar,
-     *                              null, resource, StreamInterface, Iterator, or
-     *                              callable), or an array for nested expansion.
+     *                              non-array value accepted by Utils::streamFor(),
+     *                              or an array for nested expansion.
      *                              Optional keys include "headers" (associative
      *                              array of custom headers) and "filename" (string
      *                              to send as the filename in the part).
