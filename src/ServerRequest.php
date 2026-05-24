@@ -166,7 +166,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public static function fromGlobals(): ServerRequestInterface
     {
         $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
-        $headers = self::getAllHeaders();
+        $headers = self::removeInvalidHostHeader(self::getAllHeaders());
         $uri = self::getUriFromGlobals();
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
         $serverProtocol = self::getServerParam('SERVER_PROTOCOL');
@@ -213,20 +213,82 @@ class ServerRequest extends Request implements ServerRequestInterface
     }
 
     /**
+     * @param array<array-key, string> $headers
+     *
+     * @return array<array-key, string>
+     */
+    private static function removeInvalidHostHeader(array $headers): array
+    {
+        foreach ($headers as $name => $value) {
+            if (strtolower((string) $name) !== 'host') {
+                continue;
+            }
+
+            [$host] = self::extractHostAndPortFromAuthority($value);
+            if ($host === null) {
+                unset($headers[$name]);
+            }
+        }
+
+        return $headers;
+    }
+
+    /**
      * @return array{0: string|null, 1: int|null}
      */
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        $uri = 'http://'.$authority;
-        $parts = parse_url($uri);
-        if (!is_array($parts)) {
+        if ($authority === '') {
             return [null, null];
         }
 
-        $host = $parts['host'] ?? null;
-        $port = $parts['port'] ?? null;
+        $host = $authority;
+        $port = null;
+
+        if ($authority[0] === '[') {
+            $closingBracket = strpos($authority, ']');
+            if ($closingBracket === false) {
+                return [null, null];
+            }
+
+            $host = substr($authority, 0, $closingBracket + 1);
+            $remainder = substr($authority, $closingBracket + 1);
+            if ($remainder !== '') {
+                if ($remainder[0] !== ':') {
+                    return [null, null];
+                }
+
+                $port = self::parsePortFromAuthority(substr($remainder, 1));
+                if ($port === null) {
+                    return [null, null];
+                }
+            }
+        } elseif (false !== ($colon = strpos($authority, ':'))) {
+            $host = substr($authority, 0, $colon);
+            $port = self::parsePortFromAuthority(substr($authority, $colon + 1));
+            if ($port === null) {
+                return [null, null];
+            }
+        }
+
+        if ($host === '' || preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host)) {
+            return [null, null];
+        }
 
         return [$host, $port];
+    }
+
+    private static function parsePortFromAuthority(string $port): ?int
+    {
+        if ($port === '' || !ctype_digit($port)) {
+            return null;
+        }
+
+        if (strlen($port) > 5 || (int) $port > 0xFFFF) {
+            return null;
+        }
+
+        return (int) $port;
     }
 
     /**

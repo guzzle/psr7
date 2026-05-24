@@ -107,6 +107,25 @@ class MessageTest extends TestCase
         self::assertSame('http://foo.com/', (string) $request->getUri());
     }
 
+    /**
+     * @dataProvider invalidHostHeaderProvider
+     */
+    public function testParseRequestRejectsInvalidHostHeader(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequest("GET / HTTP/1.1\r\nHost: {$host}\r\n\r\n");
+    }
+
+    public static function invalidHostHeaderProvider(): iterable
+    {
+        yield 'userinfo delimiter' => ['trusted.example@evil.example'];
+        yield 'path delimiter' => ['example.com/path'];
+        yield 'query delimiter' => ['example.com?query'];
+        yield 'fragment delimiter' => ['example.com#fragment'];
+        yield 'multiple ports' => ['example.com:443:8443'];
+    }
+
     public function testParsesRequestMessagesWithFullUri(): void
     {
         $req = "GET https://www.google.com:443/search?q=foobar HTTP/1.1\r\nHost: www.google.com\r\n\r\n";

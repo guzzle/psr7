@@ -354,6 +354,10 @@ class ServerRequestTest extends TestCase
                 'https://localhost/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'a:b']),
             ],
+            'Host header with userinfo delimiter' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'trusted.example@evil.example']),
+            ],
             'Different port with SERVER_PORT' => [
                 'https://www.example.org:8324/blog/article.php?id=10&user=foo',
                 array_merge($server, ['SERVER_PORT' => '8324']),
@@ -534,6 +538,27 @@ class ServerRequestTest extends TestCase
 
         self::assertSame('GET', $server->getMethod());
         self::assertSame('1.1', $server->getProtocolVersion());
+    }
+
+    public function testFromGlobalsDropsInvalidHostHeaderWhenUriFallsBack(): void
+    {
+        if (!\function_exists('getallheaders')) {
+            self::markTestSkipped('getallheaders() is not available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'trusted.example@evil.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('localhost', $request->getUri()->getHost());
+        self::assertSame('localhost', $request->getHeaderLine('Host'));
     }
 
     public function testUploadedFiles(): void

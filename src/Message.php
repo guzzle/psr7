@@ -234,6 +234,23 @@ final class Message
      */
     public static function parseRequestUri(string $path, array $headers): string
     {
+        $host = self::getHostFromHeaders($headers);
+
+        // If no host is found, then a full URI cannot be constructed.
+        if ($host === null) {
+            return $path;
+        }
+
+        $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
+
+        return $scheme.'://'.$host.'/'.ltrim($path, '/');
+    }
+
+    /**
+     * @param array $headers Array of headers (each value an array).
+     */
+    private static function getHostFromHeaders(array $headers): ?string
+    {
         $hostKey = array_filter(array_keys($headers), function ($k) {
             // Numeric array keys are converted to int by PHP.
             $k = (string) $k;
@@ -241,15 +258,56 @@ final class Message
             return strtolower($k) === 'host';
         });
 
-        // If no host is found, then a full URI cannot be constructed.
         if (!$hostKey) {
-            return $path;
+            return null;
         }
 
         $host = $headers[reset($hostKey)][0];
-        $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
+        if (!is_string($host) || !self::isValidHostHeader($host)) {
+            throw new \InvalidArgumentException('Invalid request string');
+        }
 
-        return $scheme.'://'.$host.'/'.ltrim($path, '/');
+        return $host;
+    }
+
+    private static function isValidHostHeader(string $authority): bool
+    {
+        if ($authority === '') {
+            return false;
+        }
+
+        $host = $authority;
+        $port = null;
+
+        if ($authority[0] === '[') {
+            $closingBracket = strpos($authority, ']');
+            if ($closingBracket === false) {
+                return false;
+            }
+
+            $host = substr($authority, 0, $closingBracket + 1);
+            $remainder = substr($authority, $closingBracket + 1);
+            if ($remainder !== '') {
+                if ($remainder[0] !== ':') {
+                    return false;
+                }
+
+                $port = substr($remainder, 1);
+            }
+        } elseif (false !== ($colon = strpos($authority, ':'))) {
+            $host = substr($authority, 0, $colon);
+            $port = substr($authority, $colon + 1);
+        }
+
+        if ($host === '' || preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host)) {
+            return false;
+        }
+
+        if ($port !== null && ($port === '' || !ctype_digit($port) || strlen($port) > 5 || (int) $port > 0xFFFF)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
