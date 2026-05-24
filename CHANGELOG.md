@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Require `psr/http-message:^2.0` and add its native parameter types
+- Require `psr/http-message:^2.0` and add compatible native parameter and return types
 - Require `psr/http-factory:^1.1`
 - Preserve HTTP request method casing for explicitly constructed requests while continuing to uppercase `ServerRequest::fromGlobals()` methods for server-global compatibility
 - Reject empty arrays and non-string values as header values

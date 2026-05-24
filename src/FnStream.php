@@ -74,10 +74,8 @@ final class FnStream implements StreamInterface
      *
      * @param StreamInterface         $stream  Stream to decorate
      * @param array<string, callable> $methods Hash of method name to a closure
-     *
-     * @return FnStream
      */
-    public static function decorate(StreamInterface $stream, array $methods)
+    public static function decorate(StreamInterface $stream, array $methods): self
     {
         // If any of the required methods were not provided, then simply
         // proxy to the decorated stream.
