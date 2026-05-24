@@ -1102,6 +1102,58 @@ class UtilsTest extends TestCase
         self::assertSame('payload', (string) $modified->getBody());
     }
 
+    public function testModifyRequestConvertsCallableArrayBodyWithStreamFor(): void
+    {
+        $source = new class {
+            /** @var list<string|false> */
+            private array $chunks = ['payload', false];
+
+            /**
+             * @return string|false
+             */
+            public function read(int $length)
+            {
+                if ($this->chunks === []) {
+                    return false;
+                }
+
+                return array_shift($this->chunks);
+            }
+        };
+
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'body' => [$source, 'read'],
+        ]);
+
+        self::assertInstanceOf(Psr7\PumpStream::class, $modified->getBody());
+        self::assertSame('payload', $modified->getBody()->getContents());
+    }
+
+    public function testModifyRequestConvertsStringableBodyWithStreamFor(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'body' => new HasToString(),
+        ]);
+
+        self::assertSame('foo', $modified->getBody()->getContents());
+    }
+
+    public function testModifyRequestTreatsCallableStringBodyAsString(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'body' => 'strlen',
+        ]);
+
+        self::assertNotInstanceOf(Psr7\PumpStream::class, $modified->getBody());
+        self::assertSame('strlen', $modified->getBody()->getContents());
+    }
+
     public function testModifyRequestReaddsHostHeaderWhenFinalHeadersDoNotContainHost(): void
     {
         $request = (new Psr7\Request('GET', 'http://example.com'))->withoutHeader('Host');

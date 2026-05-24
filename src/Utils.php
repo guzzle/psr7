@@ -18,7 +18,7 @@ final class Utils
     /**
      * Remove the items given by the keys, case insensitively from the data.
      *
-     * @param (string|int)[] $keys
+     * @param array<array-key, string|int> $keys
      */
     public static function caselessRemove(array $keys, array $data): array
     {
@@ -184,15 +184,28 @@ final class Utils
      *
      * The changes can be one of:
      * - method: (string) Changes the HTTP method.
-     * - set_headers: (array) Sets the given headers.
-     * - remove_headers: (array) Remove the given headers.
-     * - body: (mixed) Sets the given body.
+     * - set_headers: (array) Sets the given headers. Values must be strings
+     *   or arrays of strings.
+     * - remove_headers: (array) Remove the given headers. Values may be
+     *   strings or integers.
+     * - body: (mixed) Sets the given body. Present non-null values are converted
+     *   with self::streamFor(), including scalar values, resources, streams,
+     *   iterators, callable arrays, closures, invokable objects, and stringable
+     *   objects. String inputs remain literal bodies.
      * - uri: (UriInterface) Set the URI.
      * - query: (string) Set the query string value of the URI.
      * - version: (string) Set the protocol version.
      *
      * @param RequestInterface $request Request to clone and modify.
-     * @param array            $changes Changes to apply.
+     * @param array{
+     *     method?: string,
+     *     set_headers?: array<array-key, string|array<array-key, string>>,
+     *     remove_headers?: array<array-key, string|int>,
+     *     body?: resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable,
+     *     uri?: UriInterface,
+     *     query?: string,
+     *     version?: string
+     * } $changes Changes to apply.
      */
     public static function modifyRequest(RequestInterface $request, array $changes): RequestInterface
     {
@@ -363,8 +376,8 @@ final class Utils
      *   bytes will be buffered and used in subsequent reads. String inputs are
      *   always treated as string bodies, even when they name callable functions.
      *
-     * @param resource|string|int|float|bool|StreamInterface|callable|\Iterator|null $resource Entity body data
-     * @param array{size?: int, metadata?: array}                                    $options  Additional options
+     * @param resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable|null $resource Entity body data
+     * @param array{size?: int, metadata?: array}                                                $options  Additional options
      *
      * @throws \InvalidArgumentException if the $resource arg is not valid.
      */
