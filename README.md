@@ -503,7 +503,7 @@ a message.
 - body: (mixed) Sets the given body. Present non-null values are converted with
   `GuzzleHttp\Psr7\Utils::streamFor()`, including scalar values, resources,
   streams, iterators, callable arrays, closures, invokable objects, and
-  stringable objects. String inputs remain literal bodies.
+  objects with `__toString()`. String inputs remain literal bodies.
 - uri: (UriInterface) Set the URI.
 - query: (string) Set the query string value of the URI.
 - version: (string) Set the protocol version.
@@ -525,7 +525,7 @@ Redact the password in the user info part of a URI.
 
 ## `GuzzleHttp\Psr7\Utils::streamFor`
 
-`public static function streamFor(resource|string|null|int|float|bool|StreamInterface|callable|\Iterator|\Stringable $resource = '', array $options = []): StreamInterface`
+`public static function streamFor(resource|string|null|int|float|bool|StreamInterface|callable|\Iterator $resource = '', array $options = []): StreamInterface`
 
 Create a new stream based on the input type.
 
