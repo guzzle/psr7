@@ -26,7 +26,7 @@ final class Query
         }
 
         if ($urlEncoding === true) {
-            $decoder = function ($value) {
+            $decoder = function ($value): string {
                 return rawurldecode(str_replace('+', ' ', (string) $value));
             };
         } elseif ($urlEncoding === PHP_QUERY_RFC3986) {
@@ -34,7 +34,7 @@ final class Query
         } elseif ($urlEncoding === PHP_QUERY_RFC1738) {
             $decoder = 'urldecode';
         } else {
-            $decoder = function ($str) {
+            $decoder = function ($str): string {
                 return $str;
             };
         }

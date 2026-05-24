@@ -251,7 +251,7 @@ final class Message
      */
     private static function getHostFromHeaders(array $headers): ?string
     {
-        $hostKey = array_filter(array_keys($headers), function ($k) {
+        $hostKey = array_filter(array_keys($headers), function ($k): bool {
             // Numeric array keys are converted to int by PHP.
             $k = (string) $k;
 

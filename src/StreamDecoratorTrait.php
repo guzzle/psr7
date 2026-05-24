@@ -24,10 +24,8 @@ trait StreamDecoratorTrait
     /**
      * Magic method used to create a new stream if streams are not added in
      * the constructor of a decorator (e.g., LazyOpenStream).
-     *
-     * @return StreamInterface
      */
-    public function __get(string $name)
+    public function __get(string $name): StreamInterface
     {
         if ($name === 'stream') {
             $this->stream = $this->createStream();

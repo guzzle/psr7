@@ -214,7 +214,7 @@ trait MessageTrait
      */
     private function trimAndValidateHeaderValues(array $values): array
     {
-        return array_map(function ($value) {
+        return array_map(function ($value): string {
             if (!is_string($value)) {
                 throw new \InvalidArgumentException(sprintf(
                     'Header value must be a string or array of strings but %s provided.',
