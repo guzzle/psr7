@@ -167,8 +167,8 @@ final class Utils
      * - remove_headers: (array) Remove the given headers.
      * - body: (mixed) Sets the given body. Present non-null values are converted
      *   with self::streamFor(), including scalar values, resources, streams,
-     *   iterators, callable arrays, closures, invokable objects, and stringable
-     *   objects. String inputs remain literal bodies.
+     *   iterators, callable arrays, closures, invokable objects, and objects
+     *   with __toString(). String inputs remain literal bodies.
      * - uri: (UriInterface) Set the URI.
      * - query: (string) Set the query string value of the URI.
      * - version: (string) Set the protocol version.
@@ -347,8 +347,8 @@ final class Utils
      *   bytes will be buffered and used in subsequent reads. String inputs are
      *   always treated as string bodies, even when they name callable functions.
      *
-     * @param resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable|null $resource Entity body data
-     * @param array{size?: int, metadata?: array}                                                $options  Additional options
+     * @param resource|string|int|float|bool|StreamInterface|callable|\Iterator|null $resource Entity body data
+     * @param array{size?: int, metadata?: array}                                    $options  Additional options
      *
      * @throws \InvalidArgumentException if the $resource arg is not valid.
      */
