@@ -31,24 +31,21 @@ final class Query
 
         if ($urlEncoding === true) {
             $decoder = function (string $value): string {
-                return rawurldecode(str_replace('+', ' ', $value));
+                return \rawurldecode(str_replace('+', ' ', $value));
             };
         } elseif ($urlEncoding === PHP_QUERY_RFC3986) {
             $decoder = static function (string $value): string {
-                return rawurldecode($value);
+                return \rawurldecode($value);
             };
         } elseif ($urlEncoding === PHP_QUERY_RFC1738) {
             $decoder = static function (string $value): string {
-                return urldecode($value);
+                return \urldecode($value);
             };
         } else {
             $decoder = function (string $str): string {
                 return $str;
             };
         }
-
-        /** @var \Closure(string): string $decoder */
-        $decoder = $decoder;
 
         foreach (explode('&', $str) as $kvp) {
             $parts = explode('=', $kvp, 2);
@@ -94,18 +91,15 @@ final class Query
             };
         } elseif ($encoding === PHP_QUERY_RFC3986) {
             $encoder = static function (string $value): string {
-                return rawurlencode($value);
+                return \rawurlencode($value);
             };
         } elseif ($encoding === PHP_QUERY_RFC1738) {
             $encoder = static function (string $value): string {
-                return urlencode($value);
+                return \urlencode($value);
             };
         } else {
             throw new \InvalidArgumentException('Invalid type');
         }
-
-        /** @var \Closure(string): string $encoder */
-        $encoder = $encoder;
 
         $qs = '';
         foreach ($params as $k => $v) {

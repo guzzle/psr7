@@ -37,17 +37,17 @@ final class PumpStream implements StreamInterface
     private $buffer;
 
     /**
-     * @param callable                            $source  Source of the stream data. The callable receives
-     *                                                     the suggested number of bytes to read, may ignore
-     *                                                     that value, and may return fewer or more bytes.
-     *                                                     Extra bytes are buffered. The callable MUST return
-     *                                                     a string when called, or false|null on error or EOF.
-     *                                                     Userland callables that declare no parameters are
-     *                                                     tolerated by PHP, but length-aware callables remain
-     *                                                     the recommended formal shape.
-     * @param array{size?: int, metadata?: array} $options Stream options:
-     *                                                     - metadata: Hash of metadata to use with stream.
-     *                                                     - size: Size of the stream, if known.
+     * @param (callable(): (string|false|null))|(callable(int): (string|false|null)) $source  Source of the stream data. The callable receives
+     *                                                                                        the suggested number of bytes to read, may ignore
+     *                                                                                        that value, and may return fewer or more bytes.
+     *                                                                                        Extra bytes are buffered. The callable MUST return
+     *                                                                                        a string when called, or false|null on error or EOF.
+     *                                                                                        Userland callables that declare no parameters are
+     *                                                                                        tolerated by PHP, but length-aware callables remain
+     *                                                                                        the recommended formal shape.
+     * @param array{size?: int, metadata?: array}                                    $options Stream options:
+     *                                                                                        - metadata: Hash of metadata to use with stream.
+     *                                                                                        - size: Size of the stream, if known.
      */
     public function __construct(callable $source, array $options = [])
     {
