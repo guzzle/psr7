@@ -531,7 +531,7 @@ metadata can be detected after a stream read cannot make progress.
 
 `public static function redactUserInfo(UriInterface $uri): UriInterface`
 
-Redact the password in the user info part of a URI.
+Redact the user info part of a URI.
 
 
 ## `GuzzleHttp\Psr7\Utils::streamFor`

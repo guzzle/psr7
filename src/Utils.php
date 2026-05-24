@@ -323,17 +323,11 @@ final class Utils
     }
 
     /**
-     * Redact the password in the user info part of a URI.
+     * Redact the user info part of a URI.
      */
     public static function redactUserInfo(UriInterface $uri): UriInterface
     {
-        $userInfo = $uri->getUserInfo();
-
-        if (false !== ($pos = \strpos($userInfo, ':'))) {
-            return $uri->withUserInfo(\substr($userInfo, 0, $pos), '***');
-        }
-
-        return $uri;
+        return $uri->getUserInfo() === '' ? $uri : $uri->withUserInfo('***');
     }
 
     /**

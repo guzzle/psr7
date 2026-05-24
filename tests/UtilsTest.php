@@ -457,11 +457,20 @@ class UtilsTest extends TestCase
 
     public function testRedactUserInfo(): void
     {
-        $uri = new Psr7\Uri('http://my_user:secretPass@localhost/');
+        self::assertSame(
+            'http://***@localhost/',
+            (string) Psr7\Utils::redactUserInfo(new Psr7\Uri('http://my_user:secretPass@localhost/'))
+        );
 
-        $redactedUri = Psr7\Utils::redactUserInfo($uri);
+        self::assertSame(
+            'http://***@localhost/',
+            (string) Psr7\Utils::redactUserInfo(new Psr7\Uri('http://ghp_TOKEN@localhost/'))
+        );
 
-        self::assertSame('http://my_user:***@localhost/', (string) $redactedUri);
+        self::assertSame(
+            'http://localhost/',
+            (string) Psr7\Utils::redactUserInfo(new Psr7\Uri('http://localhost/'))
+        );
     }
 
     public function testCalculatesHash(): void
