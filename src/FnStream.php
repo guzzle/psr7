@@ -7,7 +7,7 @@ namespace GuzzleHttp\Psr7;
 use Psr\Http\Message\StreamInterface;
 
 /**
- * Compose stream implementations based on a hash of functions.
+ * Compose stream implementations based on a hash of callables.
  *
  * Allows for easy testing and extension of a provided stream without needing
  * to create a concrete class for a simple extension point.
@@ -31,7 +31,7 @@ final class FnStream implements StreamInterface
     {
         $this->methods = $methods;
 
-        // Create the functions on the class
+        // Create the callables on the class
         foreach ($methods as $name => $fn) {
             $this->{'_fn_'.$name} = $fn;
         }
@@ -73,7 +73,7 @@ final class FnStream implements StreamInterface
      * specific method calls.
      *
      * @param StreamInterface         $stream  Stream to decorate
-     * @param array<string, callable> $methods Hash of method name to a closure
+     * @param array<string, callable> $methods Hash of method name to a callable
      *
      * @return FnStream
      */

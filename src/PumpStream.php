@@ -9,16 +9,19 @@ use Psr\Http\Message\StreamInterface;
 /**
  * Provides a read only stream that pumps data from a PHP callable.
  *
- * When invoking the provided callable, the PumpStream will pass the amount of
- * data requested to read to the callable. The callable can choose to ignore
+ * When invoking the provided callable, the PumpStream will pass the suggested
+ * number of bytes to read to the callable. The callable can choose to ignore
  * this value and return fewer or more bytes than requested. Any extra data
- * returned by the provided callable is buffered internally until drained using
- * the read() function of the PumpStream. The provided callable MUST return
- * false when there is no more data to read.
+ * returned by the callable is buffered internally until drained using the
+ * read() function of the PumpStream. The callable MUST return false or null
+ * when there is no more data to read.
+ *
+ * Userland callables that declare no parameters are tolerated by PHP, but
+ * length-aware callables remain the recommended formal shape.
  */
 final class PumpStream implements StreamInterface
 {
-    /** @var callable(int): (string|false|null)|null */
+    /** @var callable|null */
     private $source;
 
     /** @var int|null */
@@ -34,14 +37,17 @@ final class PumpStream implements StreamInterface
     private $buffer;
 
     /**
-     * @param callable(int): (string|false|null)  $source  Source of the stream data. The callable MAY
-     *                                                     accept an integer argument used to control the
-     *                                                     amount of data to return. The callable MUST
-     *                                                     return a string when called, or false|null on error
-     *                                                     or EOF.
-     * @param array{size?: int, metadata?: array} $options Stream options:
-     *                                                     - metadata: Hash of metadata to use with stream.
-     *                                                     - size: Size of the stream, if known.
+     * @param (callable(): (string|false|null))|(callable(int): (string|false|null)) $source  Source of the stream data. The callable receives
+     *                                                                                        the suggested number of bytes to read, may ignore
+     *                                                                                        that value, and may return fewer or more bytes.
+     *                                                                                        Extra bytes are buffered. The callable MUST return
+     *                                                                                        a string when called, or false|null on error or EOF.
+     *                                                                                        Userland callables that declare no parameters are
+     *                                                                                        tolerated by PHP, but length-aware callables remain
+     *                                                                                        the recommended formal shape.
+     * @param array{size?: int, metadata?: array}                                    $options Stream options:
+     *                                                                                        - metadata: Hash of metadata to use with stream.
+     *                                                                                        - size: Size of the stream, if known.
      */
     public function __construct(callable $source, array $options = [])
     {
