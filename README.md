@@ -128,7 +128,7 @@ echo $stream; // 0123456789
 
 `GuzzleHttp\Psr7\FnStream`
 
-Compose stream implementations based on a hash of functions.
+Compose stream implementations based on a hash of callables.
 
 Allows for easy testing and extension of a provided stream without needing
 to create a concrete class for a simple extension point.
@@ -211,6 +211,11 @@ echo $stream->tell();
 Stream that when read returns bytes for a streaming multipart or
 multipart/form-data stream.
 
+Each multipart element must contain a `name` and `contents` key. `contents` may
+be any non-array value accepted by `GuzzleHttp\Psr7\Utils::streamFor()`,
+including closures and invokable objects. Array contents are recursively
+expanded into nested form fields.
+
 
 ## NoSeekStream
 
@@ -240,12 +245,15 @@ var_export($noSeek->read(3));
 
 Provides a read only stream that pumps data from a PHP callable.
 
-When invoking the provided callable, the PumpStream will pass the amount of
-data requested to read to the callable. The callable can choose to ignore
+When invoking the provided callable, the PumpStream will pass the suggested
+number of bytes to read to the callable. The callable can choose to ignore
 this value and return fewer or more bytes than requested. Any extra data
 returned by the provided callable is buffered internally until drained using
 the read() function of the PumpStream. The provided callable MUST return
-false when there is no more data to read.
+false or null when there is no more data to read.
+
+Userland callables that declare no parameters are tolerated by PHP, but
+length-aware callables remain the recommended formal shape.
 
 
 ## Implementing stream decorators
@@ -560,13 +568,13 @@ This method accepts the following `$resource` types:
   the object will be cast to a string and then a stream will be returned that
   uses the string value.
 - `NULL`: When `null` is passed, an empty stream object is returned.
-- `callable` When a callable is passed, a read-only stream object will be
-  created that invokes the given callable. The callable is invoked with the
-  number of suggested bytes to read. The callable can return any number of
-  bytes, but MUST return `false` when there is no more data to return. The
-  stream object that wraps the callable will invoke the callable until the
-  number of requested bytes are available. Any additional bytes will be
-  buffered and used in subsequent reads.
+- `callable`: When a callable array, closure, or invokable object is passed, a
+  read-only stream object will be created that invokes the given callable. The
+  callable is invoked with the suggested number of bytes to read. The callable
+  can return fewer or more bytes than requested, but MUST return `false` or
+  `null` when there is no more data to return. Any additional bytes will be
+  buffered and used in subsequent reads. String inputs are always treated as
+  string bodies, even when they name callable functions.
 
 ```php
 $stream = GuzzleHttp\Psr7\Utils::streamFor('foo');

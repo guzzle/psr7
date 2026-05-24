@@ -142,6 +142,33 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testSerializesRawCallableContents(): void
+    {
+        $chunks = ['callable body', false];
+        $b = new MultipartStream([
+            [
+                'name' => 'foo',
+                'contents' => static function (int $length) use (&$chunks) {
+                    if ($chunks === []) {
+                        return false;
+                    }
+
+                    return array_shift($chunks);
+                },
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"foo\"\r\n",
+            "\r\n",
+            "callable body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+    }
+
     public function testEscapesGeneratedContentDispositionName(): void
     {
         $b = new MultipartStream([

@@ -633,6 +633,64 @@ class UtilsTest extends TestCase
         self::assertSame('foo', (string) $s);
     }
 
+    public function testFactoryTreatsCallableStringAsStringBody(): void
+    {
+        $s = Psr7\Utils::streamFor('strlen');
+
+        self::assertNotInstanceOf(Psr7\PumpStream::class, $s);
+        self::assertSame('strlen', $s->getContents());
+    }
+
+    public function testFactoryCreatesFromCallableArray(): void
+    {
+        $source = new class {
+            /** @var list<string|false> */
+            private array $chunks = ['foo', false];
+
+            /**
+             * @return string|false
+             */
+            public function read(int $length)
+            {
+                if ($this->chunks === []) {
+                    return false;
+                }
+
+                return array_shift($this->chunks);
+            }
+        };
+
+        $s = Psr7\Utils::streamFor([$source, 'read']);
+
+        self::assertInstanceOf(Psr7\PumpStream::class, $s);
+        self::assertSame('foo', $s->getContents());
+    }
+
+    public function testFactoryCreatesFromInvokableObject(): void
+    {
+        $source = new class {
+            /** @var list<string|false> */
+            private array $chunks = ['foo', false];
+
+            /**
+             * @return string|false
+             */
+            public function __invoke(int $length)
+            {
+                if ($this->chunks === []) {
+                    return false;
+                }
+
+                return array_shift($this->chunks);
+            }
+        };
+
+        $s = Psr7\Utils::streamFor($source);
+
+        self::assertInstanceOf(Psr7\PumpStream::class, $s);
+        self::assertSame('foo', $s->getContents());
+    }
+
     public function testCreatePassesThrough(): void
     {
         $s = Psr7\Utils::streamFor('foo');

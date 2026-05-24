@@ -33,6 +33,31 @@ class FnStreamTest extends TestCase
         self::assertSame('foo', $s->read(3));
     }
 
+    public function testProxiesToNonClosureCallable(): void
+    {
+        $s = new FnStream([
+            'write' => 'strlen',
+        ]);
+
+        self::assertSame(3, $s->write('foo'));
+    }
+
+    public function testDecoratesWithNonClosureCallable(): void
+    {
+        $source = new class {
+            public function read(int $length): string
+            {
+                return str_repeat('x', $length);
+            }
+        };
+
+        $s = FnStream::decorate(Psr7\Utils::streamFor('foo'), [
+            'read' => [$source, 'read'],
+        ]);
+
+        self::assertSame('xxx', $s->read(3));
+    }
+
     public function testCanCloseOnDestruct(): void
     {
         $called = false;

@@ -11,6 +11,21 @@ use PHPUnit\Framework\TestCase;
 
 class PumpStreamTest extends TestCase
 {
+    /** @var list<string|false|null> */
+    private static array $chunks = [];
+
+    /**
+     * @return string|false|null
+     */
+    public static function dequeueChunk(int $length)
+    {
+        if (self::$chunks === []) {
+            return false;
+        }
+
+        return array_shift(self::$chunks);
+    }
+
     public function testHasMetadataAndSize(): void
     {
         $p = new PumpStream(function (): void {
@@ -33,6 +48,63 @@ class PumpStreamTest extends TestCase
         self::assertSame(1, $p->tell());
         self::assertSame('aaaaa', $p->read(5));
         self::assertSame(6, $p->tell());
+    }
+
+    public function testCanReadFromCallableString(): void
+    {
+        self::$chunks = ['foo', false];
+
+        $p = new PumpStream(self::class.'::dequeueChunk');
+
+        self::assertSame('foo', $p->getContents());
+    }
+
+    public function testCanReadFromCallableArray(): void
+    {
+        $source = new class {
+            /** @var list<string|false> */
+            private array $chunks = ['foo', false];
+
+            /**
+             * @return string|false
+             */
+            public function read(int $length)
+            {
+                if ($this->chunks === []) {
+                    return false;
+                }
+
+                return array_shift($this->chunks);
+            }
+        };
+
+        $p = new PumpStream([$source, 'read']);
+
+        self::assertSame('foo', $p->getContents());
+    }
+
+    public function testCanReadFromInvokableObject(): void
+    {
+        $source = new class {
+            /** @var list<string|false> */
+            private array $chunks = ['foo', false];
+
+            /**
+             * @return string|false
+             */
+            public function __invoke(int $length)
+            {
+                if ($this->chunks === []) {
+                    return false;
+                }
+
+                return array_shift($this->chunks);
+            }
+        };
+
+        $p = new PumpStream($source);
+
+        self::assertSame('foo', $p->getContents());
     }
 
     public function testStoresExcessDataInBuffer(): void
