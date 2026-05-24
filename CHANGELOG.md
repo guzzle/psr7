@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.10.2 - TBD
 
-### Fixed
+### Security
 
-- Reject control and whitespace characters in URI host components
+- Reject control and whitespace characters in URI host components (GHSA-hq7v-mx3g-29hw)
 
 ## 2.10.1 - 2026-05-20
 
