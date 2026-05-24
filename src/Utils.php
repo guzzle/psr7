@@ -327,9 +327,7 @@ final class Utils
      */
     public static function redactUserInfo(UriInterface $uri): UriInterface
     {
-        return $uri->getUserInfo() === ''
-            ? $uri
-            : $uri->withUserInfo('***');
+        return $uri->getUserInfo() === '' ? $uri : $uri->withUserInfo('***');
     }
 
     /**
