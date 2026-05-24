@@ -30,15 +30,19 @@ final class Query
         }
 
         if ($urlEncoding === true) {
-            $decoder = function ($value): string {
-                return rawurldecode(str_replace('+', ' ', (string) $value));
+            $decoder = function (string $value): string {
+                return \rawurldecode(str_replace('+', ' ', $value));
             };
         } elseif ($urlEncoding === PHP_QUERY_RFC3986) {
-            $decoder = 'rawurldecode';
+            $decoder = static function (string $value): string {
+                return \rawurldecode($value);
+            };
         } elseif ($urlEncoding === PHP_QUERY_RFC1738) {
-            $decoder = 'urldecode';
+            $decoder = static function (string $value): string {
+                return \urldecode($value);
+            };
         } else {
-            $decoder = function ($str): string {
+            $decoder = function (string $str): string {
                 return $str;
             };
         }
@@ -86,9 +90,13 @@ final class Query
                 return $str;
             };
         } elseif ($encoding === PHP_QUERY_RFC3986) {
-            $encoder = 'rawurlencode';
+            $encoder = static function (string $value): string {
+                return \rawurlencode($value);
+            };
         } elseif ($encoding === PHP_QUERY_RFC1738) {
-            $encoder = 'urlencode';
+            $encoder = static function (string $value): string {
+                return \urlencode($value);
+            };
         } else {
             throw new \InvalidArgumentException('Invalid type');
         }
