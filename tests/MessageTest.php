@@ -123,7 +123,45 @@ class MessageTest extends TestCase
         yield 'path delimiter' => ['example.com/path'];
         yield 'query delimiter' => ['example.com?query'];
         yield 'fragment delimiter' => ['example.com#fragment'];
+        yield 'backslash delimiter' => ['example.com\\evil'];
+        yield 'space' => ['bad host'];
+        yield 'tab' => ["bad\thost"];
+        yield 'control character' => ['example'.chr(1).'com'];
+        yield 'delete' => ['example'.chr(0x7F).'com'];
         yield 'multiple ports' => ['example.com:443:8443'];
+        yield 'missing closing bracket' => ['[::1'];
+        yield 'unexpected bracket suffix' => ['[::1]x'];
+        yield 'invalid ip literal' => ['[bad]'];
+        yield 'unexpected opening bracket' => ['foo[bar'];
+        yield 'unexpected closing bracket' => ['foo]bar'];
+    }
+
+    /**
+     * @dataProvider validHostHeaderProvider
+     */
+    public function testParseRequestAcceptsValidHostHeader(string $host, string $expectedUri): void
+    {
+        $request = Psr7\Message::parseRequest("GET / HTTP/1.1\r\nHost: {$host}\r\n\r\n");
+
+        self::assertSame($host, $request->getHeaderLine('Host'));
+        self::assertSame($expectedUri, (string) $request->getUri());
+    }
+
+    public static function validHostHeaderProvider(): iterable
+    {
+        yield 'host' => ['foo.com', 'http://foo.com/'];
+        yield 'https default port' => ['foo.com:443', 'https://foo.com/'];
+        yield 'non-default port' => ['foo.com:8080', 'http://foo.com:8080/'];
+        yield 'zero port' => ['foo.com:0', 'http://foo.com:0/'];
+        yield 'ipv6' => ['[::1]', 'http://[::1]/'];
+        yield 'ipv6 port' => ['[::1]:443', 'https://[::1]/'];
+    }
+
+    public function testParseRequestAcceptsMissingHostHeader(): void
+    {
+        $request = Psr7\Message::parseRequest("GET /abc HTTP/1.1\r\nFoo: bar\r\n\r\n");
+
+        self::assertSame('/abc', (string) $request->getUri());
     }
 
     public function testParsesRequestMessagesWithFullUri(): void
