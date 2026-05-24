@@ -168,7 +168,7 @@ class MultipartStreamTest extends TestCase
             "x\"\r\n\r\n--BOUND\r\n",
             "Content-Disposition: form-data; name=\"role\"\r\n\r\n",
             "admin\r\n--BOUND\r\n",
-            "Content-Disposition: form-data; name=\"_ignore",
+            'Content-Disposition: form-data; name="_ignore',
         ]);
 
         $body = new MultipartStream([
