@@ -306,23 +306,25 @@ final class Utils
             if (!\is_array($changes['set_headers'])) {
                 self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $changes['set_headers']);
             } else {
-                foreach ($changes['set_headers'] as $value) {
+                foreach ($changes['set_headers'] as $header => $value) {
+                    $headerPath = 'set_headers.'.(string) $header;
+
                     if (\is_array($value)) {
                         if ($value === []) {
-                            self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $value);
+                            self::warnOnInvalidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
 
                             break;
                         }
 
-                        foreach ($value as $item) {
+                        foreach ($value as $index => $item) {
                             if (!\is_string($item)) {
-                                self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $item);
+                                self::warnOnInvalidModifyRequestChange($headerPath.'.'.(string) $index, 'string', $item);
 
                                 break 2;
                             }
                         }
                     } elseif (!\is_string($value)) {
-                        self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $value);
+                        self::warnOnInvalidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
 
                         break;
                     }
@@ -340,9 +342,9 @@ final class Utils
             return;
         }
 
-        foreach ($changes['remove_headers'] as $header) {
+        foreach ($changes['remove_headers'] as $index => $header) {
             if (!\is_string($header) && !\is_int($header)) {
-                self::warnOnInvalidModifyRequestChange('remove_headers', 'array<array-key, string|int>', $header);
+                self::warnOnInvalidModifyRequestChange('remove_headers.'.(string) $index, 'string|int', $header);
 
                 return;
             }
