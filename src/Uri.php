@@ -402,21 +402,7 @@ class Uri implements UriInterface, \JsonSerializable
      */
     public static function assertValidHost(string $host): void
     {
-        if ($host === '') {
-            return;
-        }
-
-        if (preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host)) {
-            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
-        }
-
-        if (strpos($host, '[') !== false || strpos($host, ']') !== false) {
-            self::assertValidIpLiteralHost($host);
-
-            return;
-        }
-
-        if (strpos($host, ':') !== false) {
+        if (!Rfc3986::isValidHost($host)) {
             throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
         }
     }
@@ -657,24 +643,6 @@ class Uri implements UriInterface, \JsonSerializable
         self::assertValidHost($host);
 
         return $host;
-    }
-
-    private static function assertValidIpLiteralHost(string $host): void
-    {
-        if ($host[0] !== '[' || substr($host, -1) !== ']') {
-            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
-        }
-
-        $address = substr($host, 1, -1);
-        if (\filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
-            return;
-        }
-
-        if (preg_match('/^v[0-9a-f]+\.['.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.':]+$/iD', $address)) {
-            return;
-        }
-
-        throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
     }
 
     /**
