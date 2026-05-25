@@ -527,7 +527,7 @@ final class Utils
             return new PumpStream($resource, $options);
         }
 
-        throw new \InvalidArgumentException('Invalid resource type: '.gettype($resource));
+        throw new \InvalidArgumentException('Invalid resource type: '.\get_debug_type($resource));
     }
 
     /**

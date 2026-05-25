@@ -337,11 +337,11 @@ class ResponseTest extends TestCase
         return [
             ['', '', '"" is not valid header name'],
             ['foo', [], 'Header value must be a non-empty array or string.'],
-            ['foo', false, 'Header value must be a string or array of strings but boolean provided.'],
+            ['foo', false, 'Header value must be a string or array of strings but bool provided.'],
             ['foo', new \stdClass(),  'Header value must be a string or array of strings but stdClass provided.'],
-            ['foo', 1, 'Header value must be a string or array of strings but integer provided.'],
-            ['foo', null, 'Header value must be a string or array of strings but NULL provided.'],
-            ['foo', [1], 'Header value must be a string or array of strings but integer provided.'],
+            ['foo', 1, 'Header value must be a string or array of strings but int provided.'],
+            ['foo', null, 'Header value must be a string or array of strings but null provided.'],
+            ['foo', [1], 'Header value must be a string or array of strings but int provided.'],
         ];
     }
 

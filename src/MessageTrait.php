@@ -216,7 +216,7 @@ trait MessageTrait
             if (!is_string($value)) {
                 throw new \InvalidArgumentException(sprintf(
                     'Header value must be a string or array of strings but %s provided.',
-                    is_object($value) ? get_class($value) : gettype($value)
+                    \get_debug_type($value)
                 ));
             }
 
