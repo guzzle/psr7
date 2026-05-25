@@ -151,6 +151,46 @@ class MessageTest extends TestCase
     }
 
     /**
+     * @dataProvider duplicateHostHeaderProvider
+     */
+    public function testParseRequestRejectsDuplicateHostHeaders(string $message): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequest($message);
+    }
+
+    public static function duplicateHostHeaderProvider(): iterable
+    {
+        yield 'duplicate same case' => [
+            "GET / HTTP/1.1\r\nHost: one.example\r\nHost: two.example\r\n\r\n",
+        ];
+
+        yield 'duplicate different case' => [
+            "GET / HTTP/1.1\r\nHost: one.example\r\nhost: two.example\r\n\r\n",
+        ];
+
+        yield 'duplicate on options asterisk' => [
+            "OPTIONS * HTTP/1.1\r\nHost: one.example\r\nHost: two.example\r\n\r\n",
+        ];
+
+        yield 'duplicate on absolute form' => [
+            "GET https://up.example/ HTTP/1.1\r\nHost: one.example\r\nHost: two.example\r\n\r\n",
+        ];
+
+        yield 'duplicate on connect authority form' => [
+            "CONNECT up.example:443 HTTP/1.1\r\nHost: one.example\r\nHost: two.example\r\n\r\n",
+        ];
+    }
+
+    public function testParseRequestUriRejectsMultipleHostValues(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequestUri('/', ['Host' => ['one.example', 'two.example']]);
+    }
+
+    /**
      * @dataProvider invalidHostHeaderProvider
      */
     public function testParseOptionsAsteriskRejectsInvalidHostHeader(string $host): void

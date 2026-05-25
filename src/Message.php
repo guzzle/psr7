@@ -274,23 +274,44 @@ final class Message
      */
     private static function getHostFromHeaders(array $headers): ?string
     {
-        $hostKey = array_filter(array_keys($headers), function ($k): bool {
-            // Numeric array keys are converted to int by PHP.
-            $k = (string) $k;
-
-            return strtolower($k) === 'host';
-        });
-
-        if (!$hostKey) {
+        $host = self::getSingleHostHeader($headers);
+        if ($host === null) {
             return null;
         }
 
-        $host = $headers[reset($hostKey)][0];
+        self::parseHostHeaderAuthority($host);
+
+        return $host;
+    }
+
+    /**
+     * @param array $headers Array of headers (each value an array).
+     */
+    private static function getSingleHostHeader(array $headers): ?string
+    {
+        $host = null;
+        $found = false;
+
+        foreach ($headers as $name => $values) {
+            if (strtolower((string) $name) !== 'host') {
+                continue;
+            }
+
+            if ($found || !is_array($values) || count($values) !== 1) {
+                throw new \InvalidArgumentException('Invalid request string');
+            }
+
+            $found = true;
+            $host = reset($values);
+        }
+
+        if (!$found) {
+            return null;
+        }
+
         if (!is_string($host)) {
             throw new \InvalidArgumentException('Invalid request string');
         }
-
-        self::parseHostHeaderAuthority($host);
 
         return $host;
     }
@@ -323,6 +344,8 @@ final class Message
         if (!preg_match('/^(?P<method>[!#$%&\'*+.^_`|~0-9A-Za-z-]+) (?P<target>[^\x00-\x20\x7F]+) HTTP\/(?P<version>\d+(?:\.\d+)?)$/D', $data['start-line'], $matches)) {
             throw new \InvalidArgumentException('Invalid request string');
         }
+
+        self::getSingleHostHeader($data['headers']);
 
         if ($matches['target'][0] === '/') {
             return new Request(

@@ -210,6 +210,8 @@ malformed `SERVER_PORT` values when reconstructing the URI from server globals.
 `Message::parseRequest()` now applies 3.0 authority rules when deriving a URI
 from an origin-form or asterisk-form request target. Host ports with leading
 zeroes are normalized for URI reconstruction, and port zero is rejected.
+It also rejects duplicate `Host` field lines, including case-insensitive
+duplicates.
 
 Applications that need to reject malformed inbound `Host` headers should
 validate the request host before calling `getUriFromGlobals()` or inspect the
