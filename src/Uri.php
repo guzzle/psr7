@@ -402,7 +402,9 @@ class Uri implements UriInterface, \JsonSerializable
      */
     public static function assertValidHost(string $host): void
     {
-        Rfc3986::assertValidHost($host);
+        if (!Rfc3986::isValidHost($host)) {
+            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
+        }
     }
 
     public function getScheme(): string

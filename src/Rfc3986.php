@@ -44,13 +44,6 @@ final class Rfc3986
         return strpos($host, ':') === false;
     }
 
-    public static function assertValidHost(string $host): void
-    {
-        if (!self::isValidHost($host)) {
-            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
-        }
-    }
-
     private static function isValidIpLiteralHost(string $host): bool
     {
         if ($host[0] !== '[' || substr($host, -1) !== ']') {
