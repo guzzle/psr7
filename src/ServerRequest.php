@@ -636,7 +636,7 @@ class ServerRequest extends Request implements ServerRequestInterface
 
                 throw new InvalidArgumentException(sprintf(
                     'Invalid uploaded file tree; expected UploadedFileInterface instances but %s provided.',
-                    is_object($uploadedFile) ? get_class($uploadedFile) : gettype($uploadedFile)
+                    \get_debug_type($uploadedFile)
                 ));
             }
         }
