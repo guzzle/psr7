@@ -214,6 +214,32 @@ class UriTest extends TestCase
         (new Uri())->withHost([]);
     }
 
+    /**
+     * @dataProvider getInvalidHostsWithControlCharacters
+     */
+    public function testHostMustRejectControlCharacters(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new Uri())->withHost($host);
+    }
+
+    public static function getInvalidHostsWithControlCharacters(): iterable
+    {
+        for ($i = 0; $i <= 0x20; ++$i) {
+            yield 'ascii 0x'.strtoupper(dechex($i)) => ['example'.chr($i).'com'];
+        }
+
+        yield 'ascii 0x7F' => ['example'.chr(0x7F).'com'];
+    }
+
+    public function testParseUriRejectsHostWithControlCharacter(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri("http://example.com\r\nX-Injected:%20yes/");
+    }
+
     public function testPathMustHaveCorrectType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
