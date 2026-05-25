@@ -222,6 +222,8 @@ class MessageTest extends TestCase
         yield 'maximum port' => ['foo.com:65535', 'http://foo.com:65535/'];
         yield 'ipv6' => ['[::1]', 'http://[::1]/'];
         yield 'ipv6 port' => ['[::1]:443', 'https://[::1]/'];
+        yield 'ipv6 https leading zero default port' => ['[::1]:000443', 'https://[::1]/'];
+        yield 'ipv6 leading zero non-default port' => ['[::1]:0008080', 'http://[::1]:8080/'];
     }
 
     public function testParseRequestAcceptsMissingHostHeader(): void
@@ -241,6 +243,15 @@ class MessageTest extends TestCase
         self::assertSame('www.google.com', $request->getHeaderLine('Host'));
         self::assertSame('', (string) $request->getBody());
         self::assertSame('https://www.google.com/search?q=foobar', (string) $request->getUri());
+    }
+
+    public function testParseRequestAbsoluteFormIgnoresInvalidHostHeaderWhenUriComesFromTarget(): void
+    {
+        $request = Psr7\Message::parseRequest("GET https://good.example/admin HTTP/1.1\r\nHost: trusted.example@evil.example\r\n\r\n");
+
+        self::assertSame('https://good.example/admin', $request->getRequestTarget());
+        self::assertSame('trusted.example@evil.example', $request->getHeaderLine('Host'));
+        self::assertSame('https://good.example/admin', (string) $request->getUri());
     }
 
     public function testParsesOptionsAsteriskFormRequestTarget(): void
@@ -271,6 +282,15 @@ class MessageTest extends TestCase
 
         self::assertSame('*', $request->getRequestTarget());
         self::assertSame('[::1]:443', $request->getHeaderLine('Host'));
+        self::assertSame('https://[::1]', (string) $request->getUri());
+    }
+
+    public function testParsesOptionsAsteriskFormRequestTargetWithIpv6LeadingZeroHttpsPort(): void
+    {
+        $request = Psr7\Message::parseRequest("OPTIONS * HTTP/1.1\r\nHost: [::1]:000443\r\n\r\n");
+
+        self::assertSame('*', $request->getRequestTarget());
+        self::assertSame('[::1]:000443', $request->getHeaderLine('Host'));
         self::assertSame('https://[::1]', (string) $request->getUri());
     }
 
@@ -317,6 +337,27 @@ class MessageTest extends TestCase
         self::assertSame('CONNECT', $request->getMethod());
         self::assertSame('up.example:000443', $request->getRequestTarget());
         self::assertSame('up.example:000443', $request->getHeaderLine('Host'));
+        self::assertSame('//up.example:443', (string) $request->getUri());
+    }
+
+    public function testParsesConnectAuthorityFormRequestTargetWithIpv6LeadingZeroPort(): void
+    {
+        $req = "CONNECT [::1]:000443 HTTP/1.1\r\nHost: [::1]:000443\r\n\r\n";
+        $request = Psr7\Message::parseRequest($req);
+
+        self::assertSame('CONNECT', $request->getMethod());
+        self::assertSame('[::1]:000443', $request->getRequestTarget());
+        self::assertSame('[::1]:000443', $request->getHeaderLine('Host'));
+        self::assertSame('//[::1]:443', (string) $request->getUri());
+    }
+
+    public function testParseConnectAuthorityFormIgnoresInvalidHostHeaderWhenUriComesFromTarget(): void
+    {
+        $request = Psr7\Message::parseRequest("CONNECT up.example:443 HTTP/1.1\r\nHost: trusted.example@evil.example\r\n\r\n");
+
+        self::assertSame('CONNECT', $request->getMethod());
+        self::assertSame('up.example:443', $request->getRequestTarget());
+        self::assertSame('trusted.example@evil.example', $request->getHeaderLine('Host'));
         self::assertSame('//up.example:443', (string) $request->getUri());
     }
 
