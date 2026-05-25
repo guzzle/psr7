@@ -166,7 +166,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public static function fromGlobals(): ServerRequestInterface
     {
         $method = strtoupper(self::getServerParam('REQUEST_METHOD') ?? 'GET');
-        $headers = getallheaders();
+        $headers = self::getAllHeaders();
         $uri = self::getUriFromGlobals();
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
         $serverProtocol = self::getServerParam('SERVER_PROTOCOL');
@@ -179,6 +179,32 @@ class ServerRequest extends Request implements ServerRequestInterface
             ->withQueryParams($_GET)
             ->withParsedBody($_POST)
             ->withUploadedFiles(self::normalizeFiles($_FILES));
+    }
+
+    /**
+     * @return array<array-key, string>
+     */
+    private static function getAllHeaders(): array
+    {
+        return self::normalizeHeaderValues(getallheaders());
+    }
+
+    /**
+     * @param array<array-key, mixed> $headers
+     *
+     * @return array<array-key, string>
+     */
+    private static function normalizeHeaderValues(array $headers): array
+    {
+        $normalized = [];
+
+        foreach ($headers as $name => $value) {
+            if (is_scalar($value) || (is_object($value) && method_exists($value, '__toString'))) {
+                $normalized[$name] = (string) $value;
+            }
+        }
+
+        return $normalized;
     }
 
     private static function getServerParam(string $key): ?string
