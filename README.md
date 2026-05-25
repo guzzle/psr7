@@ -498,10 +498,11 @@ This method is useful for reducing the number of clones needed to mutate
 a message.
 
 - method: (string) Changes the HTTP method.
-- set_headers: (array) Sets the given headers. Values must be strings or
-  non-empty arrays of strings.
-- remove_headers: (array) Remove the given headers. Values may be strings or
-  integers.
+- set_headers: (array) Sets the given headers. Use strings or non-empty arrays
+  of strings. Non-string scalar values, null values, and empty arrays are
+  deprecated and will be rejected in 3.0.
+- remove_headers: (array) Remove the given headers. Use strings or integers.
+  Other values are deprecated and will be rejected in 3.0.
 - body: (mixed) Sets the given body. Present non-null values are converted with
   `GuzzleHttp\Psr7\Utils::streamFor()`, including scalar values, resources,
   streams, iterators, callable arrays, closures, invokable objects, and
