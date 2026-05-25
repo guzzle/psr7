@@ -199,7 +199,7 @@ final class Utils
      * @param RequestInterface $request Request to clone and modify.
      * @param array{
      *     method?: string,
-     *     set_headers?: array<array-key, string|array<array-key, string>>,
+     *     set_headers?: array<array-key, string|non-empty-array<array-key, string>>,
      *     remove_headers?: array<array-key, string|int>,
      *     body?: resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable,
      *     uri?: UriInterface,
@@ -213,7 +213,7 @@ final class Utils
             return $request;
         }
 
-        self::warnOnInvalidModifyRequestChanges($changes);
+        self::assertValidModifyRequestChanges($changes);
 
         $headers = $request->getHeaders();
 
@@ -319,45 +319,45 @@ final class Utils
     /**
      * @param array<array-key, mixed> $changes
      */
-    private static function warnOnInvalidModifyRequestChanges(array $changes): void
+    private static function assertValidModifyRequestChanges(array $changes): void
     {
         foreach (['method', 'query', 'version'] as $key) {
             if (\array_key_exists($key, $changes) && !\is_string($changes[$key])) {
-                self::warnOnInvalidModifyRequestChange($key, 'string', $changes[$key]);
+                self::assertValidModifyRequestChange($key, 'string', $changes[$key]);
             }
         }
 
         if (\array_key_exists('uri', $changes) && !$changes['uri'] instanceof UriInterface) {
-            self::warnOnInvalidModifyRequestChange('uri', 'UriInterface', $changes['uri']);
+            self::assertValidModifyRequestChange('uri', 'UriInterface', $changes['uri']);
         }
 
         if (\array_key_exists('body', $changes) && $changes['body'] === null) {
-            self::warnOnInvalidModifyRequestChange('body', 'resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable', $changes['body']);
+            self::assertValidModifyRequestChange('body', 'resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable', $changes['body']);
         }
 
         if (\array_key_exists('set_headers', $changes)) {
             if (!\is_array($changes['set_headers'])) {
-                self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $changes['set_headers']);
+                self::assertValidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $changes['set_headers']);
             } else {
                 foreach ($changes['set_headers'] as $header => $value) {
                     $headerPath = \sprintf('set_headers.%s', (string) $header);
 
                     if (\is_array($value)) {
                         if ($value === []) {
-                            self::warnOnInvalidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
+                            self::assertValidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
 
                             break;
                         }
 
                         foreach ($value as $index => $item) {
                             if (!\is_string($item)) {
-                                self::warnOnInvalidModifyRequestChange(\sprintf('%s.%s', $headerPath, (string) $index), 'string', $item);
+                                self::assertValidModifyRequestChange(\sprintf('%s.%s', $headerPath, (string) $index), 'string', $item);
 
                                 break 2;
                             }
                         }
                     } elseif (!\is_string($value)) {
-                        self::warnOnInvalidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
+                        self::assertValidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
 
                         break;
                     }
@@ -370,14 +370,14 @@ final class Utils
         }
 
         if (!\is_array($changes['remove_headers'])) {
-            self::warnOnInvalidModifyRequestChange('remove_headers', 'array<array-key, string|int>', $changes['remove_headers']);
+            self::assertValidModifyRequestChange('remove_headers', 'array<array-key, string|int>', $changes['remove_headers']);
 
             return;
         }
 
         foreach ($changes['remove_headers'] as $index => $header) {
             if (!\is_string($header) && !\is_int($header)) {
-                self::warnOnInvalidModifyRequestChange(\sprintf('remove_headers.%s', (string) $index), 'string|int', $header);
+                self::assertValidModifyRequestChange(\sprintf('remove_headers.%s', (string) $index), 'string|int', $header);
 
                 return;
             }
@@ -387,16 +387,14 @@ final class Utils
     /**
      * @param mixed $value
      */
-    private static function warnOnInvalidModifyRequestChange(string $key, string $expected, $value): void
+    private static function assertValidModifyRequestChange(string $key, string $expected, $value): void
     {
-        \trigger_deprecation(
-            'guzzlehttp/psr7',
-            '2.11',
-            'Passing %s to Utils::modifyRequest() change "%s" is deprecated; guzzlehttp/psr7 3.0 requires %s.',
-            \get_debug_type($value),
+        throw new \InvalidArgumentException(\sprintf(
+            'Utils::modifyRequest() change "%s" must be %s; %s provided.',
             $key,
-            $expected
-        );
+            $expected,
+            \is_object($value) ? \get_class($value) : \gettype($value)
+        ));
     }
 
     /**

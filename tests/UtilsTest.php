@@ -1212,6 +1212,24 @@ class UtilsTest extends TestCase
         self::assertFalse($modified->hasHeader('123'));
     }
 
+    /**
+     * @dataProvider providesInvalidModifyRequestChanges
+     */
+    public function testModifyRequestRejectsInvalidChangeValues(array $changes, string $expectedMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        Psr7\Utils::modifyRequest(new Psr7\Request('GET', 'http://example.com'), $changes);
+    }
+
+    public function testModifyRequestIgnoresUnknownChangeKeys(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        self::assertSame($request, Psr7\Utils::modifyRequest($request, ['unknown' => new \stdClass()]));
+    }
+
     public function testModifyServerRequestWithUploadedFiles(): void
     {
         $request = new Psr7\ServerRequest('GET', 'http://example.com/bla');
@@ -1269,6 +1287,83 @@ class UtilsTest extends TestCase
         $modifiedRequest = Psr7\Utils::modifyRequest($request, ['set_headers' => ['baz' => 'qux']]);
 
         self::assertSame(['foo' => 'bar'], $modifiedRequest->getAttributes());
+    }
+
+    /**
+     * @return array<string, array{0: array, 1: string}>
+     */
+    public static function providesInvalidModifyRequestChanges(): array
+    {
+        return [
+            'method null' => [
+                ['method' => null],
+                'Utils::modifyRequest() change "method" must be string; NULL provided.',
+            ],
+            'method int' => [
+                ['method' => 123],
+                'Utils::modifyRequest() change "method" must be string; integer provided.',
+            ],
+            'uri null' => [
+                ['uri' => null],
+                'Utils::modifyRequest() change "uri" must be UriInterface; NULL provided.',
+            ],
+            'uri string' => [
+                ['uri' => 'http://example.com'],
+                'Utils::modifyRequest() change "uri" must be UriInterface; string provided.',
+            ],
+            'query null' => [
+                ['query' => null],
+                'Utils::modifyRequest() change "query" must be string; NULL provided.',
+            ],
+            'query int' => [
+                ['query' => 123],
+                'Utils::modifyRequest() change "query" must be string; integer provided.',
+            ],
+            'version null' => [
+                ['version' => null],
+                'Utils::modifyRequest() change "version" must be string; NULL provided.',
+            ],
+            'version int' => [
+                ['version' => 2],
+                'Utils::modifyRequest() change "version" must be string; integer provided.',
+            ],
+            'body null' => [
+                ['body' => null],
+                'Utils::modifyRequest() change "body" must be resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable; NULL provided.',
+            ],
+            'set_headers null' => [
+                ['set_headers' => null],
+                'Utils::modifyRequest() change "set_headers" must be array<array-key, string|non-empty-array<array-key, string>>; NULL provided.',
+            ],
+            'set_headers string' => [
+                ['set_headers' => 'X-Test: value'],
+                'Utils::modifyRequest() change "set_headers" must be array<array-key, string|non-empty-array<array-key, string>>; string provided.',
+            ],
+            'set_headers value bool' => [
+                ['set_headers' => ['X-Test' => false]],
+                'Utils::modifyRequest() change "set_headers.X-Test" must be string|non-empty-array<array-key, string>; boolean provided.',
+            ],
+            'set_headers value empty array' => [
+                ['set_headers' => ['X-Test' => []]],
+                'Utils::modifyRequest() change "set_headers.X-Test" must be string|non-empty-array<array-key, string>; array provided.',
+            ],
+            'set_headers value array non-string item' => [
+                ['set_headers' => ['X-Test' => [false]]],
+                'Utils::modifyRequest() change "set_headers.X-Test.0" must be string; boolean provided.',
+            ],
+            'remove_headers null' => [
+                ['remove_headers' => null],
+                'Utils::modifyRequest() change "remove_headers" must be array<array-key, string|int>; NULL provided.',
+            ],
+            'remove_headers string' => [
+                ['remove_headers' => 'Host'],
+                'Utils::modifyRequest() change "remove_headers" must be array<array-key, string|int>; string provided.',
+            ],
+            'remove_headers bool value' => [
+                ['remove_headers' => [false]],
+                'Utils::modifyRequest() change "remove_headers.0" must be string|int; boolean provided.',
+            ],
+        ];
     }
 
     private static function customRequest(string $method, UriInterface $uri): Psr7\Request
