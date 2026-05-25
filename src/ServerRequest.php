@@ -426,12 +426,9 @@ class ServerRequest extends Request implements ServerRequestInterface
         return (int) $port;
     }
 
-    /**
-     * @param mixed $host
-     */
-    private static function withHostFromGlobals(UriInterface $uri, $host): ?UriInterface
+    private static function withHostFromGlobals(UriInterface $uri, ?string $host): ?UriInterface
     {
-        if (!is_string($host)) {
+        if ($host === null) {
             return null;
         }
 

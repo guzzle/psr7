@@ -229,18 +229,9 @@ trait MessageTrait
 
     /**
      * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2
-     *
-     * @param mixed $header
      */
-    private function assertHeader($header): void
+    private function assertHeader(string $header): void
     {
-        if (!is_string($header)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Header name must be a string but %s provided.',
-                is_object($header) ? get_class($header) : gettype($header)
-            ));
-        }
-
         if (!preg_match('/^[a-zA-Z0-9\'`#$%&*+.^_|~!-]+$/D', $header)) {
             throw new \InvalidArgumentException(
                 sprintf('"%s" is not valid header name.', $header)
