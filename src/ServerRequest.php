@@ -30,10 +30,9 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     private array $cookieParams = [];
 
-    /**
-     * @var array|object|null
-     */
-    private $parsedBody;
+    private ?array $parsedBodyArray = null;
+
+    private ?object $parsedBodyObject = null;
 
     private array $queryParams = [];
 
@@ -678,7 +677,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function getParsedBody()
     {
-        return $this->parsedBody;
+        return $this->parsedBodyArray ?? $this->parsedBodyObject;
     }
 
     public function withParsedBody($data): ServerRequestInterface
@@ -688,7 +687,14 @@ class ServerRequest extends Request implements ServerRequestInterface
         }
 
         $new = clone $this;
-        $new->parsedBody = $data;
+        $new->parsedBodyArray = null;
+        $new->parsedBodyObject = null;
+
+        if (\is_array($data)) {
+            $new->parsedBodyArray = $data;
+        } elseif (\is_object($data)) {
+            $new->parsedBodyObject = $data;
+        }
 
         return $new;
     }
