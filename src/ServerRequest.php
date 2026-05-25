@@ -224,7 +224,7 @@ class ServerRequest extends Request implements ServerRequestInterface
                 continue;
             }
 
-            if (!is_string($value) || self::parseHostAuthority($value) === null) {
+            if (self::parseHostAuthority($value) === null) {
                 unset($headers[$name]);
             }
         }
