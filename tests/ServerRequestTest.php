@@ -464,9 +464,49 @@ class ServerRequestTest extends TestCase
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => "www.example.org\n.evil"]),
             ],
+            'Host header with userinfo delimiter' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'trusted.example@evil.example']),
+            ],
+            'Host header with path delimiter' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com/path']),
+            ],
+            'Host header with query delimiter' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com?x=1']),
+            ],
+            'Host header with fragment delimiter' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com#frag']),
+            ],
+            'Host header with backslash delimiter' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com\\evil']),
+            ],
+            'Host header with space' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'bad host']),
+            ],
             'Host header with multiple ports' => [
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'www.example.org:443:8324']),
+            ],
+            'Host header with ambiguous ports' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com:80:90']),
+            ],
+            'Host header with invalid ip literal' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => '[bad]']),
+            ],
+            'Host header with unexpected opening bracket' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'foo[bar']),
+            ],
+            'Host header with unexpected closing bracket' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'foo]bar']),
             ],
             'Invalid HTTP_HOST and SERVER_NAME -> fallback to SERVER_ADDR' => [
                 'https://217.112.82.20/blog/article.php?id=10&user=foo',
@@ -959,11 +999,19 @@ class ServerRequestTest extends TestCase
     public static function dataInvalidHostHeaderFromGlobals(): iterable
     {
         yield 'empty' => [''];
+        yield 'userinfo delimiter' => ['trusted.example@evil.example'];
+        yield 'path delimiter' => ['example.com/path'];
+        yield 'query delimiter' => ['example.com?x=1'];
+        yield 'fragment delimiter' => ['example.com#frag'];
+        yield 'backslash delimiter' => ['example.com\\evil'];
         yield 'space' => ['bad host'];
         yield 'newline' => ["bad.example\r\nX-Evil: yes"];
         yield 'multiple ports' => ['bad.example:443:8443'];
         yield 'zero port' => ['bad.example:0'];
         yield 'zero padded zero port' => ['bad.example:0000'];
+        yield 'invalid ip literal' => ['[bad]'];
+        yield 'unexpected opening bracket' => ['foo[bar'];
+        yield 'unexpected closing bracket' => ['foo]bar'];
     }
 
     /**

@@ -347,68 +347,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        if ($authority === '') {
-            return [null, null];
-        }
-
-        $host = $authority;
-        $port = null;
-
-        if ($authority[0] === '[') {
-            $closingBracket = strpos($authority, ']');
-            if ($closingBracket === false) {
-                return [null, null];
-            }
-
-            $host = substr($authority, 0, $closingBracket + 1);
-            $remainder = substr($authority, $closingBracket + 1);
-            if ($remainder !== '') {
-                if ($remainder[0] !== ':') {
-                    return [null, null];
-                }
-
-                $port = self::parsePortFromAuthority(substr($remainder, 1));
-                if ($port === null) {
-                    return [null, null];
-                }
-            }
-        } elseif (false !== ($colon = strpos($authority, ':'))) {
-            $host = substr($authority, 0, $colon);
-            $port = self::parsePortFromAuthority(substr($authority, $colon + 1));
-            if ($port === null) {
-                return [null, null];
-            }
-        }
-
-        if ($host === '') {
-            return [null, null];
-        }
-
-        try {
-            Uri::assertValidHost($host);
-        } catch (InvalidArgumentException $e) {
-            return [null, null];
-        }
-
-        return [$host, $port];
-    }
-
-    private static function parsePortFromAuthority(string $port): ?int
-    {
-        if ($port === '' || !ctype_digit($port)) {
-            return null;
-        }
-
-        $port = ltrim($port, '0');
-        if ($port === '') {
-            return null;
-        }
-
-        if (strlen($port) > 5 || (int) $port > 0xFFFF) {
-            return null;
-        }
-
-        return (int) $port;
+        return Rfc7230::parseHostHeader($authority, false) ?? [null, null];
     }
 
     private static function parseServerPort(string $port): int
