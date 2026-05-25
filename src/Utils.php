@@ -295,34 +295,34 @@ final class Utils
         }
 
         if (\array_key_exists('uri', $changes) && !$changes['uri'] instanceof UriInterface) {
-            self::warnOnInvalidModifyRequestChange('uri', UriInterface::class, $changes['uri']);
+            self::warnOnInvalidModifyRequestChange('uri', 'UriInterface', $changes['uri']);
         }
 
         if (\array_key_exists('body', $changes) && $changes['body'] === null) {
-            self::warnOnInvalidModifyRequestChange('body', 'a non-null value', $changes['body']);
+            self::warnOnInvalidModifyRequestChange('body', 'resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable', $changes['body']);
         }
 
         if (\array_key_exists('set_headers', $changes)) {
             if (!\is_array($changes['set_headers'])) {
-                self::warnOnInvalidModifyRequestChange('set_headers', 'array', $changes['set_headers']);
+                self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $changes['set_headers']);
             } else {
                 foreach ($changes['set_headers'] as $value) {
                     if (\is_array($value)) {
                         if ($value === []) {
-                            self::warnOnInvalidModifyRequestChange('set_headers', 'string|non-empty-array<string> values', $value);
+                            self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $value);
 
                             break;
                         }
 
                         foreach ($value as $item) {
                             if (!\is_string($item)) {
-                                self::warnOnInvalidModifyRequestChange('set_headers', 'string|non-empty-array<string> values', $item);
+                                self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $item);
 
                                 break 2;
                             }
                         }
                     } elseif (!\is_string($value)) {
-                        self::warnOnInvalidModifyRequestChange('set_headers', 'string|non-empty-array<string> values', $value);
+                        self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $value);
 
                         break;
                     }
@@ -335,14 +335,14 @@ final class Utils
         }
 
         if (!\is_array($changes['remove_headers'])) {
-            self::warnOnInvalidModifyRequestChange('remove_headers', 'array', $changes['remove_headers']);
+            self::warnOnInvalidModifyRequestChange('remove_headers', 'array<array-key, string|int>', $changes['remove_headers']);
 
             return;
         }
 
         foreach ($changes['remove_headers'] as $header) {
             if (!\is_string($header) && !\is_int($header)) {
-                self::warnOnInvalidModifyRequestChange('remove_headers', 'string|int values', $header);
+                self::warnOnInvalidModifyRequestChange('remove_headers', 'array<array-key, string|int>', $header);
 
                 return;
             }
