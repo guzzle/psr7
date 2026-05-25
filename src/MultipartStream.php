@@ -243,7 +243,7 @@ final class MultipartStream implements StreamInterface
                 if (!is_scalar($value) && $value !== null && !(is_object($value) && method_exists($value, '__toString'))) {
                     throw new \InvalidArgumentException(sprintf(
                         'Multipart part header value must be a string or stringable value but %s provided.',
-                        is_object($value) ? get_class($value) : gettype($value)
+                        \get_debug_type($value)
                     ));
                 }
 
