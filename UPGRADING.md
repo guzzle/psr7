@@ -162,10 +162,10 @@ $request = $request->withParsedBody(['name' => 'value']);
 
 #### URI Host and Scheme Validation
 
-URI hosts containing control characters, whitespace, URI delimiters, backslashes,
-ambiguous port separators, or malformed IP-literal brackets are no longer
-accepted. URI schemes containing whitespace or control characters are also no
-longer accepted.
+URI hosts containing URI delimiters, backslashes, embedded ports passed to
+`withHost()`, malformed IP-literal brackets, unbracketed IPv6, or other
+malformed host forms are no longer accepted. URI schemes containing whitespace
+or control characters are also no longer accepted.
 
 If you previously passed a host and port together to `withHost()`, split them
 between `withHost()` and `withPort()`:
