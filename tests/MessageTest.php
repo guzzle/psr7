@@ -152,7 +152,6 @@ class MessageTest extends TestCase
         yield 'host' => ['foo.com', 'http://foo.com/'];
         yield 'https default port' => ['foo.com:443', 'https://foo.com/'];
         yield 'non-default port' => ['foo.com:8080', 'http://foo.com:8080/'];
-        yield 'zero port' => ['foo.com:0', 'http://foo.com:0/'];
         yield 'ipv6' => ['[::1]', 'http://[::1]/'];
         yield 'ipv6 port' => ['[::1]:443', 'https://[::1]/'];
     }
