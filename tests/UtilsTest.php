@@ -862,6 +862,16 @@ class UtilsTest extends TestCase
         Psr7\Utils::modifyRequest(new Psr7\Request('GET', '/'), ['uri' => $uri]);
     }
 
+    public function testCanModifyRequestWithFalseyUriHost(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Utils::modifyRequest($r1, [
+            'uri' => new Psr7\Uri('http://0'),
+        ]);
+        self::assertSame('http://0', (string) $r2->getUri());
+        self::assertSame('0', (string) $r2->getHeaderLine('host'));
+    }
+
     public function testCanModifyRequestWithCaseInsensitiveHeader(): void
     {
         $r1 = new Psr7\Request('GET', 'http://foo.com', ['User-Agent' => 'foo']);
@@ -1166,16 +1176,68 @@ class UtilsTest extends TestCase
         self::assertSame('1', $modified->getHeaderLine('X-Test'));
     }
 
-    public function testModifyRequestPreservesConstructorStyleHeaderAggregation(): void
+    /**
+     * @dataProvider hostHeaderCaseProvider
+     */
+    public function testModifyRequestRejectsUriAndExplicitHostHeader(string $hostHeader): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot modify request with both a URI containing a host and an explicit Host header.');
+
+        Psr7\Utils::modifyRequest($request, [
+            'uri' => new Psr7\Uri('http://bar.com'),
+            'set_headers' => [$hostHeader => 'custom'],
+        ]);
+    }
+
+    public function testModifyRequestRejectsFalseyUriHostAndExplicitHostHeader(): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot modify request with both a URI containing a host and an explicit Host header.');
+
+        Psr7\Utils::modifyRequest($request, [
+            'uri' => new Psr7\Uri('http://0'),
+            'set_headers' => ['host' => 'custom'],
+        ]);
+    }
+
+    public function testModifyRequestCanSetExplicitHostHeaderWithoutUriChange(): void
     {
         $request = new Psr7\Request('GET', 'http://foo.com');
 
         $modified = Psr7\Utils::modifyRequest($request, [
-            'uri' => new Psr7\Uri('http://bar.com'),
             'set_headers' => ['host' => 'custom'],
         ]);
 
-        self::assertSame(['host' => ['custom', 'bar.com']], $modified->getHeaders());
+        self::assertSame('custom', $modified->getHeaderLine('Host'));
+    }
+
+    public function testModifyRequestCanSetExplicitHostHeaderWithRelativeUriChange(): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $modified = Psr7\Utils::modifyRequest($request, [
+            'uri' => new Psr7\Uri('/relative'),
+            'set_headers' => ['host' => 'custom'],
+        ]);
+
+        self::assertSame('custom', $modified->getHeaderLine('Host'));
+        self::assertSame('/relative', (string) $modified->getUri());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function hostHeaderCaseProvider(): iterable
+    {
+        yield 'canonical' => ['Host'];
+        yield 'lowercase' => ['host'];
+        yield 'uppercase' => ['HOST'];
+        yield 'mixed case' => ['HoSt'];
     }
 
     public function testModifyRequestPreservesNumericHeaderNames(): void
