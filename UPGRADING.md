@@ -109,6 +109,22 @@ $response = $response->withStatus(201);
 $uri = $uri->withPort(8080);
 ```
 
+#### Request Modification Changes
+
+`Utils::modifyRequest()` now validates recognized change values before applying
+request modifications. Unknown change keys are still ignored. Explicit `null`
+values are no longer treated as omitted recognized changes; omit the key instead.
+
+Recognized change values must use the documented types:
+
+- `method`: `string`
+- `uri`: `UriInterface`
+- `query`: `string`
+- `version`: `string`
+- `body`: `resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable`
+- `set_headers`: `array<array-key, string|non-empty-array<array-key, string>>`
+- `remove_headers`: `array<array-key, string|int>`
+
 #### Uploaded Files
 
 `ServerRequestInterface::withUploadedFiles()` now rejects invalid nested upload
