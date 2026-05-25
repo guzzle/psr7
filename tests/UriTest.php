@@ -267,6 +267,26 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider getValidHosts
+     */
+    public function testHostMayBeValid(string $host, string $expectedHost): void
+    {
+        $uri = (new Uri())->withHost($host);
+
+        self::assertSame($expectedHost, $uri->getHost());
+    }
+
+    public static function getValidHosts(): iterable
+    {
+        yield 'empty' => ['', ''];
+        yield 'mixed case' => ['Example.COM', 'example.com'];
+        yield 'underscore' => ['foo_bar.example', 'foo_bar.example'];
+        yield 'sub-delims' => ['foo!$&\'()*+,;=.example', 'foo!$&\'()*+,;=.example'];
+        yield 'ipv6 literal' => ['[::1]', '[::1]'];
+        yield 'ipvfuture literal' => ['[v7.a:b]', '[v7.a:b]'];
+    }
+
+    /**
      * @dataProvider getInvalidHosts
      */
     public function testHostMustBeValid(string $host): void
@@ -292,8 +312,33 @@ class UriTest extends TestCase
         yield 'unbracketed IPv6' => ['::1'];
         yield 'bracketed IPv6 with port' => ['[::1]:80'];
         yield 'unterminated bracketed IPv6' => ['[::1'];
+        yield 'unexpected bracket suffix' => ['[::1]x'];
+        yield 'empty ip literal' => ['[]'];
+        yield 'invalid ip literal' => ['[bad]'];
+        yield 'empty ipvfuture address' => ['[v7.]'];
+        yield 'invalid ipvfuture version' => ['[vg.foo]'];
         yield 'unbalanced opening bracket' => ['example[com'];
         yield 'unbalanced closing bracket' => ['example]com'];
+    }
+
+    /**
+     * @dataProvider getInvalidHostParts
+     */
+    public function testFromPartsRejectsInvalidHost(string $host): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        Uri::fromParts(['scheme' => 'http', 'host' => $host]);
+    }
+
+    public static function getInvalidHostParts(): iterable
+    {
+        yield 'path delimiter' => ['example.com/path'];
+        yield 'query delimiter' => ['example.com?query'];
+        yield 'fragment delimiter' => ['example.com#fragment'];
+        yield 'userinfo delimiter' => ['user@example.com'];
+        yield 'backslash' => ['example\\com'];
+        yield 'invalid ip literal' => ['[bad]'];
     }
 
     public function testCanParseFalseyUriPartsExceptScheme(): void

@@ -119,6 +119,7 @@ class MessageTest extends TestCase
 
     public static function invalidHostHeaderProvider(): iterable
     {
+        yield 'empty' => [''];
         yield 'userinfo delimiter' => ['trusted.example@evil.example'];
         yield 'path delimiter' => ['example.com/path'];
         yield 'query delimiter' => ['example.com?query'];
@@ -128,12 +129,31 @@ class MessageTest extends TestCase
         yield 'tab' => ["bad\thost"];
         yield 'control character' => ['example'.chr(1).'com'];
         yield 'delete' => ['example'.chr(0x7F).'com'];
+        yield 'empty port' => ['example.com:'];
+        yield 'non numeric port' => ['example.com:abc'];
+        yield 'leading plus port' => ['example.com:+443'];
+        yield 'negative port' => ['example.com:-1'];
+        yield 'out of range port' => ['example.com:65536'];
         yield 'multiple ports' => ['example.com:443:8443'];
         yield 'missing closing bracket' => ['[::1'];
         yield 'unexpected bracket suffix' => ['[::1]x'];
         yield 'invalid ip literal' => ['[bad]'];
+        yield 'ipv6 empty port' => ['[::1]:'];
+        yield 'ipv6 non numeric port' => ['[::1]:abc'];
+        yield 'ipv6 out of range port' => ['[::1]:65536'];
+        yield 'empty ipvfuture address' => ['[v7.]'];
         yield 'unexpected opening bracket' => ['foo[bar'];
         yield 'unexpected closing bracket' => ['foo]bar'];
+    }
+
+    /**
+     * @dataProvider invalidHostHeaderProvider
+     */
+    public function testParseOptionsAsteriskRejectsInvalidHostHeader(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequest("OPTIONS * HTTP/1.1\r\nHost: {$host}\r\n\r\n");
     }
 
     /**
