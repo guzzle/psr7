@@ -123,7 +123,7 @@ class Uri implements UriInterface, \JsonSerializable
         /** @var string */
         $encodedUrl = preg_replace_callback(
             '%[^:/@?&=#]+%usD',
-            static function ($matches): string {
+            static function (array $matches): string {
                 return urlencode($matches[0]);
             },
             $url
@@ -725,7 +725,7 @@ class Uri implements UriInterface, \JsonSerializable
             return rawurldecode((string) $k);
         }, $keys);
 
-        return array_filter(explode('&', $current), function ($part) use ($decodedKeys): bool {
+        return array_filter(explode('&', $current), static function (string $part) use ($decodedKeys): bool {
             return !in_array(rawurldecode(explode('=', $part)[0]), $decodedKeys, true);
         });
     }
