@@ -129,6 +129,8 @@ class MessageTest extends TestCase
         yield 'tab' => ["bad\thost"];
         yield 'control character' => ['example'.chr(1).'com'];
         yield 'delete' => ['example'.chr(0x7F).'com'];
+        yield 'zero port' => ['foo.com:0'];
+        yield 'zero padded zero port' => ['foo.com:0000'];
         yield 'empty port' => ['example.com:'];
         yield 'non numeric port' => ['example.com:abc'];
         yield 'leading plus port' => ['example.com:+443'];
@@ -138,6 +140,8 @@ class MessageTest extends TestCase
         yield 'missing closing bracket' => ['[::1'];
         yield 'unexpected bracket suffix' => ['[::1]x'];
         yield 'invalid ip literal' => ['[bad]'];
+        yield 'ipv6 zero port' => ['[::1]:0'];
+        yield 'ipv6 zero padded zero port' => ['[::1]:0000'];
         yield 'ipv6 empty port' => ['[::1]:'];
         yield 'ipv6 non numeric port' => ['[::1]:abc'];
         yield 'ipv6 out of range port' => ['[::1]:65536'];
@@ -172,6 +176,10 @@ class MessageTest extends TestCase
         yield 'host' => ['foo.com', 'http://foo.com/'];
         yield 'https default port' => ['foo.com:443', 'https://foo.com/'];
         yield 'non-default port' => ['foo.com:8080', 'http://foo.com:8080/'];
+        yield 'https leading zero default port' => ['foo.com:000443', 'https://foo.com/'];
+        yield 'http leading zero default port' => ['foo.com:000080', 'http://foo.com/'];
+        yield 'leading zero non-default port' => ['foo.com:0008080', 'http://foo.com:8080/'];
+        yield 'maximum port' => ['foo.com:65535', 'http://foo.com:65535/'];
         yield 'ipv6' => ['[::1]', 'http://[::1]/'];
         yield 'ipv6 port' => ['[::1]:443', 'https://[::1]/'];
     }
@@ -206,6 +214,24 @@ class MessageTest extends TestCase
         self::assertSame('foo.com', $request->getHeaderLine('Host'));
         self::assertSame('', (string) $request->getBody());
         self::assertSame('http://foo.com', (string) $request->getUri());
+    }
+
+    public function testParsesOptionsAsteriskFormRequestTargetWithLeadingZeroHttpsPort(): void
+    {
+        $request = Psr7\Message::parseRequest("OPTIONS * HTTP/1.1\r\nHost: foo.com:000443\r\n\r\n");
+
+        self::assertSame('*', $request->getRequestTarget());
+        self::assertSame('foo.com:000443', $request->getHeaderLine('Host'));
+        self::assertSame('https://foo.com', (string) $request->getUri());
+    }
+
+    public function testParsesOptionsAsteriskFormRequestTargetWithIpv6HttpsPort(): void
+    {
+        $request = Psr7\Message::parseRequest("OPTIONS * HTTP/1.1\r\nHost: [::1]:443\r\n\r\n");
+
+        self::assertSame('*', $request->getRequestTarget());
+        self::assertSame('[::1]:443', $request->getHeaderLine('Host'));
+        self::assertSame('https://[::1]', (string) $request->getUri());
     }
 
     public function testParsesOptionsAsteriskFormRequestTargetWithoutHost(): void
@@ -335,6 +361,7 @@ class MessageTest extends TestCase
         yield 'mixed-case connect authority-form' => ['CoNnEcT up.example:443 HTTP/1.1'];
         yield 'connect missing port' => ['CONNECT up.example HTTP/1.1'];
         yield 'connect zero port' => ['CONNECT up.example:0 HTTP/1.1'];
+        yield 'connect ipv6 zero port' => ['CONNECT [::1]:0 HTTP/1.1'];
         yield 'connect user info' => ['CONNECT user@up.example:443 HTTP/1.1'];
         yield 'connect path' => ['CONNECT up.example:443/ HTTP/1.1'];
         yield 'connect query' => ['CONNECT up.example:443?x=1 HTTP/1.1'];

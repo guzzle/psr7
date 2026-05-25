@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Harden URI host validation for delimiters, backslashes, and invalid IPv6/IP literals; reject schemes not beginning with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
 - Reject zero-port `HTTP_HOST` authorities and malformed `SERVER_PORT` values in `ServerRequest::getUriFromGlobals()`
+- Reject zero-port `Host` authorities and normalize leading-zero `Host` ports when deriving request URIs in `Message::parseRequest()`
 - Normalize server request URI reconstruction from globals, including `REQUEST_METHOD` values used for request-target parsing
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
 - Reject malformed HTTP start-line fields

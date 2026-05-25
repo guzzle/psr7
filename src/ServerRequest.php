@@ -347,7 +347,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        return Rfc7230::parseHostHeader($authority, false) ?? [null, null];
+        return Rfc7230::parseHostHeader($authority) ?? [null, null];
     }
 
     private static function parseServerPort(string $port): int
