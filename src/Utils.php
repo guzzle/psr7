@@ -163,8 +163,10 @@ final class Utils
      *
      * The changes can be one of:
      * - method: (string) Changes the HTTP method.
-     * - set_headers: (array) Sets the given headers.
-     * - remove_headers: (array) Remove the given headers.
+     * - set_headers: (array) Sets the given headers. Values must be strings
+     *   or non-empty arrays of strings.
+     * - remove_headers: (array) Remove the given headers. Values may be
+     *   strings or integers.
      * - body: (mixed) Sets the given body. Present non-null values are converted
      *   with self::streamFor(), including scalar values, resources, streams,
      *   iterators, callable arrays, closures, invokable objects, and objects
@@ -306,15 +308,21 @@ final class Utils
             } else {
                 foreach ($changes['set_headers'] as $value) {
                     if (\is_array($value)) {
+                        if ($value === []) {
+                            self::warnOnInvalidModifyRequestChange('set_headers', 'string|non-empty-array<string> values', $value);
+
+                            break;
+                        }
+
                         foreach ($value as $item) {
                             if (!\is_string($item)) {
-                                self::warnOnInvalidModifyRequestChange('set_headers', 'string|string[] values', $item);
+                                self::warnOnInvalidModifyRequestChange('set_headers', 'string|non-empty-array<string> values', $item);
 
                                 break 2;
                             }
                         }
                     } elseif (!\is_string($value)) {
-                        self::warnOnInvalidModifyRequestChange('set_headers', 'string|string[] values', $value);
+                        self::warnOnInvalidModifyRequestChange('set_headers', 'string|non-empty-array<string> values', $value);
 
                         break;
                     }
