@@ -332,18 +332,10 @@ final class Utils
             'guzzlehttp/psr7',
             '2.11',
             'Passing %s to Utils::modifyRequest() change "%s" is deprecated; guzzlehttp/psr7 3.0 requires %s.',
-            self::describeType($value),
+            \get_debug_type($value),
             $key,
             $expected
         );
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private static function describeType($value): string
-    {
-        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 
     /**
