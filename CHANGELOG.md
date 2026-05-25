@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject invalid uploaded file trees and invalid parsed body values
 - Reject malformed uploaded file specifications missing `tmp_name`, `size`, or `error`
 - Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
-- Harden URI host validation for URI delimiters, backslashes, unbracketed IPv6, and malformed IP literals, and reject schemes that do not begin with a letter
+- Harden URI host validation for delimiters, backslashes, and invalid IPv6/IP literals; reject schemes not beginning with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
 - Tighten `ServerRequest::getUriFromGlobals()` validation for malformed `HTTP_HOST` and `SERVER_PORT` values
 - Stop preserving malformed `Host` headers when building server requests from globals
