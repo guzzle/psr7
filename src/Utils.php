@@ -300,8 +300,26 @@ final class Utils
             self::warnOnInvalidModifyRequestChange('body', 'a non-null value', $changes['body']);
         }
 
-        if (\array_key_exists('set_headers', $changes) && !\is_array($changes['set_headers'])) {
-            self::warnOnInvalidModifyRequestChange('set_headers', 'array', $changes['set_headers']);
+        if (\array_key_exists('set_headers', $changes)) {
+            if (!\is_array($changes['set_headers'])) {
+                self::warnOnInvalidModifyRequestChange('set_headers', 'array', $changes['set_headers']);
+            } else {
+                foreach ($changes['set_headers'] as $value) {
+                    if (\is_array($value)) {
+                        foreach ($value as $item) {
+                            if (!\is_string($item)) {
+                                self::warnOnInvalidModifyRequestChange('set_headers', 'string|string[] values', $item);
+
+                                break 2;
+                            }
+                        }
+                    } elseif (!\is_string($value)) {
+                        self::warnOnInvalidModifyRequestChange('set_headers', 'string|string[] values', $value);
+
+                        break;
+                    }
+                }
+            }
         }
 
         if (!\array_key_exists('remove_headers', $changes)) {
