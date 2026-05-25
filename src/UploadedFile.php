@@ -25,37 +25,37 @@ class UploadedFile implements UploadedFileInterface
     /**
      * @var string|null
      */
-    private $clientFilename;
+    private ?string $clientFilename;
 
     /**
      * @var string|null
      */
-    private $clientMediaType;
+    private ?string $clientMediaType;
 
     /**
      * @var int
      */
-    private $error;
+    private int $error;
 
     /**
      * @var string|null
      */
-    private $file;
+    private ?string $file = null;
 
     /**
      * @var bool
      */
-    private $moved = false;
+    private bool $moved = false;
 
     /**
      * @var int|null
      */
-    private $size;
+    private ?int $size;
 
     /**
      * @var StreamInterface|null
      */
-    private $stream;
+    private ?StreamInterface $stream = null;
 
     /**
      * @param StreamInterface|string|resource $streamOrFile

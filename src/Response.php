@@ -79,10 +79,10 @@ class Response implements ResponseInterface
     ];
 
     /** @var string */
-    private $reasonPhrase;
+    private string $reasonPhrase;
 
     /** @var int */
-    private $statusCode;
+    private int $statusCode;
 
     /**
      * @param int                                  $status  Status code
