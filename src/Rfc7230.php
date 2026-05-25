@@ -10,16 +10,6 @@ namespace GuzzleHttp\Psr7;
 final class Rfc7230
 {
     /**
-     * Unreserved characters for use in a regex.
-     */
-    private const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
-
-    /**
-     * Sub-delims for use in a regex.
-     */
-    private const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
-
-    /**
      * Header related regular expressions (based on amphp/http package)
      *
      * Note: header delimiter (\r\n) is modified to \r?\n to accept line feed only delimiters for BC reasons.
@@ -90,7 +80,7 @@ final class Rfc7230
             $address = substr($host, 1, -1);
 
             return filter_var($address, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6) !== false
-                || preg_match('/^v[0-9a-f]+\.['.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.':]+$/iD', $address) === 1;
+                || preg_match('/^v[0-9a-f]+\.['.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.':]+$/iD', $address) === 1;
         }
 
         return strpos($host, ':') === false;
