@@ -107,7 +107,7 @@ class Uri implements UriInterface, \JsonSerializable
             $url = $matches[2];
         }
 
-        /** @var string|null $encodedUrl */
+        /** @var string|null */
         $encodedUrl = preg_replace_callback(
             '%[^:/@?&=#]+%usD',
             static function ($matches) {
