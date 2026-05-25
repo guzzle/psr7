@@ -224,7 +224,7 @@ class ServerRequest extends Request implements ServerRequestInterface
                 continue;
             }
 
-            if (Rfc7230::parseHostHeader($value, true) === null) {
+            if (Rfc7230::parseHostHeader($value) === null) {
                 unset($headers[$name]);
             }
         }
@@ -237,7 +237,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        return Rfc7230::parseHostHeader($authority, true) ?? [null, null];
+        return Rfc7230::parseHostHeader($authority) ?? [null, null];
     }
 
     /**

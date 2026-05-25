@@ -24,7 +24,7 @@ final class Rfc7230
     /**
      * @return array{0: string, 1: int|null}|null
      */
-    public static function parseHostHeader(string $authority, bool $allowPortZero): ?array
+    public static function parseHostHeader(string $authority): ?array
     {
         if ($authority === '') {
             return null;
@@ -46,14 +46,14 @@ final class Rfc7230
                     return null;
                 }
 
-                $port = self::parseAuthorityPort(substr($remainder, 1), $allowPortZero);
+                $port = self::parseAuthorityPort(substr($remainder, 1));
                 if ($port === null) {
                     return null;
                 }
             }
         } elseif (false !== ($colon = strpos($authority, ':'))) {
             $host = substr($authority, 0, $colon);
-            $port = self::parseAuthorityPort(substr($authority, $colon + 1), $allowPortZero);
+            $port = self::parseAuthorityPort(substr($authority, $colon + 1));
             if ($port === null) {
                 return null;
             }
@@ -86,7 +86,7 @@ final class Rfc7230
         return strpos($host, ':') === false;
     }
 
-    private static function parseAuthorityPort(string $port, bool $allowPortZero): ?int
+    private static function parseAuthorityPort(string $port): ?int
     {
         if ($port === '' || !ctype_digit($port)) {
             return null;
@@ -94,7 +94,7 @@ final class Rfc7230
 
         $normalized = ltrim($port, '0');
         if ($normalized === '') {
-            return $allowPortZero ? 0 : null;
+            return 0;
         }
 
         if (strlen($normalized) > 5 || (int) $normalized > 0xFFFF) {

@@ -263,7 +263,7 @@ final class Message
         }
 
         $host = $headers[reset($hostKey)][0];
-        if (!is_string($host) || Rfc7230::parseHostHeader($host, true) === null) {
+        if (!is_string($host) || Rfc7230::parseHostHeader($host) === null) {
             throw new \InvalidArgumentException('Invalid request string');
         }
 
