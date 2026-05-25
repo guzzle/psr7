@@ -132,9 +132,13 @@ class Request implements RequestInterface
             return;
         }
 
+        Uri::assertValidHost($host);
+
         if (($port = $this->uri->getPort()) !== null) {
             $host .= ':'.$port;
         }
+
+        $this->assertValue($host);
 
         if (isset($this->headerNames['host'])) {
             $header = $this->headerNames['host'];

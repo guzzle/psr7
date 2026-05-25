@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * @covers \GuzzleHttp\Psr7\MessageTrait
@@ -312,6 +313,28 @@ class RequestTest extends TestCase
         $r = new Request('GET', 'http://foo.com:8124/bar');
         $r = $r->withUri(new Uri('http://foo.com:8125/bar'));
         self::assertSame('foo.com:8125', $r->getHeaderLine('host'));
+    }
+
+    public function testGeneratedHostHeaderRejectsInvalidUriHostFromCustomUri(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getHost')->willReturn("foo\nbar");
+        $uri->method('getPort')->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request('GET', $uri);
+    }
+
+    public function testGeneratedHostHeaderValidatesAssembledHostWithPort(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getHost')->willReturn('example.com');
+        $uri->method('getPort')->willReturn(8080);
+
+        $request = new Request('GET', $uri);
+
+        self::assertSame('example.com:8080', $request->getHeaderLine('Host'));
     }
 
     /**
