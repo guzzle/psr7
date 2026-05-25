@@ -444,6 +444,10 @@ class ServerRequestTest extends TestCase
                 'https://www.example.org:8324/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'www.example.org:8324']),
             ],
+            'Host header with leading zero port' => [
+                'https://www.example.org:8324/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'www.example.org:008324']),
+            ],
             'Host header with zero port falls back to SERVER_NAME' => [
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'bad.example.org:0']),
@@ -1070,6 +1074,29 @@ class ServerRequestTest extends TestCase
         self::assertSame('www.example.org', $request->getUri()->getHost());
         self::assertSame(8324, $request->getUri()->getPort());
         self::assertSame('www.example.org:8324', $request->getHeaderLine('Host'));
+    }
+
+    public function testFromGlobalsPreservesLeadingZeroHostHeaderPort(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org:008324',
+            'SERVER_NAME' => 'good.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('www.example.org', $request->getUri()->getHost());
+        self::assertSame(8324, $request->getUri()->getPort());
+        self::assertSame('www.example.org:008324', $request->getHeaderLine('Host'));
     }
 
     public function testFromGlobalsDerivesHostHeaderWhenHostHeaderMissing(): void
