@@ -245,9 +245,28 @@ final class Message
             return $path;
         }
 
-        $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
+        [$authorityHost, $port] = self::parseHostHeaderAuthority($host);
+        $scheme = $port === 443 ? 'https' : 'http';
 
-        return $scheme.'://'.$host.'/'.ltrim($path, '/');
+        return $scheme.'://'.self::composeAuthority($authorityHost, $port).'/'.ltrim($path, '/');
+    }
+
+    /**
+     * @return array{0: string, 1: int|null}
+     */
+    private static function parseHostHeaderAuthority(string $authority): array
+    {
+        $parsed = Rfc7230::parseHostHeader($authority);
+        if ($parsed === null) {
+            throw new \InvalidArgumentException('Invalid request string');
+        }
+
+        return $parsed;
+    }
+
+    private static function composeAuthority(string $host, ?int $port): string
+    {
+        return $host.($port !== null ? ':'.$port : '');
     }
 
     /**
@@ -267,9 +286,11 @@ final class Message
         }
 
         $host = $headers[reset($hostKey)][0];
-        if (!is_string($host) || Rfc7230::parseHostHeader($host, true) === null) {
+        if (!is_string($host)) {
             throw new \InvalidArgumentException('Invalid request string');
         }
+
+        self::parseHostHeaderAuthority($host);
 
         return $host;
     }
@@ -284,9 +305,10 @@ final class Message
             return '';
         }
 
-        $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
+        [$authorityHost, $port] = self::parseHostHeaderAuthority($host);
+        $scheme = $port === 443 ? 'https' : 'http';
 
-        return $scheme.'://'.$host;
+        return $scheme.'://'.self::composeAuthority($authorityHost, $port);
     }
 
     /**
@@ -362,55 +384,21 @@ final class Message
             return null;
         }
 
-        $host = $target;
-        $port = null;
-
-        if ($target === '') {
+        $parsed = Rfc7230::parseHostHeader($target);
+        if ($parsed === null) {
             return null;
         }
 
-        if ($target[0] === '[') {
-            $closingBracket = strpos($target, ']');
-            if ($closingBracket === false || !isset($target[$closingBracket + 1]) || $target[$closingBracket + 1] !== ':') {
-                return null;
-            }
-
-            $host = substr($target, 0, $closingBracket + 1);
-            $port = self::parseAuthorityPort(substr($target, $closingBracket + 2));
-        } elseif (false !== ($colon = strrpos($target, ':'))) {
-            $host = substr($target, 0, $colon);
-            $port = self::parseAuthorityPort(substr($target, $colon + 1));
-        }
-
-        if ($host === '' || $port === null) {
+        [$host, $port] = $parsed;
+        if ($port === null) {
             return null;
         }
 
         try {
-            Uri::assertValidHost($host);
-
-            return new Uri('//'.$host.':'.$port);
+            return new Uri('//'.self::composeAuthority($host, $port));
         } catch (\InvalidArgumentException $e) {
             return null;
         }
-    }
-
-    private static function parseAuthorityPort(string $port): ?int
-    {
-        if ($port === '' || !ctype_digit($port)) {
-            return null;
-        }
-
-        $port = ltrim($port, '0');
-        if ($port === '') {
-            return null;
-        }
-
-        if (strlen($port) > 5 || (int) $port > 0xFFFF) {
-            return null;
-        }
-
-        return (int) $port;
     }
 
     /**
