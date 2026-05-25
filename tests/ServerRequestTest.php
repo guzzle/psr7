@@ -485,6 +485,40 @@ class ServerRequestTest extends TestCase
         self::assertEquals($expectedFiles, $server->getUploadedFiles());
     }
 
+    public function testFromGlobalsNormalizesUnexpectedHeaderValueTypes(): void
+    {
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'www.example.org',
+            'HTTP_X_INT' => 123,
+            'HTTP_X_FLOAT' => 1.5,
+            'HTTP_X_FALSE' => false,
+            'HTTP_X_TRUE' => true,
+            'HTTP_X_STRINGABLE' => new class {
+                public function __toString(): string
+                {
+                    return 'stringable';
+                }
+            },
+            'HTTP_X_ARRAY' => ['bad'],
+            'HTTP_X_OBJECT' => new \stdClass(),
+            'HTTP_123' => 'numeric header',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame('123', $server->getHeaderLine('X-Int'));
+        self::assertSame('1.5', $server->getHeaderLine('X-Float'));
+        self::assertSame([''], $server->getHeader('X-False'));
+        self::assertSame('1', $server->getHeaderLine('X-True'));
+        self::assertSame('stringable', $server->getHeaderLine('X-Stringable'));
+        self::assertSame('numeric header', $server->getHeaderLine('123'));
+        self::assertFalse($server->hasHeader('X-Array'));
+        self::assertFalse($server->hasHeader('X-Object'));
+    }
+
     public function testFromGlobalsDefaultsNonStringMethodAndProtocol(): void
     {
         $_SERVER = [
