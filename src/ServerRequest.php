@@ -166,7 +166,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public static function fromGlobals(): ServerRequestInterface
     {
         $method = self::getServerParam('REQUEST_METHOD') ?? 'GET';
-        $headers = self::getAllHeaders();
+        $headers = self::removeInvalidHostHeader(self::getAllHeaders());
         $uri = self::getUriFromGlobals();
         $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
         $serverProtocol = self::getServerParam('SERVER_PROTOCOL');
@@ -213,20 +213,31 @@ class ServerRequest extends Request implements ServerRequestInterface
     }
 
     /**
+     * @param array<array-key, string> $headers
+     *
+     * @return array<array-key, string>
+     */
+    private static function removeInvalidHostHeader(array $headers): array
+    {
+        foreach ($headers as $name => $value) {
+            if (strtolower((string) $name) !== 'host') {
+                continue;
+            }
+
+            if (Rfc7230::parseHostHeader($value) === null) {
+                unset($headers[$name]);
+            }
+        }
+
+        return $headers;
+    }
+
+    /**
      * @return array{0: string|null, 1: int|null}
      */
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        $uri = 'http://'.$authority;
-        $parts = parse_url($uri);
-        if (!is_array($parts)) {
-            return [null, null];
-        }
-
-        $host = $parts['host'] ?? null;
-        $port = $parts['port'] ?? null;
-
-        return [$host, $port];
+        return Rfc7230::parseHostHeader($authority) ?? [null, null];
     }
 
     /**

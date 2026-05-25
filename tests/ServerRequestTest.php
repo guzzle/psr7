@@ -354,6 +354,46 @@ class ServerRequestTest extends TestCase
                 'https://localhost/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'a:b']),
             ],
+            'Host header with userinfo delimiter' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'trusted.example@evil.example']),
+            ],
+            'Host header with path delimiter' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com/path']),
+            ],
+            'Host header with query delimiter' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com?x=1']),
+            ],
+            'Host header with fragment delimiter' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com#frag']),
+            ],
+            'Host header with backslash delimiter' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com\\evil']),
+            ],
+            'Host header with space' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'bad host']),
+            ],
+            'Host header with multiple ports' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'example.com:80:90']),
+            ],
+            'Host header with invalid ip literal' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => '[bad]']),
+            ],
+            'Host header with unexpected opening bracket' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'foo[bar']),
+            ],
+            'Host header with unexpected closing bracket' => [
+                'https://localhost/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'foo]bar']),
+            ],
             'Different port with SERVER_PORT' => [
                 'https://www.example.org:8324/blog/article.php?id=10&user=foo',
                 array_merge($server, ['SERVER_PORT' => '8324']),
@@ -534,6 +574,44 @@ class ServerRequestTest extends TestCase
 
         self::assertSame('GET', $server->getMethod());
         self::assertSame('1.1', $server->getProtocolVersion());
+    }
+
+    /**
+     * @dataProvider invalidHostHeaderFromGlobalsProvider
+     */
+    public function testFromGlobalsDropsInvalidHostHeaderWhenUriFallsBack(string $host): void
+    {
+        if (!\function_exists('getallheaders')) {
+            self::markTestSkipped('getallheaders() is not available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => $host,
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('localhost', $request->getUri()->getHost());
+        self::assertSame('localhost', $request->getHeaderLine('Host'));
+    }
+
+    public static function invalidHostHeaderFromGlobalsProvider(): iterable
+    {
+        yield 'userinfo delimiter' => ['trusted.example@evil.example'];
+        yield 'path delimiter' => ['example.com/path'];
+        yield 'query delimiter' => ['example.com?x=1'];
+        yield 'fragment delimiter' => ['example.com#frag'];
+        yield 'backslash delimiter' => ['example.com\\evil'];
+        yield 'space' => ['bad host'];
+        yield 'multiple ports' => ['example.com:80:90'];
+        yield 'invalid ip literal' => ['[bad]'];
+        yield 'unexpected opening bracket' => ['foo[bar'];
+        yield 'unexpected closing bracket' => ['foo]bar'];
     }
 
     public function testUploadedFiles(): void
