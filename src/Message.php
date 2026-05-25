@@ -263,99 +263,11 @@ final class Message
         }
 
         $host = $headers[reset($hostKey)][0];
-        if (!is_string($host) || !self::isValidHostHeader($host)) {
+        if (!is_string($host) || Rfc7230::parseHostHeader($host, true) === null) {
             throw new \InvalidArgumentException('Invalid request string');
         }
 
         return $host;
-    }
-
-    private static function isValidHostHeader(string $authority): bool
-    {
-        return self::parseHostAuthority($authority) !== null;
-    }
-
-    /**
-     * @return array{0: string, 1: int|null}|null
-     */
-    private static function parseHostAuthority(string $authority): ?array
-    {
-        if ($authority === '') {
-            return null;
-        }
-
-        $host = $authority;
-        $port = null;
-
-        if ($authority[0] === '[') {
-            $closingBracket = strpos($authority, ']');
-            if ($closingBracket === false) {
-                return null;
-            }
-
-            $host = substr($authority, 0, $closingBracket + 1);
-            $remainder = substr($authority, $closingBracket + 1);
-            if ($remainder !== '') {
-                if ($remainder[0] !== ':') {
-                    return null;
-                }
-
-                $port = self::parseAuthorityPortAllowZero(substr($remainder, 1));
-                if ($port === null) {
-                    return null;
-                }
-            }
-        } elseif (false !== ($colon = strpos($authority, ':'))) {
-            $host = substr($authority, 0, $colon);
-            $port = self::parseAuthorityPortAllowZero(substr($authority, $colon + 1));
-            if ($port === null) {
-                return null;
-            }
-        }
-
-        if ($host === '' || !self::isValidHostAuthorityHost($host)) {
-            return null;
-        }
-
-        return [$host, $port];
-    }
-
-    private static function isValidHostAuthorityHost(string $host): bool
-    {
-        if (preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host)) {
-            return false;
-        }
-
-        if (strpos($host, '[') !== false || strpos($host, ']') !== false) {
-            if ($host[0] !== '[' || substr($host, -1) !== ']') {
-                return false;
-            }
-
-            $address = substr($host, 1, -1);
-
-            return filter_var($address, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6) !== false
-                || preg_match('/^v[0-9a-f]+\.[a-z0-9_\.~!\$&\'\(\)\*\+,;=:-]+$/iD', $address) === 1;
-        }
-
-        return strpos($host, ':') === false;
-    }
-
-    private static function parseAuthorityPortAllowZero(string $port): ?int
-    {
-        if ($port === '' || !ctype_digit($port)) {
-            return null;
-        }
-
-        $normalized = ltrim($port, '0');
-        if ($normalized === '') {
-            return 0;
-        }
-
-        if (strlen($normalized) > 5 || (int) $normalized > 0xFFFF) {
-            return null;
-        }
-
-        return (int) $normalized;
     }
 
     /**
