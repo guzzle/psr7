@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated URI schemes that do not match guzzlehttp/psr7 3.0 syntax requirements
 - Deprecated multipart boundary and custom part header metadata that guzzlehttp/psr7 3.0 will reject
 - Deprecated relying on automatic uppercasing of explicitly provided HTTP request methods; guzzlehttp/psr7 3.0 preserves request method casing
+- Deprecated invalid `Utils::modifyRequest()` change values that guzzlehttp/psr7 3.0 will reject
 
 ## 2.10.1 - 2026-05-20
 

@@ -185,7 +185,7 @@ final class Utils
      * The changes can be one of:
      * - method: (string) Changes the HTTP method.
      * - set_headers: (array) Sets the given headers. Values must be strings
-     *   or arrays of strings.
+     *   or non-empty arrays of strings.
      * - remove_headers: (array) Remove the given headers. Values may be
      *   strings or integers.
      * - body: (mixed) Sets the given body. Present non-null values are converted
@@ -212,6 +212,8 @@ final class Utils
         if (!$changes) {
             return $request;
         }
+
+        self::warnOnInvalidModifyRequestChanges($changes);
 
         $headers = $request->getHeaders();
 
@@ -312,6 +314,89 @@ final class Utils
         }
 
         return $new;
+    }
+
+    /**
+     * @param array<array-key, mixed> $changes
+     */
+    private static function warnOnInvalidModifyRequestChanges(array $changes): void
+    {
+        foreach (['method', 'query', 'version'] as $key) {
+            if (\array_key_exists($key, $changes) && !\is_string($changes[$key])) {
+                self::warnOnInvalidModifyRequestChange($key, 'string', $changes[$key]);
+            }
+        }
+
+        if (\array_key_exists('uri', $changes) && !$changes['uri'] instanceof UriInterface) {
+            self::warnOnInvalidModifyRequestChange('uri', 'UriInterface', $changes['uri']);
+        }
+
+        if (\array_key_exists('body', $changes) && $changes['body'] === null) {
+            self::warnOnInvalidModifyRequestChange('body', 'resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable', $changes['body']);
+        }
+
+        if (\array_key_exists('set_headers', $changes)) {
+            if (!\is_array($changes['set_headers'])) {
+                self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $changes['set_headers']);
+            } else {
+                foreach ($changes['set_headers'] as $header => $value) {
+                    $headerPath = \sprintf('set_headers.%s', (string) $header);
+
+                    if (\is_array($value)) {
+                        if ($value === []) {
+                            self::warnOnInvalidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
+
+                            break;
+                        }
+
+                        foreach ($value as $index => $item) {
+                            if (!\is_string($item)) {
+                                self::warnOnInvalidModifyRequestChange(\sprintf('%s.%s', $headerPath, (string) $index), 'string', $item);
+
+                                break 2;
+                            }
+                        }
+                    } elseif (!\is_string($value)) {
+                        self::warnOnInvalidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!\array_key_exists('remove_headers', $changes)) {
+            return;
+        }
+
+        if (!\is_array($changes['remove_headers'])) {
+            self::warnOnInvalidModifyRequestChange('remove_headers', 'array<array-key, string|int>', $changes['remove_headers']);
+
+            return;
+        }
+
+        foreach ($changes['remove_headers'] as $index => $header) {
+            if (!\is_string($header) && !\is_int($header)) {
+                self::warnOnInvalidModifyRequestChange(\sprintf('remove_headers.%s', (string) $index), 'string|int', $header);
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private static function warnOnInvalidModifyRequestChange(string $key, string $expected, $value): void
+    {
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '2.11',
+            'Passing %s to Utils::modifyRequest() change "%s" is deprecated; guzzlehttp/psr7 3.0 requires %s.',
+            \get_debug_type($value),
+            $key,
+            $expected
+        );
     }
 
     /**
