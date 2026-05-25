@@ -17,13 +17,10 @@ final class AppendStream implements StreamInterface
     /** @var StreamInterface[] Streams being decorated */
     private array $streams = [];
 
-    /** @var bool */
     private bool $seekable = true;
 
-    /** @var int */
     private int $current = 0;
 
-    /** @var int */
     private int $pos = 0;
 
     /**

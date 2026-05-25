@@ -19,7 +19,6 @@ final class LimitStream implements StreamInterface
     /** @var int Limit the number of bytes that can be read */
     private int $limit;
 
-    /** @var StreamInterface */
     private StreamInterface $stream;
 
     /**

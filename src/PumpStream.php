@@ -24,16 +24,12 @@ final class PumpStream implements StreamInterface
     /** @var callable|null */
     private $source;
 
-    /** @var int|null */
     private ?int $size;
 
-    /** @var int */
     private int $tellPos = 0;
 
-    /** @var array */
     private array $metadata;
 
-    /** @var BufferStream */
     private BufferStream $buffer;
 
     /**

@@ -18,10 +18,8 @@ trait MessageTrait
     /** @var string[] Map of lowercase header name => original name at registration */
     private array $headerNames = [];
 
-    /** @var string */
     private string $protocol = '1.1';
 
-    /** @var StreamInterface|null */
     private ?StreamInterface $stream = null;
 
     public function getProtocolVersion(): string

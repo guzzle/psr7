@@ -21,15 +21,10 @@ class Stream implements StreamInterface
 
     /** @var resource */
     private $stream;
-    /** @var int|null */
     private ?int $size = null;
-    /** @var bool */
     private bool $seekable;
-    /** @var bool */
     private bool $readable;
-    /** @var bool */
     private bool $writable;
-    /** @var string|null */
     private ?string $uri = null;
     /** @var mixed[] */
     private array $customMetadata;

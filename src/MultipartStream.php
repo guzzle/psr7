@@ -14,10 +14,8 @@ final class MultipartStream implements StreamInterface
 {
     use StreamDecoratorTrait;
 
-    /** @var string */
     private string $boundary;
 
-    /** @var StreamInterface */
     private StreamInterface $stream;
 
     private const BOUNDARY_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'()+_,-./:=? ";

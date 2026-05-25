@@ -22,39 +22,18 @@ class UploadedFile implements UploadedFileInterface
         UPLOAD_ERR_EXTENSION => 'UPLOAD_ERR_EXTENSION',
     ];
 
-    /**
-     * @var string|null
-     */
     private ?string $clientFilename;
 
-    /**
-     * @var string|null
-     */
     private ?string $clientMediaType;
 
-    /**
-     * @var int
-     */
     private int $error;
 
-    /**
-     * @var string|null
-     */
     private ?string $file = null;
 
-    /**
-     * @var bool
-     */
     private bool $moved = false;
 
-    /**
-     * @var int|null
-     */
     private ?int $size;
 
-    /**
-     * @var StreamInterface|null
-     */
     private ?StreamInterface $stream = null;
 
     /**

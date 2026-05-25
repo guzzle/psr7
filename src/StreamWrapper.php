@@ -16,7 +16,6 @@ final class StreamWrapper
     /** @var resource */
     public $context;
 
-    /** @var StreamInterface */
     private StreamInterface $stream;
 
     /** @var string r, r+, or w */

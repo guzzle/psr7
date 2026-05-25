@@ -16,10 +16,8 @@ use Psr\Http\Message\StreamInterface;
  */
 final class BufferStream implements StreamInterface
 {
-    /** @var int */
     private int $hwm;
 
-    /** @var string */
     private string $buffer = '';
 
     /**
