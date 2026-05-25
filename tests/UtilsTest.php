@@ -1297,15 +1297,15 @@ class UtilsTest extends TestCase
         return [
             'method null' => [
                 ['method' => null],
-                'Utils::modifyRequest() change "method" must be string; NULL provided.',
+                'Utils::modifyRequest() change "method" must be string; null provided.',
             ],
             'method int' => [
                 ['method' => 123],
-                'Utils::modifyRequest() change "method" must be string; integer provided.',
+                'Utils::modifyRequest() change "method" must be string; int provided.',
             ],
             'uri null' => [
                 ['uri' => null],
-                'Utils::modifyRequest() change "uri" must be UriInterface; NULL provided.',
+                'Utils::modifyRequest() change "uri" must be UriInterface; null provided.',
             ],
             'uri string' => [
                 ['uri' => 'http://example.com'],
@@ -1313,27 +1313,27 @@ class UtilsTest extends TestCase
             ],
             'query null' => [
                 ['query' => null],
-                'Utils::modifyRequest() change "query" must be string; NULL provided.',
+                'Utils::modifyRequest() change "query" must be string; null provided.',
             ],
             'query int' => [
                 ['query' => 123],
-                'Utils::modifyRequest() change "query" must be string; integer provided.',
+                'Utils::modifyRequest() change "query" must be string; int provided.',
             ],
             'version null' => [
                 ['version' => null],
-                'Utils::modifyRequest() change "version" must be string; NULL provided.',
+                'Utils::modifyRequest() change "version" must be string; null provided.',
             ],
             'version int' => [
                 ['version' => 2],
-                'Utils::modifyRequest() change "version" must be string; integer provided.',
+                'Utils::modifyRequest() change "version" must be string; int provided.',
             ],
             'body null' => [
                 ['body' => null],
-                'Utils::modifyRequest() change "body" must be resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable; NULL provided.',
+                'Utils::modifyRequest() change "body" must be resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable; null provided.',
             ],
             'set_headers null' => [
                 ['set_headers' => null],
-                'Utils::modifyRequest() change "set_headers" must be array<array-key, string|non-empty-array<array-key, string>>; NULL provided.',
+                'Utils::modifyRequest() change "set_headers" must be array<array-key, string|non-empty-array<array-key, string>>; null provided.',
             ],
             'set_headers string' => [
                 ['set_headers' => 'X-Test: value'],
@@ -1341,7 +1341,7 @@ class UtilsTest extends TestCase
             ],
             'set_headers value bool' => [
                 ['set_headers' => ['X-Test' => false]],
-                'Utils::modifyRequest() change "set_headers.X-Test" must be string|non-empty-array<array-key, string>; boolean provided.',
+                'Utils::modifyRequest() change "set_headers.X-Test" must be string|non-empty-array<array-key, string>; bool provided.',
             ],
             'set_headers value empty array' => [
                 ['set_headers' => ['X-Test' => []]],
@@ -1349,11 +1349,11 @@ class UtilsTest extends TestCase
             ],
             'set_headers value array non-string item' => [
                 ['set_headers' => ['X-Test' => [false]]],
-                'Utils::modifyRequest() change "set_headers.X-Test.0" must be string; boolean provided.',
+                'Utils::modifyRequest() change "set_headers.X-Test.0" must be string; bool provided.',
             ],
             'remove_headers null' => [
                 ['remove_headers' => null],
-                'Utils::modifyRequest() change "remove_headers" must be array<array-key, string|int>; NULL provided.',
+                'Utils::modifyRequest() change "remove_headers" must be array<array-key, string|int>; null provided.',
             ],
             'remove_headers string' => [
                 ['remove_headers' => 'Host'],
@@ -1361,7 +1361,7 @@ class UtilsTest extends TestCase
             ],
             'remove_headers bool value' => [
                 ['remove_headers' => [false]],
-                'Utils::modifyRequest() change "remove_headers.0" must be string|int; boolean provided.',
+                'Utils::modifyRequest() change "remove_headers.0" must be string|int; bool provided.',
             ],
         ];
     }
