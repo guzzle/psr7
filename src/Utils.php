@@ -182,6 +182,8 @@ final class Utils
             return $request;
         }
 
+        self::warnOnInvalidModifyRequestChanges($changes);
+
         $headers = $request->getHeaders();
 
         if (!isset($changes['uri'])) {
@@ -277,6 +279,71 @@ final class Utils
         }
 
         return $new;
+    }
+
+    /**
+     * @param array<array-key, mixed> $changes
+     */
+    private static function warnOnInvalidModifyRequestChanges(array $changes): void
+    {
+        foreach (['method', 'query', 'version'] as $key) {
+            if (\array_key_exists($key, $changes) && !\is_string($changes[$key])) {
+                self::warnOnInvalidModifyRequestChange($key, 'string', $changes[$key]);
+            }
+        }
+
+        if (\array_key_exists('uri', $changes) && !$changes['uri'] instanceof UriInterface) {
+            self::warnOnInvalidModifyRequestChange('uri', UriInterface::class, $changes['uri']);
+        }
+
+        if (\array_key_exists('body', $changes) && $changes['body'] === null) {
+            self::warnOnInvalidModifyRequestChange('body', 'a non-null value', $changes['body']);
+        }
+
+        if (\array_key_exists('set_headers', $changes) && !\is_array($changes['set_headers'])) {
+            self::warnOnInvalidModifyRequestChange('set_headers', 'array', $changes['set_headers']);
+        }
+
+        if (!\array_key_exists('remove_headers', $changes)) {
+            return;
+        }
+
+        if (!\is_array($changes['remove_headers'])) {
+            self::warnOnInvalidModifyRequestChange('remove_headers', 'array', $changes['remove_headers']);
+
+            return;
+        }
+
+        foreach ($changes['remove_headers'] as $header) {
+            if (!\is_string($header) && !\is_int($header)) {
+                self::warnOnInvalidModifyRequestChange('remove_headers', 'string|int values', $header);
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private static function warnOnInvalidModifyRequestChange(string $key, string $expected, $value): void
+    {
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '2.11',
+            'Passing %s to Utils::modifyRequest() change "%s" is deprecated; guzzlehttp/psr7 3.0 requires %s.',
+            self::describeType($value),
+            $key,
+            $expected
+        );
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private static function describeType($value): string
+    {
+        return \is_object($value) ? \get_class($value) : \gettype($value);
     }
 
     /**
