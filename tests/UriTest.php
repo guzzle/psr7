@@ -117,7 +117,21 @@ class UriTest extends TestCase
             // currently invalid as well but should not according to RFC 3986.
             ['http://'],
             ['urn://host:with:colon'], // host cannot contain ":"
+            ['http://example.com/'."\xC3"],
+            ['//example.com/'."\xC3"],
+            ['/'."\xC3"],
+            ['?q='."\xC3"],
+            ['#f'."\xC3"],
+            ['urn:path'."\xC3"],
+            ['http://[::1]/'."\xC3"],
         ];
+    }
+
+    public function testPathNoSchemeReferenceWithMalformedUtf8ByteIsPercentEncoded(): void
+    {
+        $uri = new Uri("relative/\xC3");
+
+        self::assertSame('relative/%C3', (string) $uri);
     }
 
     /**
