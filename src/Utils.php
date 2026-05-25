@@ -393,7 +393,7 @@ final class Utils
             'Utils::modifyRequest() change "%s" must be %s; %s provided.',
             $key,
             $expected,
-            \is_object($value) ? \get_class($value) : \gettype($value)
+            \get_debug_type($value)
         ));
     }
 
