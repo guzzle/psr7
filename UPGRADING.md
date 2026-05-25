@@ -1,6 +1,29 @@
 Guzzle PSR-7 Upgrade Guide
 ==========================
 
+2.x to 3.0
+----------
+
+Guzzle PSR-7 2.11 emits deprecation notices for some values that Guzzle PSR-7
+3.0 will reject.
+
+#### Request Modification Changes
+
+`Utils::modifyRequest()` will validate recognized change values before applying
+request modifications in Guzzle PSR-7 3.0. Unknown change keys will still be
+ignored. Explicit `null` values for recognized changes will no longer be treated
+as omitted; omit the key instead.
+
+Recognized change values should use the documented types:
+
+- `method`: `string`
+- `uri`: `UriInterface`
+- `query`: `string`
+- `version`: `string`
+- `body`: `resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable`
+- `set_headers`: `array<array-key, string|non-empty-array<array-key, string>>`
+- `remove_headers`: `array<array-key, string|int>`
+
 1.x to 2.0
 ----------
 
