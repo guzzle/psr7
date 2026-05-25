@@ -615,7 +615,7 @@ class Uri implements UriInterface, \JsonSerializable
     {
         $scheme = \strtr($scheme, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
 
-        if ($scheme !== '' && !preg_match('/^[a-z][a-z0-9.+-]*$/D', $scheme)) {
+        if (!Rfc3986::isValidScheme($scheme)) {
             throw new \InvalidArgumentException(sprintf('Invalid scheme: "%s"', $scheme));
         }
 

@@ -213,6 +213,23 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider getValidSchemes
+     */
+    public function testSchemeMayBeValid(string $scheme, string $expected): void
+    {
+        $uri = (new Uri())->withScheme($scheme);
+
+        self::assertSame($expected, $uri->getScheme());
+    }
+
+    public static function getValidSchemes(): iterable
+    {
+        yield 'single letter' => ['a', 'a'];
+        yield 'mixed case normalized' => ['HtTpS', 'https'];
+        yield 'plus dot dash digit' => ['a+b.c-1', 'a+b.c-1'];
+    }
+
+    /**
      * @dataProvider getInvalidSchemes
      */
     public function testSchemeMustBeValid(string $scheme): void
@@ -230,6 +247,9 @@ class UriTest extends TestCase
 
         yield 'ascii 0x7F' => ['ht'.chr(0x7F).'tp'];
         yield 'starts with digit' => ['0'];
+        yield 'starts with plus' => ['+http'];
+        yield 'starts with dot' => ['.http'];
+        yield 'starts with dash' => ['-http'];
         yield 'contains underscore' => ['ht_tp'];
     }
 

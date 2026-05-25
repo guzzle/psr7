@@ -27,6 +27,11 @@ final class Rfc3986
      */
     public const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
 
+    public static function isValidScheme(string $scheme): bool
+    {
+        return $scheme === '' || preg_match('/^[A-Za-z][A-Za-z0-9.+-]*$/D', $scheme) === 1;
+    }
+
     public static function isValidHost(string $host): bool
     {
         if ($host === '') {
