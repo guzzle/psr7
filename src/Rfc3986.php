@@ -9,6 +9,10 @@ namespace GuzzleHttp\Psr7;
  */
 final class Rfc3986
 {
+    private function __construct()
+    {
+    }
+
     /**
      * Sub-delims for use in a regex.
      *
