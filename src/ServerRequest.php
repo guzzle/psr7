@@ -213,7 +213,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     }
 
     /**
-     * @return array<string, string>
+     * @return array<array-key, string>
      */
     private static function getAllHeaders(): array
     {
@@ -238,15 +238,15 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * @param array<array-key, mixed> $headers
      *
-     * @return array<string, string>
+     * @return array<array-key, string>
      */
     private static function normalizeHeaderValues(array $headers): array
     {
         $normalized = [];
 
         foreach ($headers as $name => $value) {
-            if (is_string($name) && is_string($value)) {
-                $normalized[$name] = $value;
+            if (is_scalar($value) || (is_object($value) && method_exists($value, '__toString'))) {
+                $normalized[$name] = (string) $value;
             }
         }
 

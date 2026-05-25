@@ -65,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Reject control and whitespace characters in URI host components (GHSA-hq7v-mx3g-29hw)
 
+### Fixed
+
+- Make `ServerRequest::fromGlobals()` robust against unexpected HTTP header value types in `$_SERVER`
+
 ## 2.10.1 - 2026-05-20
 
 ### Fixed
