@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Reject control and whitespace characters in URI host components (GHSA-hq7v-mx3g-29hw)
+- Reject malformed Host values when constructing request URIs (GHSA-34xg-wgjx-8xph)
 
 ### Fixed
 

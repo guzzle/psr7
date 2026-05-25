@@ -234,6 +234,23 @@ final class Message
      */
     public static function parseRequestUri(string $path, array $headers): string
     {
+        $host = self::getHostFromHeaders($headers);
+
+        // If no host is found, then a full URI cannot be constructed.
+        if ($host === null) {
+            return $path;
+        }
+
+        $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
+
+        return $scheme.'://'.$host.'/'.ltrim($path, '/');
+    }
+
+    /**
+     * @param array $headers Array of headers (each value an array).
+     */
+    private static function getHostFromHeaders(array $headers): ?string
+    {
         $hostKey = array_filter(array_keys($headers), function ($k) {
             // Numeric array keys are converted to int by PHP.
             $k = (string) $k;
@@ -241,15 +258,16 @@ final class Message
             return strtolower($k) === 'host';
         });
 
-        // If no host is found, then a full URI cannot be constructed.
         if (!$hostKey) {
-            return $path;
+            return null;
         }
 
         $host = $headers[reset($hostKey)][0];
-        $scheme = substr($host, -4) === ':443' ? 'https' : 'http';
+        if (!is_string($host) || Rfc7230::parseHostHeader($host) === null) {
+            throw new \InvalidArgumentException('Invalid request string');
+        }
 
-        return $scheme.'://'.$host.'/'.ltrim($path, '/');
+        return $host;
     }
 
     /**
