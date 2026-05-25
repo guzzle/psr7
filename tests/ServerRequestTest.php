@@ -1006,9 +1006,19 @@ class ServerRequestTest extends TestCase
         yield 'backslash delimiter' => ['example.com\\evil'];
         yield 'space' => ['bad host'];
         yield 'newline' => ["bad.example\r\nX-Evil: yes"];
+        yield 'empty port' => ['bad.example:'];
+        yield 'non numeric port' => ['bad.example:abc'];
+        yield 'leading plus port' => ['bad.example:+443'];
+        yield 'negative port' => ['bad.example:-1'];
+        yield 'out of range port' => ['bad.example:65536'];
         yield 'multiple ports' => ['bad.example:443:8443'];
         yield 'zero port' => ['bad.example:0'];
         yield 'zero padded zero port' => ['bad.example:0000'];
+        yield 'ipv6 zero port' => ['[::1]:0'];
+        yield 'ipv6 zero padded zero port' => ['[::1]:0000'];
+        yield 'ipv6 non numeric port' => ['[::1]:abc'];
+        yield 'ipv6 out of range port' => ['[::1]:65536'];
+        yield 'unexpected bracket suffix' => ['[::1]x'];
         yield 'invalid ip literal' => ['[bad]'];
         yield 'unexpected opening bracket' => ['foo[bar'];
         yield 'unexpected closing bracket' => ['foo]bar'];
@@ -1276,6 +1286,36 @@ PHP
         $_SERVER = [
             'REQUEST_URI' => '/',
             'HTTP_HOST' => 'bad.example:443:8443',
+            'SERVER_NAME' => 'good.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $server = ServerRequest::fromGlobals();
+
+        self::assertSame('good.example', $server->getUri()->getHost());
+        self::assertSame('good.example', $server->getHeaderLine('Host'));
+        self::assertSame(['native'], $server->getHeader('X-Native'));
+    }
+
+    /**
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
+    public function testFromGlobalsDropsZeroPortApacheHostHeaderWhenUriFallsBack(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is already available.');
+        }
+
+        eval('function apache_request_headers(): array { return ["Host" => "bad.example:0", "X-Native" => "native"]; }');
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'bad.example:0',
             'SERVER_NAME' => 'good.example',
             'SERVER_PORT' => '443',
             'HTTPS' => 'on',

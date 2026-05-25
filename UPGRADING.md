@@ -202,9 +202,10 @@ The stricter validation also applies when a request is created or modified from
 a custom `UriInterface` implementation and its host is used to generate or
 update a `Host` header.
 
-`ServerRequest::getUriFromGlobals()` now ignores malformed `HTTP_HOST` values
-and falls back to `SERVER_NAME`, then `SERVER_ADDR`, then the existing default
-host behavior.
+`ServerRequest::getUriFromGlobals()` now falls back to `SERVER_NAME`, then
+`SERVER_ADDR`, then the existing default host behavior for malformed
+`HTTP_HOST` values. It also rejects zero-port `HTTP_HOST` authorities and
+malformed `SERVER_PORT` values when reconstructing the URI from server globals.
 
 Applications that need to reject malformed inbound `Host` headers should
 validate the request host before calling `getUriFromGlobals()` or inspect the
