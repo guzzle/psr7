@@ -192,7 +192,18 @@ final class Utils
             $uri = $request->getUri();
         } else {
             // Remove the host header if one is on the URI
-            if ($host = $changes['uri']->getHost()) {
+            $host = $changes['uri']->getHost();
+            if ($host !== '') {
+                if (isset($changes['set_headers']) && is_array($changes['set_headers'])) {
+                    foreach (array_keys($changes['set_headers']) as $header) {
+                        if (strtolower((string) $header) === 'host') {
+                            throw new \InvalidArgumentException(
+                                'Cannot modify request with both a URI containing a host and an explicit Host header.'
+                            );
+                        }
+                    }
+                }
+
                 $changes['set_headers']['Host'] = $host;
 
                 if ($port = $changes['uri']->getPort()) {
