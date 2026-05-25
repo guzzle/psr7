@@ -78,11 +78,9 @@ class Response implements ResponseInterface
         511 => 'Network Authentication Required',
     ];
 
-    /** @var string */
-    private $reasonPhrase;
+    private string $reasonPhrase;
 
-    /** @var int */
-    private $statusCode;
+    private int $statusCode;
 
     /**
      * @param int                                  $status  Status code

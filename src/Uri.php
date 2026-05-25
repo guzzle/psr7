@@ -54,25 +54,25 @@ class Uri implements UriInterface, \JsonSerializable
     private const QUERY_SEPARATORS_REPLACEMENT = ['=' => '%3D', '&' => '%26', '+' => '%2B'];
 
     /** @var string Uri scheme. */
-    private $scheme = '';
+    private string $scheme = '';
 
     /** @var string Uri user info. */
-    private $userInfo = '';
+    private string $userInfo = '';
 
     /** @var string Uri host. */
-    private $host = '';
+    private string $host = '';
 
     /** @var int|null Uri port. */
-    private $port;
+    private ?int $port = null;
 
     /** @var string Uri path. */
-    private $path = '';
+    private string $path = '';
 
     /** @var string Uri query string. */
-    private $query = '';
+    private string $query = '';
 
     /** @var string Uri fragment. */
-    private $fragment = '';
+    private string $fragment = '';
 
     public function __construct(string $uri = '')
     {

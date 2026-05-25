@@ -16,18 +16,14 @@ final class CachingStream implements StreamInterface
     use StreamDecoratorTrait;
 
     /** @var StreamInterface Stream being wrapped */
-    private $remoteStream;
+    private StreamInterface $remoteStream;
 
     /** @var int Number of bytes to skip reading due to a write on the buffer */
-    private $skipReadBytes = 0;
+    private int $skipReadBytes = 0;
 
-    /**
-     * @var StreamInterface
-     */
-    private $stream;
+    private StreamInterface $stream;
 
-    /** @var bool */
-    private $detached = false;
+    private bool $detached = false;
 
     /**
      * We will treat the buffer object as the body of the stream

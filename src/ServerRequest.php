@@ -26,35 +26,20 @@ use Psr\Http\Message\UriInterface;
  */
 class ServerRequest extends Request implements ServerRequestInterface
 {
-    /**
-     * @var array
-     */
-    private $attributes = [];
+    private array $attributes = [];
 
-    /**
-     * @var array
-     */
-    private $cookieParams = [];
+    private array $cookieParams = [];
 
     /**
      * @var array|object|null
      */
     private $parsedBody;
 
-    /**
-     * @var array
-     */
-    private $queryParams = [];
+    private array $queryParams = [];
 
-    /**
-     * @var array
-     */
-    private $serverParams;
+    private array $serverParams;
 
-    /**
-     * @var array
-     */
-    private $uploadedFiles = [];
+    private array $uploadedFiles = [];
 
     /**
      * @param string                               $method       HTTP method

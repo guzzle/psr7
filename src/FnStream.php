@@ -22,7 +22,7 @@ final class FnStream implements StreamInterface
     ];
 
     /** @var array<string, callable> */
-    private $methods;
+    private array $methods;
 
     /**
      * @param array<string, callable> $methods Hash of method name to a callable.

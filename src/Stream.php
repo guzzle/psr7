@@ -21,18 +21,13 @@ class Stream implements StreamInterface
 
     /** @var resource */
     private $stream;
-    /** @var int|null */
-    private $size;
-    /** @var bool */
-    private $seekable;
-    /** @var bool */
-    private $readable;
-    /** @var bool */
-    private $writable;
-    /** @var string|null */
-    private $uri;
+    private ?int $size = null;
+    private bool $seekable;
+    private bool $readable;
+    private bool $writable;
+    private ?string $uri = null;
     /** @var mixed[] */
-    private $customMetadata;
+    private array $customMetadata;
 
     /**
      * This constructor accepts an associative array of options.

@@ -15,16 +15,13 @@ use Psr\Http\Message\StreamInterface;
 final class AppendStream implements StreamInterface
 {
     /** @var StreamInterface[] Streams being decorated */
-    private $streams = [];
+    private array $streams = [];
 
-    /** @var bool */
-    private $seekable = true;
+    private bool $seekable = true;
 
-    /** @var int */
-    private $current = 0;
+    private int $current = 0;
 
-    /** @var int */
-    private $pos = 0;
+    private int $pos = 0;
 
     /**
      * @param StreamInterface[] $streams Streams to decorate. Each stream must

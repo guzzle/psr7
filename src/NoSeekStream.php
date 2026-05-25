@@ -13,8 +13,7 @@ final class NoSeekStream implements StreamInterface
 {
     use StreamDecoratorTrait;
 
-    /** @var StreamInterface */
-    private $stream;
+    private StreamInterface $stream;
 
     public function seek(int $offset, int $whence = SEEK_SET): void
     {

@@ -16,11 +16,9 @@ use Psr\Http\Message\StreamInterface;
  */
 final class BufferStream implements StreamInterface
 {
-    /** @var int */
-    private $hwm;
+    private int $hwm;
 
-    /** @var string */
-    private $buffer = '';
+    private string $buffer = '';
 
     /**
      * @param int $hwm High water mark, representing the preferred maximum
