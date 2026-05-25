@@ -217,14 +217,13 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function getAllHeaders(): array
     {
-        if (\function_exists('apache_request_headers')) {
-            $headers = self::getApacheRequestHeaders();
-            if (is_array($headers)) {
-                return self::normalizeHeaderValues($headers);
-            }
+        $headers = self::getApacheRequestHeaders();
+
+        if (!is_array($headers)) {
+            $headers = self::getHeadersFromServer($_SERVER);
         }
 
-        return self::getHeadersFromServer($_SERVER);
+        return self::normalizeHeaderValues($headers);
     }
 
     /**
@@ -232,6 +231,10 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function getApacheRequestHeaders()
     {
+        if (!\function_exists('apache_request_headers')) {
+            return false;
+        }
+
         return \apache_request_headers();
     }
 
@@ -256,7 +259,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * @param array $server Typically the $_SERVER superglobal
      *
-     * @return array<string, string>
+     * @return array<array-key, string>
      */
     private static function getHeadersFromServer(array $server): array
     {
@@ -309,14 +312,14 @@ class ServerRequest extends Request implements ServerRequestInterface
     }
 
     /**
-     * @param array<string, string> $headers
+     * @param array<array-key, string> $headers
      *
-     * @return array<string, string>
+     * @return array<array-key, string>
      */
     private static function removeInvalidHostHeader(array $headers): array
     {
         foreach ($headers as $name => $value) {
-            if (strtolower($name) !== 'host') {
+            if (strtolower((string) $name) !== 'host') {
                 continue;
             }
 

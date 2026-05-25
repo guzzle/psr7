@@ -1171,7 +1171,26 @@ class ServerRequestTest extends TestCase
             self::markTestSkipped('apache_request_headers() is already available.');
         }
 
-        eval('function apache_request_headers(): array { return ["X-Native" => "native"]; }');
+        eval(<<<'PHP'
+function apache_request_headers(): array
+{
+    return [
+        'X-Native' => 'native',
+        'X-Int' => 123,
+        'X-False' => false,
+        'X-Stringable' => new class {
+            public function __toString(): string
+            {
+                return 'stringable';
+            }
+        },
+        'X-Array' => ['bad'],
+        'X-Object' => new \stdClass(),
+        123 => 'numeric header',
+    ];
+}
+PHP
+        );
 
         $_SERVER = [
             'REQUEST_URI' => '/',
@@ -1184,6 +1203,12 @@ class ServerRequestTest extends TestCase
         $server = ServerRequest::fromGlobals();
 
         self::assertSame(['native'], $server->getHeader('X-Native'));
+        self::assertSame('123', $server->getHeaderLine('X-Int'));
+        self::assertSame([''], $server->getHeader('X-False'));
+        self::assertSame('stringable', $server->getHeaderLine('X-Stringable'));
+        self::assertSame('numeric header', $server->getHeaderLine('123'));
+        self::assertFalse($server->hasHeader('X-Array'));
+        self::assertFalse($server->hasHeader('X-Object'));
         self::assertFalse($server->hasHeader('X-Fallback'));
     }
 
