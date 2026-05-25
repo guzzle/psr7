@@ -307,7 +307,7 @@ final class Utils
                 self::warnOnInvalidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $changes['set_headers']);
             } else {
                 foreach ($changes['set_headers'] as $header => $value) {
-                    $headerPath = 'set_headers.'.(string) $header;
+                    $headerPath = \sprintf('set_headers.%s', (string) $header);
 
                     if (\is_array($value)) {
                         if ($value === []) {
@@ -318,7 +318,7 @@ final class Utils
 
                         foreach ($value as $index => $item) {
                             if (!\is_string($item)) {
-                                self::warnOnInvalidModifyRequestChange($headerPath.'.'.(string) $index, 'string', $item);
+                                self::warnOnInvalidModifyRequestChange(\sprintf('%s.%s', $headerPath, (string) $index), 'string', $item);
 
                                 break 2;
                             }
@@ -344,7 +344,7 @@ final class Utils
 
         foreach ($changes['remove_headers'] as $index => $header) {
             if (!\is_string($header) && !\is_int($header)) {
-                self::warnOnInvalidModifyRequestChange('remove_headers.'.(string) $index, 'string|int', $header);
+                self::warnOnInvalidModifyRequestChange(\sprintf('remove_headers.%s', (string) $index), 'string|int', $header);
 
                 return;
             }
