@@ -1051,6 +1051,22 @@ class UriTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider getMalformedIpv6LiteralsWithEmbeddedIpv4
+     */
+    public function testParseUriRejectsMalformedIpv6LiteralsWithEmbeddedIpv4(string $uri): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri($uri);
+    }
+
+    public static function getMalformedIpv6LiteralsWithEmbeddedIpv4(): iterable
+    {
+        yield 'out of range ipv4 octet' => ['http://[::ffff:999.0.2.128]/'];
+        yield 'incomplete embedded ipv4 address' => ['http://[1:2.3]/'];
+    }
+
     public function testJsonSerializable(): void
     {
         $uri = new Uri('https://example.com');
