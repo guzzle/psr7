@@ -124,6 +124,9 @@ class UriTest extends TestCase
             ['#f'."\xC3"],
             ['urn:path'."\xC3"],
             ['http://[::1]/'."\xC3"],
+            ['http://[::ffff:192.0.2.128]/'."\xC3"],
+            ['http://example.com/'."\xC3".'://[::ffff:127.0.0.1]/'],
+            ['foo:'."\xC3".'://[::ffff:127.0.0.1]/'],
         ];
     }
 
