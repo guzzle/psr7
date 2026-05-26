@@ -453,27 +453,9 @@ class ServerRequest extends Request implements ServerRequestInterface
                 ];
             }
 
-            if (self::isAbsoluteFormRequestTarget($requestUri)) {
-                try {
-                    $targetUri = (new Uri($requestUri))->withFragment('');
-                } catch (InvalidArgumentException $e) {
-                    $targetUri = null;
-                }
-
-                if ($targetUri !== null && $targetUri->getHost() !== '') {
-                    $requestTarget = self::removeRequestTargetFragment($requestUri);
-                    if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
-                        $targetUri = $targetUri->withQuery($queryString);
-                        $requestTarget .= '?'.$queryString;
-                    }
-
-                    // Preserve the received absolute-form target unless it cannot be used
-                    // as a PSR-7 request target without normalization.
-                    $normalizeRequestTarget = preg_match('/[\x00-\x20\x7F]/', $requestTarget) === 1
-                        || self::hasEmptyPortInAbsoluteFormRequestTarget($requestTarget);
-
-                    return [$targetUri, $normalizeRequestTarget ? (string) $targetUri : $requestTarget];
-                }
+            $absoluteForm = self::getAbsoluteFormUriAndRequestTarget($requestUri, $queryString);
+            if ($absoluteForm !== null) {
+                return $absoluteForm;
             }
         }
 
@@ -506,6 +488,39 @@ class ServerRequest extends Request implements ServerRequestInterface
     private static function isAbsoluteFormRequestTarget(string $target): bool
     {
         return preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:\/\//D', $target) === 1;
+    }
+
+    /**
+     * @return array{0: UriInterface, 1: string}|null
+     */
+    private static function getAbsoluteFormUriAndRequestTarget(string $requestUri, ?string $queryString): ?array
+    {
+        if (!self::isAbsoluteFormRequestTarget($requestUri)) {
+            return null;
+        }
+
+        try {
+            $targetUri = (new Uri($requestUri))->withFragment('');
+        } catch (InvalidArgumentException $e) {
+            return null;
+        }
+
+        if ($targetUri->getHost() === '') {
+            return null;
+        }
+
+        $requestTarget = self::removeRequestTargetFragment($requestUri);
+        if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
+            $targetUri = $targetUri->withQuery($queryString);
+            $requestTarget .= '?'.$queryString;
+        }
+
+        // Preserve the received absolute-form target unless it cannot be used
+        // as a PSR-7 request target without normalization.
+        $normalizeRequestTarget = preg_match('/[\x00-\x20\x7F]/', $requestTarget) === 1
+            || self::hasEmptyPortInAbsoluteFormRequestTarget($requestTarget);
+
+        return [$targetUri, $normalizeRequestTarget ? (string) $targetUri : $requestTarget];
     }
 
     private static function hasEmptyPortInAbsoluteFormRequestTarget(string $target): bool
