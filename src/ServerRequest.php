@@ -515,8 +515,8 @@ class ServerRequest extends Request implements ServerRequestInterface
             $requestTarget .= '?'.$queryString;
         }
 
-        // Preserve the received absolute-form target unless it cannot be used
-        // as a PSR-7 request target without normalization.
+        // Preserve the received absolute-form target unless it cannot be used as
+        // a PSR-7 request target without normalization.
         $normalizeRequestTarget = preg_match('/[\x00-\x20\x7F]/', $requestTarget) === 1
             || self::hasEmptyPortInAbsoluteFormRequestTarget($requestTarget);
 
