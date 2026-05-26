@@ -254,6 +254,17 @@ class UriTest extends TestCase
         new Uri("http://example.com\r\nX-Injected:%20yes/");
     }
 
+    public function testFromPartsRejectsHostWithControlCharacter(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        Uri::fromParts([
+            'scheme' => 'http',
+            'host' => "example.com\r\nX-Injected: yes",
+            'path' => '/x',
+        ]);
+    }
+
     public function testPathMustHaveCorrectType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
