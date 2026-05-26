@@ -460,7 +460,7 @@ class ServerRequest extends Request implements ServerRequestInterface
                     $targetUri = null;
                 }
 
-                if ($targetUri !== null && $targetUri->getHost() !== '') {
+                if ($targetUri !== null && $targetUri->getHost() !== '' && $targetUri->getPort() !== 0) {
                     $requestTarget = self::removeRequestTargetFragment($requestUri);
                     if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
                         $targetUri = $targetUri->withQuery($queryString);
@@ -469,7 +469,10 @@ class ServerRequest extends Request implements ServerRequestInterface
 
                     // Preserve the received absolute-form target unless it cannot be used
                     // as a PSR-7 request target without normalization.
-                    return [$targetUri, preg_match('/[\x00-\x20\x7F]/', $requestTarget) ? (string) $targetUri : $requestTarget];
+                    $normalizeRequestTarget = preg_match('/[\x00-\x20\x7F]/', $requestTarget) === 1
+                        || self::hasEmptyPortInAbsoluteFormRequestTarget($requestTarget);
+
+                    return [$targetUri, $normalizeRequestTarget ? (string) $targetUri : $requestTarget];
                 }
             }
         }
@@ -503,6 +506,37 @@ class ServerRequest extends Request implements ServerRequestInterface
     private static function isAbsoluteFormRequestTarget(string $target): bool
     {
         return preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:\/\//D', $target) === 1;
+    }
+
+    private static function hasEmptyPortInAbsoluteFormRequestTarget(string $target): bool
+    {
+        $authorityStart = strpos($target, '://');
+        if ($authorityStart === false) {
+            return false;
+        }
+
+        $authorityStart += 3;
+        $authority = substr($target, $authorityStart, strcspn($target, '/?#', $authorityStart));
+        if ($authority === '') {
+            return false;
+        }
+
+        $lastAt = strrpos($authority, '@');
+        if ($lastAt !== false) {
+            $authority = substr($authority, $lastAt + 1);
+        }
+
+        if ($authority === '') {
+            return false;
+        }
+
+        if ($authority[0] === '[') {
+            $closingBracket = strpos($authority, ']');
+
+            return $closingBracket !== false && substr($authority, $closingBracket + 1) === ':';
+        }
+
+        return substr($authority, -1) === ':';
     }
 
     private static function isAsteriskFormRequestTarget(string $method, string $target): bool
