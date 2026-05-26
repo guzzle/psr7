@@ -381,12 +381,18 @@ class ServerRequest extends Request implements ServerRequestInterface
         }
     }
 
-    private static function getAuthorityUriFromGlobals(): UriInterface
+    private static function getUriWithSchemeFromGlobals(): UriInterface
     {
         $uri = new Uri('');
 
         $https = self::getServerParam('HTTPS');
-        $uri = $uri->withScheme(!empty($https) && $https !== 'off' ? 'https' : 'http');
+
+        return $uri->withScheme(!empty($https) && $https !== 'off' ? 'https' : 'http');
+    }
+
+    private static function getAuthorityUriFromGlobals(): UriInterface
+    {
+        $uri = self::getUriWithSchemeFromGlobals();
 
         $hasPort = false;
         $hasHost = false;
@@ -432,9 +438,43 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private static function getUriAndRequestTargetFromGlobals(string $method): array
     {
-        $uri = self::getAuthorityUriFromGlobals();
         $requestUri = self::getServerParam('REQUEST_URI');
         $queryString = self::getServerParam('QUERY_STRING');
+
+        if ($requestUri !== null) {
+            $connectAuthority = self::parseConnectAuthorityFormRequestTarget($method, $requestUri);
+            if ($connectAuthority !== null) {
+                [$host, $port] = $connectAuthority;
+                $uri = self::getUriWithSchemeFromGlobals();
+
+                return [
+                    $uri->withHost($host)->withPort($port)->withPath('')->withQuery(''),
+                    $requestUri,
+                ];
+            }
+
+            if (self::isAbsoluteFormRequestTarget($requestUri)) {
+                try {
+                    $targetUri = (new Uri($requestUri))->withFragment('');
+                } catch (InvalidArgumentException $e) {
+                    $targetUri = null;
+                }
+
+                if ($targetUri !== null && $targetUri->getHost() !== '') {
+                    $requestTarget = self::removeRequestTargetFragment($requestUri);
+                    if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
+                        $targetUri = $targetUri->withQuery($queryString);
+                        $requestTarget .= '?'.$queryString;
+                    }
+
+                    // Preserve the received absolute-form target unless it cannot be used
+                    // as a PSR-7 request target without normalization.
+                    return [$targetUri, preg_match('/[\x00-\x20\x7F]/', $requestTarget) ? (string) $targetUri : $requestTarget];
+                }
+            }
+        }
+
+        $uri = self::getAuthorityUriFromGlobals();
 
         if ($requestUri === null) {
             if ($queryString !== null) {
@@ -446,36 +486,6 @@ class ServerRequest extends Request implements ServerRequestInterface
 
         if (self::isAsteriskFormRequestTarget($method, $requestUri)) {
             return [$uri->withPath('')->withQuery(''), '*'];
-        }
-
-        $connectAuthority = self::parseConnectAuthorityFormRequestTarget($method, $requestUri);
-        if ($connectAuthority !== null) {
-            [$host, $port] = $connectAuthority;
-
-            return [
-                $uri->withHost($host)->withPort($port)->withPath('')->withQuery(''),
-                $requestUri,
-            ];
-        }
-
-        if (self::isAbsoluteFormRequestTarget($requestUri)) {
-            try {
-                $targetUri = (new Uri($requestUri))->withFragment('');
-            } catch (InvalidArgumentException $e) {
-                $targetUri = null;
-            }
-
-            if ($targetUri !== null && $targetUri->getHost() !== '') {
-                $requestTarget = self::removeRequestTargetFragment($requestUri);
-                if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
-                    $targetUri = $targetUri->withQuery($queryString);
-                    $requestTarget .= '?'.$queryString;
-                }
-
-                // Preserve the received absolute-form target unless it cannot be used
-                // as a PSR-7 request target without normalization.
-                return [$targetUri, preg_match('/[\x00-\x20\x7F]/', $requestTarget) ? (string) $targetUri : $requestTarget];
-            }
         }
 
         [$path, $query, $hasQuery] = self::splitRequestTargetQuery($requestUri);

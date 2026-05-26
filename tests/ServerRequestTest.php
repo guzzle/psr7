@@ -611,8 +611,26 @@ class ServerRequestTest extends TestCase
             'x=1',
         ];
 
+        yield 'absolute-form target supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://up.example:8080/admin?x=1', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://up.example:8080/admin?x=1',
+            'up.example',
+            8080,
+            '/admin',
+            'x=1',
+        ];
+
         yield 'absolute-form uses QUERY_STRING when request uri has no query' => [
             ['REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
+            'http://up.example/admin?x=1',
+            'up.example',
+            null,
+            '/admin',
+            'x=1',
+        ];
+
+        yield 'absolute-form target uses QUERY_STRING before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
             'http://up.example/admin?x=1',
             'up.example',
             null,
@@ -661,6 +679,24 @@ class ServerRequestTest extends TestCase
             'http://up.example:443',
             'up.example',
             443,
+            '',
+            '',
+        ];
+
+        yield 'connect authority-form supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://up.example:443',
+            'up.example',
+            443,
+            '',
+            '',
+        ];
+
+        yield 'connect authority-form https default port is normalized before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443', 'HTTPS' => 'on'],
+            'https://up.example',
+            'up.example',
+            null,
             '',
             '',
         ];
@@ -744,6 +780,12 @@ class ServerRequestTest extends TestCase
             'http://up.example:8080/admin?x=1',
         ];
 
+        yield 'absolute-form target is preserved before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example:8080/admin?x=1', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://up.example:8080/admin?x=1',
+            'http://up.example:8080/admin?x=1',
+        ];
+
         yield 'absolute-form target uses query string fallback' => [
             ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
             'http://up.example/admin?x=1',
@@ -778,6 +820,18 @@ class ServerRequestTest extends TestCase
             ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example'],
             'up.example:443',
             'http://up.example:443',
+        ];
+
+        yield 'connect authority-form target is preserved before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'up.example:443',
+            'http://up.example:443',
+        ];
+
+        yield 'connect authority-form https default port is normalized before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'up.example:443', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443', 'HTTPS' => 'on'],
+            'up.example:443',
+            'https://up.example',
         ];
 
         yield 'connect authority-form target with lowercase method is normalized from globals' => [
@@ -882,6 +936,63 @@ class ServerRequestTest extends TestCase
             'QUERY_STRING' => 'id=10&user=foo',
             'HTTP_HOST' => 'www.example.org',
             'HTTPS' => 'on',
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid SERVER_PORT');
+
+        ServerRequest::getUriFromGlobals();
+    }
+
+    public function testGetUriFromGlobalsRejectsInvalidServerPortForAsteriskForm(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'OPTIONS',
+            'REQUEST_URI' => '*',
+            'HTTP_HOST' => 'www.example.org',
+            'SERVER_PORT' => '+443',
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid SERVER_PORT');
+
+        ServerRequest::getUriFromGlobals();
+    }
+
+    public function testGetUriFromGlobalsRejectsInvalidServerPortWhenRequestUriIsMissing(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'www.example.org',
+            'SERVER_PORT' => '+443',
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid SERVER_PORT');
+
+        ServerRequest::getUriFromGlobals();
+    }
+
+    public function testGetUriFromGlobalsRejectsInvalidServerPortForMalformedAbsoluteFormFallback(): void
+    {
+        $_SERVER = [
+            'REQUEST_URI' => 'http://up.example:bad/admin',
+            'HTTP_HOST' => 'www.example.org',
+            'SERVER_PORT' => '+443',
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid SERVER_PORT');
+
+        ServerRequest::getUriFromGlobals();
+    }
+
+    public function testGetUriFromGlobalsRejectsInvalidServerPortForMalformedConnectFallback(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'CONNECT',
+            'REQUEST_URI' => 'up.example:not-a-port',
+            'HTTP_HOST' => 'www.example.org',
+            'SERVER_PORT' => '+443',
         ];
 
         $this->expectException(\InvalidArgumentException::class);

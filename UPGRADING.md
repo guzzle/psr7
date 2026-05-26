@@ -205,7 +205,12 @@ update a `Host` header.
 `ServerRequest::getUriFromGlobals()` now falls back to `SERVER_NAME`, then
 `SERVER_ADDR`, then the existing default host behavior for malformed
 `HTTP_HOST` values. It also rejects zero-port `HTTP_HOST` authorities and
-malformed `SERVER_PORT` values when reconstructing the URI from server globals.
+malformed `SERVER_PORT` values when fallback authority reconstruction needs the
+server port. When `REQUEST_URI` is absolute-form or CONNECT authority-form and
+supplies a valid authority, that authority is used before fallback `SERVER_PORT`
+validation. Origin-form, asterisk-form, missing `REQUEST_URI`, and fallback
+reconstruction paths still reject malformed `SERVER_PORT` values when fallback
+authority reconstruction needs the server port.
 
 `Message::parseRequest()` now applies 3.0 authority rules when deriving a URI
 from an origin-form or asterisk-form request target. Host ports with leading
