@@ -124,6 +124,9 @@ class UriTest extends TestCase
             ['#f'."\xC3"],
             ['urn:path'."\xC3"],
             ['http://[::1]/'."\xC3"],
+            ['http://[::ffff:192.0.2.128]/'."\xC3"],
+            ['http://example.com/'."\xC3".'://[::ffff:127.0.0.1]/'],
+            ['foo:'."\xC3".'://[::ffff:127.0.0.1]/'],
         ];
     }
 
@@ -841,6 +844,70 @@ class UriTest extends TestCase
         self::assertSame('/path', $uri->getPath());
         self::assertSame('foo=bar', $uri->getQuery());
         self::assertSame('frag', $uri->getFragment());
+    }
+
+    /**
+     * @dataProvider getUrisWithIpv6EmbeddedIpv4Literals
+     */
+    public function testCanParseIpv6LiteralsWithEmbeddedIpv4(string $uri, string $expectedUri, string $expectedHost, ?int $expectedPort): void
+    {
+        $parsed = new Uri($uri);
+
+        self::assertSame($expectedUri, (string) $parsed);
+        self::assertSame($expectedHost, $parsed->getHost());
+        self::assertSame($expectedPort, $parsed->getPort());
+    }
+
+    public static function getUrisWithIpv6EmbeddedIpv4Literals(): iterable
+    {
+        yield 'ipv4 mapped' => [
+            'http://[::ffff:192.0.2.128]/',
+            'http://[::ffff:192.0.2.128]/',
+            '[::ffff:192.0.2.128]',
+            null,
+        ];
+
+        yield 'ipv4 compatible' => [
+            'http://[::192.0.2.128]/path',
+            'http://[::192.0.2.128]/path',
+            '[::192.0.2.128]',
+            null,
+        ];
+
+        yield 'embedded ipv4 after hextets' => [
+            'http://[2001:db8:3:4::192.0.2.33]/',
+            'http://[2001:db8:3:4::192.0.2.33]/',
+            '[2001:db8:3:4::192.0.2.33]',
+            null,
+        ];
+
+        yield 'uppercase hex is normalized' => [
+            'http://[::FFFF:192.0.2.128]/',
+            'http://[::ffff:192.0.2.128]/',
+            '[::ffff:192.0.2.128]',
+            null,
+        ];
+
+        yield 'non-default port' => [
+            'http://[::ffff:192.0.2.128]:8080/path?x=1',
+            'http://[::ffff:192.0.2.128]:8080/path?x=1',
+            '[::ffff:192.0.2.128]',
+            8080,
+        ];
+
+        yield 'default http port is removed' => [
+            'http://[::ffff:192.0.2.128]:80/path',
+            'http://[::ffff:192.0.2.128]/path',
+            '[::ffff:192.0.2.128]',
+            null,
+        ];
+
+        yield 'default https port is removed' => [
+            'https://[::ffff:192.0.2.128]:443/path',
+            'https://[::ffff:192.0.2.128]/path',
+            '[::ffff:192.0.2.128]',
+            null,
+        ];
     }
 
     public function testJsonSerializable(): void
