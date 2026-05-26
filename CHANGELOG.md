@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject zero-port `HTTP_HOST` authorities and malformed `SERVER_PORT` values in `ServerRequest::getUriFromGlobals()`
 - Reject zero-port `Host` authorities and normalize leading-zero ports in `Message::parseRequest()` URI derivation
 - Reject duplicate `Host` field lines in `Message::parseRequest()`
+- Validate present raw `Host` field values in `Message::parseRequest()` for all request-target forms
 - Normalize server request URI reconstruction from globals, including `REQUEST_METHOD` values used for request-target parsing
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
 - Reject malformed HTTP start-line fields

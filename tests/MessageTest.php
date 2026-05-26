@@ -245,13 +245,32 @@ class MessageTest extends TestCase
         self::assertSame('https://www.google.com/search?q=foobar', (string) $request->getUri());
     }
 
-    public function testParseRequestAbsoluteFormIgnoresInvalidHostHeaderWhenUriComesFromTarget(): void
+    /**
+     * @dataProvider invalidHostHeaderProvider
+     */
+    public function testParseAbsoluteFormRejectsInvalidHostHeader(string $host): void
     {
-        $request = Psr7\Message::parseRequest("GET https://good.example/admin HTTP/1.1\r\nHost: trusted.example@evil.example\r\n\r\n");
+        $this->expectException(\InvalidArgumentException::class);
 
-        self::assertSame('https://good.example/admin', $request->getRequestTarget());
-        self::assertSame('trusted.example@evil.example', $request->getHeaderLine('Host'));
-        self::assertSame('https://good.example/admin', (string) $request->getUri());
+        Psr7\Message::parseRequest("GET https://good.example/admin HTTP/1.1\r\nHost: {$host}\r\n\r\n");
+    }
+
+    public function testParseAbsoluteFormAllowsValidHostDifferentFromTargetAuthority(): void
+    {
+        $request = Psr7\Message::parseRequest("GET https://up.example/admin HTTP/1.1\r\nHost: good.example\r\n\r\n");
+
+        self::assertSame('https://up.example/admin', $request->getRequestTarget());
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+        self::assertSame('https://up.example/admin', (string) $request->getUri());
+    }
+
+    public function testParseAbsoluteFormAllowsMissingHostHeader(): void
+    {
+        $request = Psr7\Message::parseRequest("GET https://up.example/admin HTTP/1.1\r\n\r\n");
+
+        self::assertSame('https://up.example/admin', $request->getRequestTarget());
+        self::assertSame('up.example', $request->getHeaderLine('Host'));
+        self::assertSame('https://up.example/admin', (string) $request->getUri());
     }
 
     public function testParsesOptionsAsteriskFormRequestTarget(): void
@@ -351,13 +370,33 @@ class MessageTest extends TestCase
         self::assertSame('//[::1]:443', (string) $request->getUri());
     }
 
-    public function testParseConnectAuthorityFormIgnoresInvalidHostHeaderWhenUriComesFromTarget(): void
+    /**
+     * @dataProvider invalidHostHeaderProvider
+     */
+    public function testParseConnectRejectsInvalidHostHeader(string $host): void
     {
-        $request = Psr7\Message::parseRequest("CONNECT up.example:443 HTTP/1.1\r\nHost: trusted.example@evil.example\r\n\r\n");
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequest("CONNECT up.example:443 HTTP/1.1\r\nHost: {$host}\r\n\r\n");
+    }
+
+    public function testParseConnectAllowsValidHostDifferentFromTargetAuthority(): void
+    {
+        $request = Psr7\Message::parseRequest("CONNECT up.example:443 HTTP/1.1\r\nHost: good.example\r\n\r\n");
 
         self::assertSame('CONNECT', $request->getMethod());
         self::assertSame('up.example:443', $request->getRequestTarget());
-        self::assertSame('trusted.example@evil.example', $request->getHeaderLine('Host'));
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+        self::assertSame('//up.example:443', (string) $request->getUri());
+    }
+
+    public function testParseConnectAllowsMissingHostHeader(): void
+    {
+        $request = Psr7\Message::parseRequest("CONNECT up.example:443 HTTP/1.1\r\n\r\n");
+
+        self::assertSame('CONNECT', $request->getMethod());
+        self::assertSame('up.example:443', $request->getRequestTarget());
+        self::assertSame('up.example:443', $request->getHeaderLine('Host'));
         self::assertSame('//up.example:443', (string) $request->getUri());
     }
 
