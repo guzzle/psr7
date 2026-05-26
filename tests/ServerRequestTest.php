@@ -656,6 +656,96 @@ class ServerRequestTest extends TestCase
             'x=1',
         ];
 
+        yield 'absolute-form userinfo target is normalized before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://trusted.example@evil.example/admin', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'evil.example',
+            null,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form userinfo target with password is normalized before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://user:pass@evil.example/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'evil.example',
+            null,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form empty userinfo target is normalized before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://@evil.example/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'evil.example',
+            null,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form userinfo target uses query string fallback after normalization' => [
+            ['REQUEST_URI' => 'http://trusted.example@evil.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin?x=1',
+            'evil.example',
+            null,
+            '/admin',
+            'x=1',
+        ];
+
+        yield 'absolute-form userinfo target keeps request uri query after normalization' => [
+            ['REQUEST_URI' => 'http://trusted.example@evil.example/admin?from_uri=1', 'QUERY_STRING' => 'from_query=1', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin?from_uri=1',
+            'evil.example',
+            null,
+            '/admin',
+            'from_uri=1',
+        ];
+
+        yield 'absolute-form userinfo target strips fragment after normalization' => [
+            ['REQUEST_URI' => 'http://trusted.example@evil.example/admin#frag', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'evil.example',
+            null,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form userinfo empty port target is normalized before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://user@evil.example:/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'evil.example',
+            null,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form userinfo zero port target supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://user@evil.example:0/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example:0/admin',
+            'evil.example',
+            0,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form userinfo zero padded zero port target supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://user@evil.example:0000/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example:0/admin',
+            'evil.example',
+            0,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form ipv6 userinfo target supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://user@[::1]:8080/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://[::1]:8080/admin',
+            '[::1]',
+            8080,
+            '/admin',
+            '',
+        ];
+
         yield 'absolute-form uses QUERY_STRING when request uri has no query' => [
             ['REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
             'http://up.example/admin?x=1',
@@ -855,6 +945,84 @@ class ServerRequestTest extends TestCase
             'http://[::1]:8080/admin?x=1',
         ];
 
+        yield 'absolute-form userinfo target is stripped from request target before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://trusted.example@evil.example/admin', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'http://evil.example/admin',
+        ];
+
+        yield 'absolute-form userinfo target with password is stripped from request target before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://user:pass@evil.example/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'http://evil.example/admin',
+        ];
+
+        yield 'absolute-form empty userinfo target is stripped from request target before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://@evil.example/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'http://evil.example/admin',
+        ];
+
+        yield 'absolute-form userinfo target uses query string fallback after normalization' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://trusted.example@evil.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin?x=1',
+            'http://evil.example/admin?x=1',
+        ];
+
+        yield 'absolute-form userinfo target keeps request uri query after normalization' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://trusted.example@evil.example/admin?from_uri=1', 'QUERY_STRING' => 'from_query=1', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin?from_uri=1',
+            'http://evil.example/admin?from_uri=1',
+        ];
+
+        yield 'absolute-form userinfo target strips fragment from request target' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://trusted.example@evil.example/admin#frag', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'http://evil.example/admin',
+        ];
+
+        yield 'absolute-form userinfo zero padded zero port target preserves raw port in request target' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://user@evil.example:0000/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example:0000/admin',
+            'http://evil.example:0/admin',
+        ];
+
+        yield 'absolute-form userinfo default port target preserves raw port in request target' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://user@evil.example:80/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example:80/admin',
+            'http://evil.example/admin',
+        ];
+
+        yield 'absolute-form uppercase userinfo target preserves safe raw casing in request target' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'HTTP://user@EVIL.EXAMPLE/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'HTTP://EVIL.EXAMPLE/admin',
+            'http://evil.example/admin',
+        ];
+
+        yield 'absolute-form userinfo empty port target normalizes request target' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://user@evil.example:/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin',
+            'http://evil.example/admin',
+        ];
+
+        yield 'absolute-form ipv6 userinfo target preserves authority in request target' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://user@[::1]:8080/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://[::1]:8080/admin',
+            'http://[::1]:8080/admin',
+        ];
+
+        yield 'absolute-form at sign in path is preserved' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://evil.example/admin@user', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin@user',
+            'http://evil.example/admin@user',
+        ];
+
+        yield 'absolute-form at sign in query is preserved' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://evil.example/admin?email=user@example.com', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://evil.example/admin?email=user@example.com',
+            'http://evil.example/admin?email=user@example.com',
+        ];
+
         yield 'absolute-form target uses query string fallback' => [
             ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example/admin', 'QUERY_STRING' => 'x=1', 'HTTP_HOST' => 'good.example'],
             'http://up.example/admin?x=1',
@@ -988,6 +1156,52 @@ class ServerRequestTest extends TestCase
         self::assertSame('up.example:443', $request->getRequestTarget());
         self::assertSame('good.example', $request->getHeaderLine('Host'));
         self::assertSame('http://up.example:443', (string) $request->getUri());
+    }
+
+    public function testFromGlobalsNormalizesAbsoluteFormUserInfoWithoutSynthesizingAuthorization(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'http://user:pass@evil.example/admin',
+            'HTTP_HOST' => 'good.example',
+            'SERVER_PORT' => '+443',
+        ];
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('http://evil.example/admin', (string) $request->getUri());
+        self::assertSame('http://evil.example/admin', $request->getRequestTarget());
+        self::assertSame('evil.example', $request->getUri()->getHost());
+        self::assertSame('', $request->getUri()->getUserInfo());
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+        self::assertSame('', $request->getHeaderLine('Authorization'));
+    }
+
+    public function testFromGlobalsNormalizesEmptyAbsoluteFormUserInfoInRequestTarget(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'http://@evil.example/admin',
+            'HTTP_HOST' => 'good.example',
+            'SERVER_PORT' => '+443',
+        ];
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $request = ServerRequest::fromGlobals();
+
+        self::assertSame('http://evil.example/admin', (string) $request->getUri());
+        self::assertSame('http://evil.example/admin', $request->getRequestTarget());
+        self::assertSame('evil.example', $request->getUri()->getHost());
+        self::assertSame('', $request->getUri()->getUserInfo());
     }
 
     public function testFromGlobalsNormalizesAbsoluteFormRequestTargetWithControlCharacter(): void

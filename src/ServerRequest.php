@@ -510,6 +510,12 @@ class ServerRequest extends Request implements ServerRequestInterface
         }
 
         $requestTarget = self::removeRequestTargetFragment($requestUri);
+        $requestTargetWithoutUserInfo = self::removeUserInfoFromAbsoluteFormRequestTarget($requestTarget);
+        if ($requestTargetWithoutUserInfo !== $requestTarget) {
+            $targetUri = $targetUri->withUserInfo('');
+            $requestTarget = $requestTargetWithoutUserInfo;
+        }
+
         if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
             $targetUri = $targetUri->withQuery($queryString);
             $requestTarget .= '?'.$queryString;
@@ -521,6 +527,32 @@ class ServerRequest extends Request implements ServerRequestInterface
             || self::hasEmptyPortInAbsoluteFormRequestTarget($requestTarget);
 
         return [$targetUri, $normalizeRequestTarget ? (string) $targetUri : $requestTarget];
+    }
+
+    private static function removeUserInfoFromAbsoluteFormRequestTarget(string $target): string
+    {
+        $authorityStart = strpos($target, '://');
+        if ($authorityStart === false) {
+            return $target;
+        }
+
+        $authorityStart += 3;
+        $authorityLength = strcspn($target, '/?#', $authorityStart);
+        $authority = substr($target, $authorityStart, $authorityLength);
+        if ($authority === '') {
+            return $target;
+        }
+
+        $lastAt = strrpos($authority, '@');
+        if ($lastAt === false) {
+            return $target;
+        }
+
+        $authorityEnd = $authorityStart + $authorityLength;
+
+        return substr($target, 0, $authorityStart)
+            .substr($authority, $lastAt + 1)
+            .substr($target, $authorityEnd);
     }
 
     private static function hasEmptyPortInAbsoluteFormRequestTarget(string $target): bool
