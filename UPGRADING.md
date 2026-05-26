@@ -214,9 +214,7 @@ authority reconstruction needs the server port.
 
 Absolute-form `REQUEST_URI` userinfo is removed when reconstructing the URI and
 request target from globals, including empty userinfo such as
-`http://@example.com/`. The host after the last raw `@` delimiter remains the
-URI host, and no `Authorization` header is synthesized from request-target
-userinfo.
+`http://@example.com/`. The host after the last raw `@` remains the URI host.
 
 `Message::parseRequest()` now applies 3.0 authority rules when deriving a URI
 from an origin-form or asterisk-form request target. Host ports with leading
