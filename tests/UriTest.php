@@ -127,7 +127,21 @@ class UriTest extends TestCase
             ['//example.com:80:90'],
             ['//example.com'."\n".':80'],
             ['//[::1]:80:90'],
+            ['http://example.com/'."\xC3"],
+            ['//example.com/'."\xC3"],
+            ['/'."\xC3"],
+            ['?q='."\xC3"],
+            ['#f'."\xC3"],
+            ['urn:path'."\xC3"],
+            ['http://[::1]/'."\xC3"],
         ];
+    }
+
+    public function testPathNoSchemeReferenceWithMalformedUtf8ByteIsPercentEncoded(): void
+    {
+        $uri = new Uri("relative/\xC3");
+
+        self::assertSame('relative/%C3', (string) $uri);
     }
 
     /**
