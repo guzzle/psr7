@@ -629,6 +629,24 @@ class ServerRequestTest extends TestCase
             '',
         ];
 
+        yield 'absolute-form zero port target supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://up.example:0/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://up.example:0/admin',
+            'up.example',
+            0,
+            '/admin',
+            '',
+        ];
+
+        yield 'absolute-form zero padded zero port target supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://up.example:0000/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://up.example:0/admin',
+            'up.example',
+            0,
+            '/admin',
+            '',
+        ];
+
         yield 'absolute-form ipv6 target supplies authority before malformed SERVER_PORT' => [
             ['REQUEST_URI' => 'http://[::1]:8080/admin?x=1', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
             'http://[::1]:8080/admin?x=1',
@@ -817,6 +835,18 @@ class ServerRequestTest extends TestCase
             ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example:/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
             'http://up.example/admin',
             'http://up.example/admin',
+        ];
+
+        yield 'absolute-form zero port target is preserved before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example:0/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://up.example:0/admin',
+            'http://up.example:0/admin',
+        ];
+
+        yield 'absolute-form zero padded zero port target is preserved before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example:0000/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://up.example:0000/admin',
+            'http://up.example:0/admin',
         ];
 
         yield 'absolute-form ipv6 target is preserved before malformed SERVER_PORT' => [
@@ -1059,7 +1089,7 @@ class ServerRequestTest extends TestCase
         ServerRequest::getUriFromGlobals();
     }
 
-    public function testGetUriFromGlobalsRejectsInvalidServerPortForAbsoluteFormZeroPortFallback(): void
+    public function testGetUriFromGlobalsAcceptsAbsoluteFormZeroPortBeforeMalformedServerPort(): void
     {
         $_SERVER = [
             'REQUEST_URI' => 'http://up.example:0/admin',
@@ -1067,13 +1097,15 @@ class ServerRequestTest extends TestCase
             'SERVER_PORT' => '+443',
         ];
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid SERVER_PORT');
+        $uri = ServerRequest::getUriFromGlobals();
 
-        ServerRequest::getUriFromGlobals();
+        self::assertSame('http://up.example:0/admin', (string) $uri);
+        self::assertSame('up.example', $uri->getHost());
+        self::assertSame(0, $uri->getPort());
+        self::assertSame('/admin', $uri->getPath());
     }
 
-    public function testGetUriFromGlobalsRejectsInvalidServerPortForAbsoluteFormZeroPaddedZeroPortFallback(): void
+    public function testGetUriFromGlobalsAcceptsAbsoluteFormZeroPaddedZeroPortBeforeMalformedServerPort(): void
     {
         $_SERVER = [
             'REQUEST_URI' => 'http://up.example:0000/admin',
@@ -1081,10 +1113,12 @@ class ServerRequestTest extends TestCase
             'SERVER_PORT' => '+443',
         ];
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid SERVER_PORT');
+        $uri = ServerRequest::getUriFromGlobals();
 
-        ServerRequest::getUriFromGlobals();
+        self::assertSame('http://up.example:0/admin', (string) $uri);
+        self::assertSame('up.example', $uri->getHost());
+        self::assertSame(0, $uri->getPort());
+        self::assertSame('/admin', $uri->getPath());
     }
 
     public function testGetUriFromGlobalsRejectsInvalidServerPortForMalformedConnectFallback(): void
@@ -1135,18 +1169,6 @@ class ServerRequestTest extends TestCase
         yield 'malformed absolute-form port' => [
             [
                 'REQUEST_URI' => 'http://up.example:bad/admin',
-            ],
-        ];
-
-        yield 'absolute-form zero port' => [
-            [
-                'REQUEST_URI' => 'http://up.example:0/admin',
-            ],
-        ];
-
-        yield 'absolute-form zero padded zero port' => [
-            [
-                'REQUEST_URI' => 'http://up.example:0000/admin',
             ],
         ];
 

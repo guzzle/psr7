@@ -460,7 +460,7 @@ class ServerRequest extends Request implements ServerRequestInterface
                     $targetUri = null;
                 }
 
-                if ($targetUri !== null && $targetUri->getHost() !== '' && $targetUri->getPort() !== 0) {
+                if ($targetUri !== null && $targetUri->getHost() !== '') {
                     $requestTarget = self::removeRequestTargetFragment($requestUri);
                     if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
                         $targetUri = $targetUri->withQuery($queryString);
