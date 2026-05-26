@@ -345,7 +345,7 @@ final class Message
             throw new \InvalidArgumentException('Invalid request string');
         }
 
-        self::getSingleHostHeader($data['headers']);
+        self::getHostFromHeaders($data['headers']);
 
         if ($matches['target'][0] === '/') {
             return new Request(

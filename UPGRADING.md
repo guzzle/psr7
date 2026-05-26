@@ -211,11 +211,14 @@ malformed `SERVER_PORT` values when reconstructing the URI from server globals.
 from an origin-form or asterisk-form request target. Host ports with leading
 zeroes are normalized for URI reconstruction, and port zero is rejected.
 It also rejects duplicate `Host` field lines, including case-insensitive
-duplicates.
+duplicates. Any present raw `Host` field is validated before returning a parsed
+request, even when the request target supplies the URI authority, such as
+absolute-form and CONNECT requests. Valid `Host` values may still differ from
+the absolute-form or CONNECT request-target authority.
 
-Applications that need to reject malformed inbound `Host` headers should
-validate the request host before calling `getUriFromGlobals()` or inspect the
-original server parameters.
+For server globals, applications that need to reject malformed inbound `Host`
+headers should validate the original server parameters before calling
+`getUriFromGlobals()` or inspect them afterward.
 
 #### URI Paths and Request Targets
 
