@@ -162,4 +162,18 @@ class LimitStreamTest extends TestCase
         $b = new LimitStream($a, -1, 4);
         self::assertSame(3, $b->getSize());
     }
+
+    public function testSizeIsZeroWhenOffsetExceedsUnderlyingSizeWithoutLimit(): void
+    {
+        $a = Psr7\Utils::streamFor('foo');
+        $b = new LimitStream($a, -1, 4);
+        self::assertSame(0, $b->getSize());
+    }
+
+    public function testSizeIsZeroWhenOffsetExceedsUnderlyingSizeWithLimit(): void
+    {
+        $a = Psr7\Utils::streamFor('foo');
+        $b = new LimitStream($a, 5, 4);
+        self::assertSame(0, $b->getSize());
+    }
 }
