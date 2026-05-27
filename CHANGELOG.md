@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated relying on automatic uppercasing of explicitly provided HTTP request methods; guzzlehttp/psr7 3.0 preserves request method casing
 - Deprecated invalid `Utils::modifyRequest()` change values that guzzlehttp/psr7 3.0 will reject
 
+## 2.10.4 - Upcoming
+
+### Fixed
+
+- Apply `UriNormalizer` percent-encoding normalizations to URI fragments
+- Make `LimitStream::getSize()` return `0` for slices past the underlying stream end
+- Make `AppendStream::read()` return an empty string when no streams are attached
+- Prevent `CachingStream::seek()` from looping indefinitely when the remote stream makes no progress
+
 ## 2.10.3 - 2026-05-27
 
 ### Fixed

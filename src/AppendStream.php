@@ -214,6 +214,10 @@ final class AppendStream implements StreamInterface
             );
         }
 
+        if ($this->streams === []) {
+            return '';
+        }
+
         $buffer = '';
         $total = count($this->streams) - 1;
         $remaining = $length;
