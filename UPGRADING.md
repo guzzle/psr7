@@ -595,6 +595,18 @@ custom stream implementations that do not expose `timed_out` metadata continue
 to behave as before. Previously, timed-out reads could be treated as EOF or
 return partial results.
 
+`StreamWrapper` now translates `RuntimeException` failures from the wrapped
+PSR-7 stream into PHP stream-wrapper failure values. When using a resource from
+`StreamWrapper::getResource()`, functions such as `fread()`, `fwrite()`,
+`fseek()`, `feof()`, and `fstat()` may now return normal PHP failure values
+instead of propagating the PSR-7 stream exception. Call the PSR-7 stream directly
+if you need exception-based failure handling.
+
+The `StreamWrapper::stream_read()` callback no longer declares a native return
+type so read failures can return `false`. The `StreamWrapper::stream_tell()`
+callback no longer declares a native return type so post-seek position lookup
+failures can make `fseek()` fail.
+
 Several stream `__toString()` implementations now allow exceptions thrown during
 stringification to be rethrown. Avoid relying on `(string) $stream` to hide read
 failures; call `getContents()` or `read()` and handle exceptions when failures

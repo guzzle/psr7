@@ -80,6 +80,23 @@ class StreamWrapperTest extends TestCase
         self::assertIsInt(stream_select($streams, $write, $except, 0));
     }
 
+    public function testStreamCastFailureRemovesStreamFromSelection(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('detach')->willThrowException(new \RuntimeException('detach failed'));
+
+        $failed = StreamWrapper::getResource($stream);
+        $valid = StreamWrapper::getResource(Utils::streamFor('foo'));
+        $streams = [$failed, $valid];
+        $write = null;
+        $except = null;
+
+        self::assertSame(1, @stream_select($streams, $write, $except, 0));
+        self::assertSame([$valid], \array_values($streams));
+    }
+
     public function testValidatesStream(): void
     {
         $stream = $this->createMock(StreamInterface::class);
@@ -98,6 +115,17 @@ class StreamWrapperTest extends TestCase
     {
         $result = @fopen('guzzle://foo', 'r');
         self::assertFalse($result);
+    }
+
+    public function testReturnsFalseWhenStreamContextDoesNotContainStream(): void
+    {
+        StreamWrapper::register();
+
+        $context = stream_context_create([
+            'guzzle' => ['stream' => 'not a stream'],
+        ]);
+
+        self::assertFalse(@fopen('guzzle://stream', 'r', false, $context));
     }
 
     /**
@@ -131,6 +159,91 @@ class StreamWrapperTest extends TestCase
         $r = StreamWrapper::getResource($stream);
         self::assertIsResource($r);
         fclose($r);
+    }
+
+    public function testReadFailureReturnsFalse(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('read')->willThrowException(new \RuntimeException('read failed'));
+
+        $resource = StreamWrapper::getResource($stream);
+
+        self::assertFalse(fread($resource, 1));
+    }
+
+    public function testWriteFailureReturnsFalse(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(false);
+        $stream->method('isWritable')->willReturn(true);
+        $stream->method('write')->willThrowException(new \RuntimeException('write failed'));
+
+        $resource = StreamWrapper::getResource($stream);
+
+        self::assertFalse(fwrite($resource, 'x'));
+    }
+
+    public function testSeekFailureReturnsMinusOne(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('seek')->willThrowException(new \RuntimeException('seek failed'));
+
+        $resource = StreamWrapper::getResource($stream);
+
+        self::assertSame(-1, fseek($resource, 0));
+    }
+
+    public function testTellFailureMakesSeekReturnMinusOne(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('tell')->willThrowException(new \RuntimeException('tell failed'));
+
+        $resource = StreamWrapper::getResource($stream);
+
+        self::assertSame(-1, fseek($resource, 0));
+    }
+
+    public function testEofFailureReturnsTrue(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('eof')->willThrowException(new \RuntimeException('eof failed'));
+
+        $resource = StreamWrapper::getResource($stream);
+
+        self::assertTrue(feof($resource));
+    }
+
+    public function testStatFailureReturnsFalse(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('getSize')->willThrowException(new \RuntimeException('size failed'));
+
+        $resource = StreamWrapper::getResource($stream);
+
+        self::assertFalse(fstat($resource));
+    }
+
+    public function testNonRuntimeReadFailuresStillPropagate(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('read')->willThrowException(new \Error('read failed'));
+
+        $resource = StreamWrapper::getResource($stream);
+
+        $this->expectException(\Error::class);
+        fread($resource, 1);
     }
 
     public function testUrlStat(): void
