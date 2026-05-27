@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated relying on automatic uppercasing of explicitly provided HTTP request methods; guzzlehttp/psr7 3.0 preserves request method casing
 - Deprecated invalid `Utils::modifyRequest()` change values that guzzlehttp/psr7 3.0 will reject
 
-## 2.10.3 - Upcoming
+## 2.10.3 - 2026-05-27
 
 ### Fixed
 
