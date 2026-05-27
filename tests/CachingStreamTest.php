@@ -220,6 +220,63 @@ class CachingStreamTest extends TestCase
         }
     }
 
+    public function testSeekStopsWhenRemoteReadMakesNoProgress(): void
+    {
+        $reads = 0;
+        $remote = new Psr7\FnStream([
+            'read' => function () use (&$reads): string {
+                ++$reads;
+
+                return '';
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+            'getSize' => function (): int {
+                return 10;
+            },
+            'close' => function (): void {
+            },
+        ]);
+        $stream = new CachingStream($remote);
+
+        $stream->seek(1);
+
+        self::assertSame(1, $reads);
+        self::assertSame(0, $stream->tell());
+        $stream->close();
+    }
+
+    public function testSeekContinuesWhenRemoteReadOnlySatisfiesSkippedBytes(): void
+    {
+        $chunks = ['ab', 'cd'];
+        $remote = new Psr7\FnStream([
+            'read' => function () use (&$chunks): string {
+                return $chunks === [] ? '' : array_shift($chunks);
+            },
+            'eof' => function (): bool {
+                return false;
+            },
+            'getSize' => function (): int {
+                return 4;
+            },
+            'tell' => function (): int {
+                return 0;
+            },
+            'close' => function (): void {
+            },
+        ]);
+        $stream = new CachingStream($remote);
+
+        self::assertSame(2, $stream->write('XX'));
+        $stream->seek(4);
+
+        self::assertSame(4, $stream->tell());
+        $stream->seek(0);
+        self::assertSame('XXcd', $stream->read(4));
+        $stream->close();
+    }
+
     public function testWritesToBufferStream(): void
     {
         $this->body->read(2);

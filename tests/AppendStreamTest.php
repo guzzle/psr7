@@ -139,6 +139,35 @@ class AppendStreamTest extends TestCase
         self::assertSame('', (string) $a);
     }
 
+    public function testReadWithoutStreamsReturnsEmptyString(): void
+    {
+        $stream = new AppendStream();
+
+        self::assertSame('', $stream->read(1));
+        self::assertSame(0, $stream->tell());
+        self::assertTrue($stream->eof());
+    }
+
+    public function testReadAfterCloseReturnsEmptyString(): void
+    {
+        $stream = new AppendStream([Psr7\Utils::streamFor('foo')]);
+
+        $stream->close();
+
+        self::assertSame('', $stream->read(1));
+        self::assertTrue($stream->eof());
+    }
+
+    public function testReadAfterDetachReturnsEmptyString(): void
+    {
+        $stream = new AppendStream([Psr7\Utils::streamFor('foo')]);
+
+        $stream->detach();
+
+        self::assertSame('', $stream->read(1));
+        self::assertTrue($stream->eof());
+    }
+
     public function testCanReadFromMultipleStreams(): void
     {
         $a = new AppendStream([
