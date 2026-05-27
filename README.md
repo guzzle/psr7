@@ -729,7 +729,7 @@ provided key are removed.
 
 Determines if a modified URL should be considered cross-origin with respect to an original URL.
 
-Two URLs are cross-origin when their scheme, host, or effective port differ. Host comparison is case-insensitive, and missing ports use the default port for `http` or `https`.
+Two URLs are cross-origin when their scheme, host, or effective port differ. Host comparison is case-insensitive, and missing ports use the default port for `http` or `https`. Other schemes do not receive implicit default ports.
 
 This helper only compares URI origins. It does not implement redirect handling or credential policy.
 
