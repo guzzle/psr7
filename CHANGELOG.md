@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Prevent `PumpStream` from looping indefinitely when a callable repeatedly returns empty strings
 - Prevent `CachingStream::seek()` from looping indefinitely when the remote stream makes no progress
 
 ## 2.10.3 - 2026-05-27

@@ -50,44 +50,6 @@ class PumpStreamTest extends TestCase
         self::assertSame([1, 9, 3], $called);
     }
 
-    public function testThrowsWhenCallableOnlyReturnsEmptyStrings(): void
-    {
-        $p = new PumpStream(function (): string {
-            return '';
-        });
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('PumpStream source returned too many empty strings without making progress');
-
-        $p->read(1);
-    }
-
-    public function testSkipsFiniteEmptyStringReadsUntilDataIsAvailable(): void
-    {
-        $chunks = ['', '', 'foo', false];
-        $p = new PumpStream(function () use (&$chunks) {
-            return array_shift($chunks);
-        });
-
-        self::assertSame('foo', $p->read(3));
-        self::assertFalse($p->eof());
-        self::assertSame('', $p->getContents());
-        self::assertTrue($p->eof());
-    }
-
-    public function testSkipsFiniteEmptyStringReadsAfterProgress(): void
-    {
-        $chunks = ['ab', '', 'cd', false];
-        $p = new PumpStream(function () use (&$chunks) {
-            return array_shift($chunks);
-        });
-
-        self::assertSame('abcd', $p->read(4));
-        self::assertFalse($p->eof());
-        self::assertSame('', $p->getContents());
-        self::assertTrue($p->eof());
-    }
-
     public function testInifiniteStreamWrappedInLimitStream(): void
     {
         $p = Psr7\Utils::streamFor(function () {
