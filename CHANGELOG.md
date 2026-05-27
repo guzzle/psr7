@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Make `AppendStream::read()` return an empty string when no streams are attached
 - Prevent `CachingStream::seek()` from looping indefinitely when the remote stream makes no progress
 
 ## 2.10.3 - 2026-05-27
