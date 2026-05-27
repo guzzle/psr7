@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed `Header::parse()` handling of escaped quotes in semicolon-separated parameters
+- Fixed `Header::parse()` splitting of semicolon-separated parameters with escaped quotes
 
 ## 2.10.4 - Upcoming
 
