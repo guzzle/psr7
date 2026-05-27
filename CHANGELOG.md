@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `Utils::copyToStream()` to retry short destination writes and throw when destination streams cannot make progress
 - Changed `Utils::modifyRequest()` to reject conflicting URI and `Host` header changes in the same call
 - Changed `Header::parse()` to split semicolon-separated parameters without repeated regular expression lookaheads
+- Changed `UriComparator::isCrossOrigin()` so only HTTP and HTTPS missing ports receive implicit default ports
 
 ### Deprecated
 
