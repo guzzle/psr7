@@ -80,6 +80,23 @@ class StreamWrapperTest extends TestCase
         self::assertIsInt(stream_select($streams, $write, $except, 0));
     }
 
+    public function testStreamCastFailureRemovesStreamFromSelection(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isWritable')->willReturn(false);
+        $stream->method('detach')->willThrowException(new \RuntimeException('detach failed'));
+
+        $failed = StreamWrapper::getResource($stream);
+        $valid = StreamWrapper::getResource(Utils::streamFor('foo'));
+        $streams = [$failed, $valid];
+        $write = null;
+        $except = null;
+
+        self::assertSame(1, @stream_select($streams, $write, $except, 0));
+        self::assertSame([$valid], \array_values($streams));
+    }
+
     public function testValidatesStream(): void
     {
         $stream = $this->createMock(StreamInterface::class);

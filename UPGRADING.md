@@ -602,9 +602,10 @@ PSR-7 stream into PHP stream-wrapper failure values. When using a resource from
 instead of propagating the PSR-7 stream exception. Call the PSR-7 stream directly
 if you need exception-based failure handling.
 
-The `StreamWrapper::stream_read()` and `StreamWrapper::stream_tell()` callback
-methods no longer declare native return types so they can return `false`
-according to PHP stream-wrapper failure semantics.
+The `StreamWrapper::stream_read()` callback no longer declares a native return
+type so read failures can return `false`. The `StreamWrapper::stream_tell()`
+callback no longer declares a native return type so post-seek position lookup
+failures can make `fseek()` fail.
 
 Several stream `__toString()` implementations now allow exceptions thrown during
 stringification to be rethrown. Avoid relying on `(string) $stream` to hide read
