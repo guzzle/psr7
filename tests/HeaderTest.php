@@ -60,6 +60,30 @@ class HeaderTest extends TestCase
                 ],
             ],
             [
+                'foo="a;b\\"c"; bar=baz',
+                [
+                    ['foo' => 'a;b\\"c', 'bar' => 'baz'],
+                ],
+            ],
+            [
+                'foo="a;b\\"c"',
+                [
+                    ['foo' => 'a;b\\"c'],
+                ],
+            ],
+            [
+                'foo="a\\";b"; bar=baz',
+                [
+                    ['foo' => 'a\\";b', 'bar' => 'baz'],
+                ],
+            ],
+            [
+                'foo="a\\\\;b"; bar=baz',
+                [
+                    ['foo' => 'a\\\\;b', 'bar' => 'baz'],
+                ],
+            ],
+            [
                 'foo=bar;;baz=qux',
                 [
                     ['foo' => 'bar', 'baz' => 'qux'],
