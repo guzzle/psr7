@@ -54,16 +54,31 @@ final class Header
     {
         $values = [];
         $start = 0;
-        $quotesRemaining = \substr_count($value, '"');
+        $isQuoted = false;
+        $isEscaped = false;
 
         for ($i = 0, $max = \strlen($value); $i < $max; ++$i) {
-            if ($value[$i] === '"') {
-                --$quotesRemaining;
+            $char = $value[$i];
+
+            if ($isEscaped) {
+                $isEscaped = false;
 
                 continue;
             }
 
-            if ($value[$i] === ';' && $quotesRemaining % 2 === 0) {
+            if ($isQuoted && $char === '\\') {
+                $isEscaped = true;
+
+                continue;
+            }
+
+            if ($char === '"') {
+                $isQuoted = !$isQuoted;
+
+                continue;
+            }
+
+            if (!$isQuoted && $char === ';') {
                 $values[] = \substr($value, $start, $i - $start);
                 $start = $i + 1;
             }
