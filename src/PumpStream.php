@@ -18,6 +18,8 @@ use Psr\Http\Message\StreamInterface;
  */
 final class PumpStream implements StreamInterface
 {
+    private const MAX_CONSECUTIVE_EMPTY_READS = 100;
+
     /** @var callable(int): (string|false|null)|null */
     private $source;
 
@@ -164,6 +166,8 @@ final class PumpStream implements StreamInterface
     private function pump(int $length): void
     {
         if ($this->source !== null) {
+            $emptyReads = 0;
+
             do {
                 $data = ($this->source)($length);
                 if ($data === false || $data === null) {
@@ -171,6 +175,16 @@ final class PumpStream implements StreamInterface
 
                     return;
                 }
+
+                if ($data === '') {
+                    if (++$emptyReads > self::MAX_CONSECUTIVE_EMPTY_READS) {
+                        throw new \RuntimeException('PumpStream source returned too many empty strings without making progress');
+                    }
+
+                    continue;
+                }
+
+                $emptyReads = 0;
                 $this->buffer->write($data);
                 $length -= strlen($data);
             } while ($length > 0);
