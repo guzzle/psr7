@@ -18,14 +18,17 @@ class UriNormalizerTest extends TestCase
     {
         $actualEncoding = 'a%c2%7A%5eb%25%fa%fA%Fa';
         $expectEncoding = 'a%C2%7A%5Eb%25%FA%FA%FA';
-        $uri = (new Uri())->withPath("/$actualEncoding")->withQuery($actualEncoding);
+        $uri = (new Uri())
+            ->withPath("/$actualEncoding")
+            ->withQuery($actualEncoding)
+            ->withFragment($actualEncoding);
 
-        self::assertSame("/$actualEncoding?$actualEncoding", (string) $uri, 'Not normalized automatically beforehand');
+        self::assertSame("/$actualEncoding?$actualEncoding#$actualEncoding", (string) $uri, 'Not normalized automatically beforehand');
 
         $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
 
         self::assertInstanceOf(UriInterface::class, $normalizedUri);
-        self::assertSame("/$expectEncoding?$expectEncoding", (string) $normalizedUri);
+        self::assertSame("/$expectEncoding?$expectEncoding#$expectEncoding", (string) $normalizedUri);
     }
 
     /**
@@ -37,14 +40,17 @@ class UriNormalizerTest extends TestCase
         // Add encoded reserved characters to test that those are not decoded and include the percent-encoded
         // unreserved character both in lower and upper case to test the decoding is case-insensitive.
         $encodedChars = $percentEncoded.'%2F%5B'.strtoupper($percentEncoded);
-        $uri = (new Uri())->withPath("/$encodedChars")->withQuery($encodedChars);
+        $uri = (new Uri())
+            ->withPath("/$encodedChars")
+            ->withQuery($encodedChars)
+            ->withFragment($encodedChars);
 
-        self::assertSame("/$encodedChars?$encodedChars", (string) $uri, 'Not normalized automatically beforehand');
+        self::assertSame("/$encodedChars?$encodedChars#$encodedChars", (string) $uri, 'Not normalized automatically beforehand');
 
         $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
 
         self::assertInstanceOf(UriInterface::class, $normalizedUri);
-        self::assertSame("/$char%2F%5B$char?$char%2F%5B$char", (string) $normalizedUri);
+        self::assertSame("/$char%2F%5B$char?$char%2F%5B$char#$char%2F%5B$char", (string) $normalizedUri);
     }
 
     public static function getUnreservedCharacters(): iterable
@@ -170,6 +176,7 @@ class UriNormalizerTest extends TestCase
             ['http://example.org/path?#', 'http://example.org/path', true],
             ['http://example.org:80', 'http://example.org/', true],
             ['http://example.org/../a/.././p%61th?%7a=%5e', 'http://example.org/path?z=%5E', true],
+            ['http://example.org/path#fr%61g%c2%b1', 'http://example.org/path#frag%C2%B1', true],
             ['https://example.org/', 'http://example.org/', false],
             ['https://example.org/', '//example.org/', false],
             ['//example.org/', '//example.org/', true],

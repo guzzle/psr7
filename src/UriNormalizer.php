@@ -189,12 +189,10 @@ final class UriNormalizer
             return strtoupper($match[0]);
         };
 
-        return
-            $uri->withPath(
-                preg_replace_callback($regex, $callback, $uri->getPath())
-            )->withQuery(
-                preg_replace_callback($regex, $callback, $uri->getQuery())
-            );
+        return $uri
+            ->withPath(self::normalizePercentEncodingInComponent($uri->getPath(), $regex, $callback))
+            ->withQuery(self::normalizePercentEncodingInComponent($uri->getQuery(), $regex, $callback))
+            ->withFragment(self::normalizePercentEncodingInComponent($uri->getFragment(), $regex, $callback));
     }
 
     private static function decodeUnreservedCharacters(UriInterface $uri): UriInterface
@@ -205,12 +203,24 @@ final class UriNormalizer
             return rawurldecode($match[0]);
         };
 
-        return
-            $uri->withPath(
-                preg_replace_callback($regex, $callback, $uri->getPath())
-            )->withQuery(
-                preg_replace_callback($regex, $callback, $uri->getQuery())
-            );
+        return $uri
+            ->withPath(self::normalizePercentEncodingInComponent($uri->getPath(), $regex, $callback))
+            ->withQuery(self::normalizePercentEncodingInComponent($uri->getQuery(), $regex, $callback))
+            ->withFragment(self::normalizePercentEncodingInComponent($uri->getFragment(), $regex, $callback));
+    }
+
+    /**
+     * @param callable(array): string $callback
+     */
+    private static function normalizePercentEncodingInComponent(string $component, string $regex, callable $callback): string
+    {
+        $normalized = preg_replace_callback($regex, $callback, $component);
+
+        if ($normalized === null) {
+            throw new \RuntimeException('Unable to normalize URI component percent-encoding');
+        }
+
+        return $normalized;
     }
 
     private function __construct()
