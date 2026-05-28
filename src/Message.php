@@ -377,7 +377,7 @@ final class Message
             );
         }
 
-        if (self::isAbsoluteFormRequestTarget($matches['target'])) {
+        if (Rfc7230::isAbsoluteFormRequestTarget($matches['target'])) {
             return (new Request(
                 $matches['method'],
                 $matches['target'],
@@ -387,7 +387,7 @@ final class Message
             ))->withRequestTarget($matches['target']);
         }
 
-        if (self::isAsteriskFormRequestTarget($matches['method'], $matches['target'])) {
+        if (Rfc7230::isAsteriskFormRequestTarget($matches['method'], $matches['target'])) {
             return (new Request(
                 $matches['method'],
                 self::parseRequestAuthorityUri($data['headers']),
@@ -411,19 +411,9 @@ final class Message
         throw new \InvalidArgumentException('Invalid request string');
     }
 
-    private static function isAbsoluteFormRequestTarget(string $target): bool
-    {
-        return preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:\/\//D', $target) === 1;
-    }
-
-    private static function isAsteriskFormRequestTarget(string $method, string $target): bool
-    {
-        return $method === 'OPTIONS' && $target === '*';
-    }
-
     private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?Uri
     {
-        if ($method !== 'CONNECT' || strpbrk($target, '/?#') !== false) {
+        if (!Rfc7230::isConnectAuthorityFormRequestTarget($method, $target)) {
             return null;
         }
 

@@ -336,7 +336,7 @@ final class ServerRequestGlobalsFactory
             return [$uri, null];
         }
 
-        if (self::isAsteriskFormRequestTarget($method, $requestUri)) {
+        if (Rfc7230::isAsteriskFormRequestTarget($method, $requestUri)) {
             return [$uri->withPath('')->withQuery(''), '*'];
         }
 
@@ -352,17 +352,12 @@ final class ServerRequestGlobalsFactory
         return [$uri, null];
     }
 
-    private static function isAbsoluteFormRequestTarget(string $target): bool
-    {
-        return preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:\/\//D', $target) === 1;
-    }
-
     /**
      * @return array{0: UriInterface, 1: string}|null
      */
     private static function getAbsoluteFormUriAndRequestTarget(string $requestUri, ?string $queryString): ?array
     {
-        if (!self::isAbsoluteFormRequestTarget($requestUri)) {
+        if (!Rfc7230::isAbsoluteFormRequestTarget($requestUri)) {
             return null;
         }
 
@@ -453,17 +448,12 @@ final class ServerRequestGlobalsFactory
         return substr($authority, -1) === ':';
     }
 
-    private static function isAsteriskFormRequestTarget(string $method, string $target): bool
-    {
-        return $method === 'OPTIONS' && $target === '*';
-    }
-
     /**
      * @return array{0: string, 1: int}|null
      */
     private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?array
     {
-        if ($method !== 'CONNECT' || strpbrk($target, '/?#') !== false) {
+        if (!Rfc7230::isConnectAuthorityFormRequestTarget($method, $target)) {
             return null;
         }
 
