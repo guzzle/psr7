@@ -716,7 +716,62 @@ class MessageTest extends TestCase
     {
         $message = new Psr7\Response(200, [], 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.');
         $message->getBody()->read(10);
+
         self::assertSame('Lorem ipsu (truncated...)', Psr7\Message::bodySummary($message, 10));
+        self::assertSame(10, $message->getBody()->tell());
+    }
+
+    public function testMessageBodySummaryRestoresOriginalPosition(): void
+    {
+        $body = Psr7\Utils::streamFor('abcdef');
+        $body->seek(3);
+        $message = new Psr7\Response(200, [], $body);
+
+        self::assertSame('abcdef', Psr7\Message::bodySummary($message));
+        self::assertSame(3, $body->tell());
+    }
+
+    public function testMessageBodySummaryRestoresOriginalPositionAfterUtf8Lookahead(): void
+    {
+        $body = Psr7\Utils::streamFor('必填性规则校验失败，此字段为必填项');
+        $body->seek(6);
+        $message = new Psr7\Response(200, [], $body);
+
+        self::assertSame('必填性规则校验失 (truncated...)', Psr7\Message::bodySummary($message, 25));
+        self::assertSame(6, $body->tell());
+    }
+
+    public function testMessageBodySummaryRestoresOriginalPositionWhenReturningNull(): void
+    {
+        $body = Psr7\Utils::streamFor("abc\0def");
+        $body->seek(3);
+        $message = new Psr7\Response(200, [], $body);
+
+        self::assertNull(Psr7\Message::bodySummary($message));
+        self::assertSame(3, $body->tell());
+
+        $body = Psr7\Utils::streamFor("abc\xFFdef");
+        $body->seek(2);
+        $message = new Psr7\Response(200, [], $body);
+
+        self::assertNull(Psr7\Message::bodySummary($message, 4));
+        self::assertSame(2, $body->tell());
+    }
+
+    public function testMessageBodySummaryThrowsWhenOriginalPositionCannotBeDetermined(): void
+    {
+        $body = Psr7\Utils::streamFor('abc');
+        $body = FnStream::decorate($body, [
+            'tell' => static function (): int {
+                throw new \RuntimeException('tell failed');
+            },
+        ]);
+        $message = new Psr7\Response(200, [], $body);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('tell failed');
+
+        Psr7\Message::bodySummary($message);
     }
 
     public function testGetResponseBodySummaryOfNonReadableStream(): void

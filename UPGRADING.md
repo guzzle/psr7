@@ -358,6 +358,18 @@ $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 $stream = Utils::streamFor(new ArrayIterator(['body']));
 ```
 
+#### Message Body Summaries
+
+`Message::bodySummary()` still summarizes seekable bodies from the beginning,
+even when the body was already partially read. It now restores the body cursor to
+the position it had before the summary was created. In 2.x, calling
+`bodySummary()` left seekable bodies rewound to the beginning.
+
+Most applications do not need to change anything. Check your code only if you
+called `bodySummary()` and then read the same body while relying on
+`bodySummary()` to leave the body rewound. If you need to read the body from the
+beginning after summarizing it, call `Message::rewindBody()` explicitly.
+
 #### Stream Lifecycle
 
 `FnStream` now treats `close()` and successful `detach()` calls as terminal
