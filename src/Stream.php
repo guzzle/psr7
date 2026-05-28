@@ -251,12 +251,35 @@ class Stream implements StreamInterface
             throw new \RuntimeException('Cannot write to a non-writable stream');
         }
 
+        if ($string === '') {
+            return 0;
+        }
+
         // We can't know the size after writing anything
         $this->size = null;
-        $result = fwrite($this->stream, $string);
+
+        try {
+            $result = fwrite($this->stream, $string);
+        } catch (TimeoutException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            if ($this->writeTimedOut()) {
+                throw new TimeoutException('Unable to write to stream: timed out', 0, $e);
+            }
+
+            throw new \RuntimeException('Unable to write to stream', 0, $e);
+        }
 
         if ($result === false) {
+            if ($this->writeTimedOut()) {
+                throw new TimeoutException('Unable to write to stream: timed out');
+            }
+
             throw new \RuntimeException('Unable to write to stream');
+        }
+
+        if ($result === 0 && $this->writeTimedOut()) {
+            throw new TimeoutException('Unable to write to stream: timed out');
         }
 
         return $result;
@@ -283,5 +306,10 @@ class Stream implements StreamInterface
     private function timedOut(): bool
     {
         return StreamTimeout::isResourceReadTimedOut($this->stream);
+    }
+
+    private function writeTimedOut(): bool
+    {
+        return StreamTimeout::isResourceWriteTimedOut($this->stream);
     }
 }
