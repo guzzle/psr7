@@ -27,6 +27,13 @@ final class Rfc3986
      */
     public const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
 
+    /**
+     * The two hex digits of a percent-encoded octet (the "3A" in "%3A"), for use in a regex.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
+     */
+    public const HEX_OCTET = '[A-Fa-f0-9]{2}';
+
     public static function isValidScheme(string $scheme): bool
     {
         return $scheme === '' || preg_match('/^[A-Za-z][A-Za-z0-9.+-]*$/D', $scheme) === 1;
