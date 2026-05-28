@@ -128,6 +128,31 @@ class PumpStreamTest extends TestCase
         self::assertTrue($p->eof());
     }
 
+    public function testReadFailureDoesNotDiscardBytesBufferedDuringSameRead(): void
+    {
+        /** @var list<string|false> $chunks */
+        $chunks = ['a', '', false];
+
+        $p = new PumpStream(static function (int $length) use (&$chunks) {
+            return array_shift($chunks);
+        });
+
+        try {
+            $p->read(2);
+            self::fail('Expected empty source chunk to throw.');
+        } catch (\RuntimeException $e) {
+            self::assertSame('PumpStream source returned an empty string', $e->getMessage());
+        }
+
+        self::assertSame(0, $p->tell());
+        self::assertSame('a', $p->read(1));
+        self::assertSame(1, $p->tell());
+        self::assertFalse($p->eof());
+        self::assertSame('', $p->read(1));
+        self::assertSame(1, $p->tell());
+        self::assertTrue($p->eof());
+    }
+
     public function testCanReadFromCallableString(): void
     {
         self::$chunks = ['foo', false];
