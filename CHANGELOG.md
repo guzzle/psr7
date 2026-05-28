@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make `LimitStream::getSize()` return `0` for slices past the underlying stream end
 - Make `AppendStream::read()` return an empty string when no streams are attached
 - Prevent `CachingStream::seek()` from looping indefinitely when the remote stream makes no progress
+- Make `CachingStream::read()` throw on an incomplete cache-target write instead of silently corrupting replays
 
 ## 2.10.3 - 2026-05-27
 
