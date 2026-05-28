@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Tests\Psr7;
 
+use GuzzleHttp\Psr7\NoSeekStream;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\UploadedFile;
 use PHPUnit\Framework\TestCase;
@@ -195,5 +196,65 @@ class UploadedFileTest extends TestCase
         $uploadedFile->moveTo($to);
 
         self::assertFileEquals(__FILE__, $to);
+    }
+
+    public function testMoveToMovesCompleteFileBackedUploadAfterReadingStream(): void
+    {
+        $this->cleanup[] = $from = tempnam(sys_get_temp_dir(), 'copy_from');
+        $this->cleanup[] = $to = tempnam(sys_get_temp_dir(), 'copy_to');
+        $contents = 'Foo bar!';
+
+        file_put_contents($from, $contents);
+
+        $uploadedFile = new UploadedFile($from, strlen($contents), UPLOAD_ERR_OK, basename($from), 'text/plain');
+        self::assertSame('Foo', $uploadedFile->getStream()->read(3));
+
+        $uploadedFile->moveTo($to);
+
+        self::assertFileExists($to);
+        self::assertSame($contents, file_get_contents($to));
+    }
+
+    public function testMoveToLeavesUploadActiveWhenTargetPathIsInvalid(): void
+    {
+        $stream = \GuzzleHttp\Psr7\Utils::streamFor('Foo bar!');
+        $uploadedFile = new UploadedFile($stream, $stream->getSize(), UPLOAD_ERR_OK, 'filename.txt', 'text/plain');
+
+        try {
+            $uploadedFile->moveTo('');
+            self::fail('Expected invalid target path exception');
+        } catch (\InvalidArgumentException $e) {
+            self::assertFalse($uploadedFile->isMoved());
+            self::assertSame($stream, $uploadedFile->getStream());
+        }
+    }
+
+    public function testMoveToLeavesUploadActiveWhenTargetCannotBeOpened(): void
+    {
+        $stream = \GuzzleHttp\Psr7\Utils::streamFor('Foo bar!');
+        $uploadedFile = new UploadedFile($stream, $stream->getSize(), UPLOAD_ERR_OK, 'filename.txt', 'text/plain');
+        $target = sys_get_temp_dir().'/missing-upload-dir-'.bin2hex(random_bytes(8)).'/target.txt';
+
+        try {
+            $uploadedFile->moveTo($target);
+            self::fail('Expected target open exception');
+        } catch (\RuntimeException $e) {
+            self::assertFalse($uploadedFile->isMoved());
+            self::assertSame($stream, $uploadedFile->getStream());
+            self::assertFileDoesNotExist($target);
+        }
+    }
+
+    public function testMoveToCopiesNonSeekableStreamBackedUploadFromCurrentPosition(): void
+    {
+        $stream = new NoSeekStream(\GuzzleHttp\Psr7\Utils::streamFor('Foo bar!'));
+        $uploadedFile = new UploadedFile($stream, null, UPLOAD_ERR_OK, 'filename.txt', 'text/plain');
+
+        self::assertSame('Foo ', $uploadedFile->getStream()->read(4));
+
+        $this->cleanup[] = $to = tempnam(sys_get_temp_dir(), 'non_seekable_upload');
+        $uploadedFile->moveTo($to);
+
+        self::assertSame('bar!', file_get_contents($to));
     }
 }
