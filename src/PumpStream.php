@@ -68,6 +68,7 @@ final class PumpStream implements StreamInterface
     {
         $this->tellPos = 0;
         $this->source = null;
+        $this->buffer->close();
 
         return null;
     }

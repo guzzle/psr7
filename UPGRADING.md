@@ -383,6 +383,10 @@ still closes the remote stream owned by the `CachingStream`, but it no longer
 closes the detached cache resource returned to the caller. Repeated `close()`
 calls are no-ops.
 
+`PumpStream::close()` and `PumpStream::detach()` now discard internally buffered
+unread bytes. If a callable or iterator source returns more bytes than a read
+requested, drain the stream before closing it if you need those buffered bytes.
+
 #### Multipart Part Headers and Metadata
 
 `MultipartStream` no longer adds default `Content-Length` headers to individual

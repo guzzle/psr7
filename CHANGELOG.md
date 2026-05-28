@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rewind seekable stream-backed uploaded files before copying them in `UploadedFile::moveTo()`
 - Reject negative stream read lengths consistently across stream implementations
 - Reject empty strings returned by `PumpStream` source callables to prevent no-progress read loops
+- Make `PumpStream::close()` and `PumpStream::detach()` discard internally buffered unread bytes
 - Restore the original body cursor after `Message::bodySummary()` reads seekable bodies
 - Validate `LimitStream` offset and limit values and track non-seekable offsets by bytes actually skipped
 - Make `FnStream` close and detach terminal, preventing later operation forwarding and invoking close callbacks at most once
