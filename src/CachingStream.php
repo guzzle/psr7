@@ -25,6 +25,8 @@ final class CachingStream implements StreamInterface
 
     private bool $detached = false;
 
+    private bool $closed = false;
+
     /**
      * We will treat the buffer object as the body of the stream
      *
@@ -182,13 +184,39 @@ final class CachingStream implements StreamInterface
     }
 
     /**
-     * Close both the remote stream and buffer stream
+     * Close the remote stream and any attached cache stream.
      */
     public function close(): void
     {
-        $this->remoteStream->close();
-        $this->stream->close();
+        if ($this->closed) {
+            return;
+        }
+
+        $closeCache = !$this->detached;
+        $this->closed = true;
         $this->detached = true;
+
+        $exception = null;
+
+        try {
+            $this->remoteStream->close();
+        } catch (\Throwable $e) {
+            $exception = $e;
+        }
+
+        if ($closeCache) {
+            try {
+                $this->stream->close();
+            } catch (\Throwable $e) {
+                if ($exception === null) {
+                    $exception = $e;
+                }
+            }
+        }
+
+        if ($exception !== null) {
+            throw $exception;
+        }
     }
 
     private function cacheEntireStream(): int

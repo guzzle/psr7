@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject empty strings returned by `PumpStream` source callables to prevent no-progress read loops
 - Validate `LimitStream` offset and limit values and track non-seekable offsets by bytes actually skipped
 - Make `FnStream` close and detach terminal, preventing later operation forwarding and invoking close callbacks at most once
+- Make `CachingStream::close()` idempotent while preserving remote cleanup after cache detachment
 - Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
 - Harden URI host validation for delimiters, backslashes, and invalid IPv6/IP literals; reject schemes not beginning with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`

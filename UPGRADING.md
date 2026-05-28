@@ -366,6 +366,11 @@ repeated `close()` calls are no-ops, destruction after explicit close no longer
 invokes the close callback, and closed or detached streams no longer forward
 read, write, seek, metadata, or stringification callbacks.
 
+`CachingStream::close()` is now idempotent. Calling `close()` after `detach()`
+still closes the remote stream owned by the `CachingStream`, but it no longer
+closes the detached cache resource returned to the caller. Repeated `close()`
+calls are no-ops.
+
 #### Multipart Part Headers and Metadata
 
 `MultipartStream` no longer adds default `Content-Length` headers to individual
