@@ -85,4 +85,11 @@ class BufferStreamTest extends TestCase
         self::assertSame('hi hello', (string) $b);
         self::assertSame(4, $b->write('test'));
     }
+
+    public function testWriteReturnsZeroWhenBufferReachesHighWaterMark(): void
+    {
+        $b = new BufferStream(5);
+        self::assertSame(0, $b->write('hello'));
+        self::assertSame('hello', (string) $b);
+    }
 }

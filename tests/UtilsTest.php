@@ -352,6 +352,39 @@ class UtilsTest extends TestCase
         Psr7\Utils::copyToStream($s1, $s2, 10);
     }
 
+    public function testCopyToStreamThrowsWhenDestinationBufferStreamReachesHighWaterMark(): void
+    {
+        $source = Psr7\Utils::streamFor('foobaz');
+        $dest = new Psr7\BufferStream(3);
+
+        try {
+            Psr7\Utils::copyToStream($source, $dest);
+            self::fail('Expected a RuntimeException to be thrown');
+        } catch (\RuntimeException $e) {
+            self::assertSame('Unable to write to stream', $e->getMessage());
+        }
+
+        // The bytes are buffered even though copyToStream reports failure.
+        self::assertSame('foobaz', (string) $dest);
+    }
+
+    public function testCopyToStreamThrowsWhenDestinationDroppingStreamIsFull(): void
+    {
+        $source = Psr7\Utils::streamFor('foobaz');
+        $underlying = new Psr7\BufferStream();
+        $dest = new Psr7\DroppingStream($underlying, 3);
+
+        try {
+            Psr7\Utils::copyToStream($source, $dest);
+            self::fail('Expected a RuntimeException to be thrown');
+        } catch (\RuntimeException $e) {
+            self::assertSame('Unable to write to stream', $e->getMessage());
+        }
+
+        // The destination kept up to maxLength bytes and dropped the rest.
+        self::assertSame('foo', (string) $underlying);
+    }
+
     public function testCopyToStreamReadsInChunksInsteadOfAllInMemory(): void
     {
         $sizes = [];
