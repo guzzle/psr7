@@ -376,7 +376,9 @@ beginning after summarizing it, call `Message::rewindBody()` explicitly.
 lifecycle operations. Its configured `close` callback is invoked at most once;
 repeated `close()` calls are no-ops, destruction after explicit close no longer
 invokes the close callback, and closed or detached streams no longer forward
-read, write, seek, metadata, or stringification callbacks.
+read, write, seek, metadata, or stringification callbacks. `FnStream` also
+suppresses exceptions thrown by destructor-triggered close callbacks. Call
+`close()` explicitly if cleanup failures must be observed.
 
 `CachingStream::close()` is now idempotent. Calling `close()` after `detach()`
 still closes the remote stream owned by the `CachingStream`, but it no longer

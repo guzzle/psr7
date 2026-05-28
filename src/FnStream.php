@@ -55,8 +55,14 @@ final class FnStream implements StreamInterface
      */
     public function __destruct()
     {
-        if (!$this->detached && isset($this->_fn_close)) {
+        if ($this->detached || !isset($this->_fn_close)) {
+            return;
+        }
+
+        try {
             $this->close();
+        } catch (\Throwable $e) {
+            // Destructors must not surface cleanup failures.
         }
     }
 

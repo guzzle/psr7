@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restore the original body cursor after `Message::bodySummary()` reads seekable bodies
 - Validate `LimitStream` offset and limit values and track non-seekable offsets by bytes actually skipped
 - Make `FnStream` close and detach terminal, preventing later operation forwarding and invoking close callbacks at most once
+- Suppress exceptions thrown by `FnStream` close callbacks during destructor cleanup
 - Make `CachingStream::close()` idempotent while preserving remote cleanup after cache detachment
 - Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
 - Harden URI host validation for delimiters, backslashes, and invalid IPv6/IP literals; reject schemes not beginning with a letter

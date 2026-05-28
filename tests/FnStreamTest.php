@@ -91,6 +91,22 @@ class FnStreamTest extends TestCase
         self::assertSame(1, $called);
     }
 
+    public function testSwallowsCloseExceptionOnDestruct(): void
+    {
+        $called = 0;
+        $s = new FnStream([
+            'close' => function () use (&$called): void {
+                ++$called;
+
+                throw new \RuntimeException('close failed');
+            },
+        ]);
+
+        unset($s);
+
+        self::assertSame(1, $called);
+    }
+
     public function testCanCloseUsingCallable(): void
     {
         $called = 0;
