@@ -35,4 +35,16 @@ class NoSeekStreamTest extends TestCase
 
         $wrapped->close();
     }
+
+    public function testDetachDelegatesToDecoratedStream(): void
+    {
+        $resource = fopen('php://temp', 'r+');
+        $wrapped = new NoSeekStream(\GuzzleHttp\Psr7\Utils::streamFor($resource));
+
+        self::assertFalse($wrapped->isSeekable());
+        self::assertSame($resource, $wrapped->detach());
+        self::assertNull($wrapped->detach());
+
+        fclose($resource);
+    }
 }

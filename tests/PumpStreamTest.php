@@ -152,6 +152,21 @@ class PumpStreamTest extends TestCase
         }
     }
 
+    public function testCloseDetachesSourceButLeavesBufferedBytesReadable(): void
+    {
+        $p = new PumpStream(function (): string {
+            return 'abc';
+        });
+
+        self::assertSame('a', $p->read(1));
+
+        $p->close();
+
+        self::assertTrue($p->eof());
+        self::assertSame('bc', $p->read(10));
+        self::assertSame(2, $p->tell());
+    }
+
     public function testThatConvertingStreamToStringWillThrowException(): void
     {
         $p = Psr7\Utils::streamFor(function ($size): void {
