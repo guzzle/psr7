@@ -7,6 +7,7 @@ namespace GuzzleHttp\Psr7;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 
 final class Message
 {
@@ -26,7 +27,7 @@ final class Message
                     .$message->getRequestTarget())
                 .' HTTP/'.$message->getProtocolVersion();
             if (!$message->hasHeader('host')) {
-                $msg .= "\r\nHost: ".$message->getUri()->getHost();
+                $msg .= "\r\nHost: ".self::hostHeaderFromUri($message->getUri());
             }
         } elseif ($message instanceof ResponseInterface) {
             $msg = 'HTTP/'.$message->getProtocolVersion().' '
@@ -47,6 +48,21 @@ final class Message
         }
 
         return "{$msg}\r\n\r\n".$message->getBody();
+    }
+
+    private static function hostHeaderFromUri(UriInterface $uri): string
+    {
+        $host = $uri->getHost();
+
+        if ($host === '') {
+            return '';
+        }
+
+        if (($port = $uri->getPort()) !== null) {
+            $host .= ':'.$port;
+        }
+
+        return $host;
     }
 
     /**
