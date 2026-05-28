@@ -30,7 +30,12 @@ final class CachingStream implements StreamInterface
      * We will treat the buffer object as the body of the stream
      *
      * @param StreamInterface $stream Stream to cache. The cursor is assumed to be at the beginning of the stream.
-     * @param StreamInterface $target Optionally specify where data is cached
+     * @param StreamInterface $target Optionally specify where data is cached. Defaults to a "php://temp"
+     *                                stream. A custom target is used as a random-access byte buffer to
+     *                                replay the remote stream, so it must be readable, writable, and
+     *                                seekable, report an accurate position and size, and store writes
+     *                                losslessly. Lossy or non-seekable streams such as BufferStream and
+     *                                DroppingStream are not valid targets.
      */
     public function __construct(
         StreamInterface $stream,
