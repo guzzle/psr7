@@ -22,6 +22,46 @@ class MessageTest extends TestCase
         );
     }
 
+    public function testConvertsRequestWithoutHostHeaderToStringWithUriPort(): void
+    {
+        $request = (new Psr7\Request('GET', 'http://foo.com:8124/hi'))->withoutHeader('Host');
+
+        self::assertSame(
+            "GET /hi HTTP/1.1\r\nHost: foo.com:8124\r\n\r\n",
+            Psr7\Message::toString($request)
+        );
+    }
+
+    public function testConvertsRequestWithoutHostHeaderToStringWithIpv6UriPort(): void
+    {
+        $request = (new Psr7\Request('GET', 'http://[::1]:8124/'))->withoutHeader('Host');
+
+        self::assertSame(
+            "GET / HTTP/1.1\r\nHost: [::1]:8124\r\n\r\n",
+            Psr7\Message::toString($request)
+        );
+    }
+
+    public function testConvertsRequestWithoutHostHeaderToStringWithoutUriUserInfo(): void
+    {
+        $request = (new Psr7\Request('GET', 'http://user:pass@foo.com:8124/hi'))->withoutHeader('Host');
+
+        self::assertSame(
+            "GET /hi HTTP/1.1\r\nHost: foo.com:8124\r\n\r\n",
+            Psr7\Message::toString($request)
+        );
+    }
+
+    public function testConvertsRequestWithHostHeaderToStringWithoutOverwritingHost(): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com:8124/hi', ['Host' => 'custom.example']);
+
+        self::assertSame(
+            "GET /hi HTTP/1.1\r\nHost: custom.example\r\n\r\n",
+            Psr7\Message::toString($request)
+        );
+    }
+
     public function testConvertsResponsesToStrings(): void
     {
         $response = new Psr7\Response(200, [

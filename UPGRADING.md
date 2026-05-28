@@ -251,6 +251,10 @@ $updated->getHeaderLine('Host'); // example.com:8124
 If your application intentionally sends an empty or stale Host header, set it
 after calling `withUri()` or preserve a non-empty Host header explicitly.
 
+`Message::toString()` now applies the same URI host and port synthesis when
+serializing a request without a `Host` header. Generated `Host` lines include
+non-null URI ports.
+
 #### URI Paths and Request Targets
 
 `Uri::getPath()` now normalizes multiple leading slashes to one slash when
