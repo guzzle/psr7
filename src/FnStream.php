@@ -24,6 +24,8 @@ final class FnStream implements StreamInterface
     /** @var array<string, callable> */
     private array $methods;
 
+    private bool $closed = false;
+
     /**
      * @param array<string, callable> $methods Hash of method name to a callable.
      */
@@ -53,8 +55,8 @@ final class FnStream implements StreamInterface
      */
     public function __destruct()
     {
-        if (isset($this->_fn_close)) {
-            ($this->_fn_close)();
+        if (!$this->closed && isset($this->_fn_close)) {
+            $this->close();
         }
     }
 
@@ -96,7 +98,13 @@ final class FnStream implements StreamInterface
 
     public function close(): void
     {
-        ($this->_fn_close)();
+        if ($this->closed) {
+            return;
+        }
+
+        $close = $this->_fn_close;
+        $this->closed = true;
+        $close();
     }
 
     public function detach()

@@ -626,6 +626,10 @@ non-seekable streams, offsets are tracked by the number of bytes actually
 skipped. Short reads are retried until the offset is reached, EOF is reached, or
 the decorated stream stops making progress.
 
+`FnStream` now invokes its configured `close` callback at most once. Calling
+`close()` explicitly suppresses the destructor close callback, and repeated
+`close()` calls after the first close are no-ops.
+
 Timed-out stream operations now throw
 `GuzzleHttp\Psr7\Exception\TimeoutException`, which extends
 `RuntimeException`. `Stream::read()`, `Utils::copyToStream()`,

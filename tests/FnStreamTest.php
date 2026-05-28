@@ -81,28 +81,91 @@ class FnStreamTest extends TestCase
 
     public function testCanCloseOnDestruct(): void
     {
-        $called = false;
+        $called = 0;
         $s = new FnStream([
             'close' => function () use (&$called): void {
-                $called = true;
+                ++$called;
             },
         ]);
         unset($s);
-        self::assertTrue($called);
+        self::assertSame(1, $called);
     }
 
     public function testCanCloseUsingCallable(): void
     {
-        $called = false;
+        $called = 0;
         $s = new FnStream([
             'close' => function () use (&$called): void {
-                $called = true;
+                ++$called;
             },
         ]);
 
         $s->close();
 
-        self::assertTrue($called);
+        self::assertSame(1, $called);
+    }
+
+    public function testExplicitCloseAndDestructorOnlyCloseOnce(): void
+    {
+        $called = 0;
+        $s = new FnStream([
+            'close' => function () use (&$called): void {
+                ++$called;
+            },
+        ]);
+
+        $s->close();
+        unset($s);
+
+        self::assertSame(1, $called);
+    }
+
+    public function testCloseIsIdempotent(): void
+    {
+        $called = 0;
+        $s = new FnStream([
+            'close' => function () use (&$called): void {
+                ++$called;
+            },
+        ]);
+
+        $s->close();
+        $s->close();
+        unset($s);
+
+        self::assertSame(1, $called);
+    }
+
+    public function testCloseFailureIsNotRetried(): void
+    {
+        $called = 0;
+        $s = new FnStream([
+            'close' => function () use (&$called): void {
+                ++$called;
+
+                throw new \RuntimeException('close failed');
+            },
+        ]);
+
+        try {
+            $s->close();
+            self::fail('Expected close to fail');
+        } catch (\RuntimeException $e) {
+            self::assertSame('close failed', $e->getMessage());
+        }
+
+        $s->close();
+        unset($s);
+
+        self::assertSame(1, $called);
+    }
+
+    public function testCloseStillThrowsWhenNotImplemented(): void
+    {
+        $this->expectException(\BadMethodCallException::class);
+        $this->expectExceptionMessage('close() is not implemented in the FnStream');
+
+        (new FnStream([]))->close();
     }
 
     public function testCanDetachUsingCallable(): void
