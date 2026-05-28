@@ -147,6 +147,12 @@ $files = ['file' => ['tmp_name' => '/tmp/php123', 'error' => '0']];
 $files = ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123', 'error' => '0']];
 ```
 
+For stream-backed uploads, `UploadedFile::moveTo()` now rewinds seekable streams
+before copying them. If application code reads from a seekable uploaded stream
+before calling `moveTo()`, 3.0 writes the full stream contents to the target
+instead of only the unread suffix. Non-seekable stream-backed uploads continue to
+copy from their current position because consumed bytes cannot be replayed.
+
 #### Parsed Body Values
 
 `ServerRequestInterface::withParsedBody()` now rejects values other than

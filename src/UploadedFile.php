@@ -148,8 +148,13 @@ class UploadedFile implements UploadedFileInterface
                 ? rename($this->file, $targetPath)
                 : move_uploaded_file($this->file, $targetPath);
         } else {
+            $stream = $this->getStream();
+            if ($stream->isSeekable()) {
+                $stream->rewind();
+            }
+
             Utils::copyToStream(
-                $this->getStream(),
+                $stream,
                 new LazyOpenStream($targetPath, 'w')
             );
 

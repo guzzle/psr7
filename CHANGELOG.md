@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject empty arrays and non-string values as header values
 - Reject invalid uploaded file trees and invalid parsed body values
 - Reject malformed uploaded file specifications missing `tmp_name`, `size`, or `error`
+- Rewind seekable stream-backed uploaded files before copying them in `UploadedFile::moveTo()`
 - Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
 - Harden URI host validation for delimiters, backslashes, and invalid IPv6/IP literals; reject schemes not beginning with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
