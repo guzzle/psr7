@@ -70,6 +70,38 @@ class FnStreamTest extends TestCase
         self::assertTrue($called);
     }
 
+    public function testCanCloseUsingCallable(): void
+    {
+        $called = false;
+        $s = new FnStream([
+            'close' => function () use (&$called): void {
+                $called = true;
+            },
+        ]);
+
+        $s->close();
+
+        self::assertTrue($called);
+    }
+
+    public function testCanDetachUsingCallable(): void
+    {
+        $called = false;
+        $resource = fopen('php://temp', 'r+');
+        $s = new FnStream([
+            'detach' => function () use (&$called, $resource) {
+                $called = true;
+
+                return $resource;
+            },
+        ]);
+
+        self::assertSame($resource, $s->detach());
+        self::assertTrue($called);
+
+        fclose($resource);
+    }
+
     public function testDoesNotRequireClose(): void
     {
         $s = new FnStream([]);

@@ -54,6 +54,19 @@ class BufferStreamTest extends TestCase
         self::assertSame('abc', $b->read(10));
     }
 
+    public function testCloseClearsBuffer(): void
+    {
+        $b = new BufferStream();
+        $b->write('foo');
+
+        $b->close();
+
+        self::assertTrue($b->eof());
+        self::assertSame(0, $b->getSize());
+        self::assertSame(3, $b->write('abc'));
+        self::assertSame('abc', $b->read(10));
+    }
+
     public function testExceedingHighwaterMarkReturnsFalseButStillBuffers(): void
     {
         $b = new BufferStream(5);

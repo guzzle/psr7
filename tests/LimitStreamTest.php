@@ -122,6 +122,16 @@ class LimitStreamTest extends TestCase
         self::assertSame('foo_bar', $c->getContents());
     }
 
+    public function testCloseClosesDecoratedStream(): void
+    {
+        $handle = fopen('php://temp', 'r+');
+        $stream = new LimitStream(Psr7\Utils::streamFor($handle));
+
+        $stream->close();
+
+        self::assertFalse(is_resource($handle));
+    }
+
     public function testClaimsConsumedWhenReadLimitIsReached(): void
     {
         self::assertFalse($this->body->eof());
