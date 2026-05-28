@@ -58,7 +58,7 @@ final class Utils
 
         if ($maxLen === -1) {
             while (!$source->eof()) {
-                $buf = self::read($source, $bufferSize, 'Unable to read from stream: timed out');
+                $buf = StreamTimeout::read($source, $bufferSize, 'Unable to read from stream: timed out');
                 if ($buf === '') {
                     break;
                 }
@@ -68,7 +68,7 @@ final class Utils
         } else {
             $remaining = $maxLen;
             while ($remaining > 0 && !$source->eof()) {
-                $buf = self::read($source, min($bufferSize, $remaining), 'Unable to read from stream: timed out');
+                $buf = StreamTimeout::read($source, min($bufferSize, $remaining), 'Unable to read from stream: timed out');
                 $len = strlen($buf);
                 if (!$len) {
                     break;
@@ -90,13 +90,13 @@ final class Utils
             } catch (TimeoutException $e) {
                 throw $e;
             } catch (\RuntimeException $e) {
-                self::throwIfWriteTimedOut($dest, $e);
+                StreamTimeout::throwIfWriteTimedOut($dest, $e);
 
                 throw $e;
             }
 
             if ($result <= 0) {
-                self::throwIfWriteTimedOut($dest);
+                StreamTimeout::throwIfWriteTimedOut($dest);
 
                 throw new \RuntimeException('Unable to write to stream');
             }
@@ -121,7 +121,7 @@ final class Utils
 
         if ($maxLen === -1) {
             while (!$stream->eof()) {
-                $buf = self::read($stream, 1048576, 'Unable to read from stream: timed out');
+                $buf = StreamTimeout::read($stream, 1048576, 'Unable to read from stream: timed out');
                 if ($buf === '') {
                     break;
                 }
@@ -133,7 +133,7 @@ final class Utils
 
         $len = 0;
         while (!$stream->eof() && $len < $maxLen) {
-            $buf = self::read($stream, $maxLen - $len, 'Unable to read from stream: timed out');
+            $buf = StreamTimeout::read($stream, $maxLen - $len, 'Unable to read from stream: timed out');
             if ($buf === '') {
                 break;
             }
@@ -166,7 +166,7 @@ final class Utils
 
         $ctx = hash_init($algo);
         while (!$stream->eof()) {
-            $buf = self::read($stream, 1048576, 'Unable to calculate stream hash: timed out');
+            $buf = StreamTimeout::read($stream, 1048576, 'Unable to calculate stream hash: timed out');
             if ($buf === '') {
                 break;
             }
@@ -423,7 +423,7 @@ final class Utils
         $size = 0;
 
         while (!$stream->eof()) {
-            if ('' === ($byte = self::read($stream, 1, 'Unable to read line from stream: timed out'))) {
+            if ('' === ($byte = StreamTimeout::read($stream, 1, 'Unable to read line from stream: timed out'))) {
                 return $buffer;
             }
             $buffer .= $byte;
@@ -651,42 +651,6 @@ final class Utils
         }
 
         return $contents;
-    }
-
-    private static function read(StreamInterface $stream, int $length, string $timeoutMessage): string
-    {
-        try {
-            $buffer = $stream->read($length);
-        } catch (TimeoutException $e) {
-            throw $e;
-        } catch (\RuntimeException $e) {
-            self::throwIfReadTimedOut($stream, $timeoutMessage, $e);
-
-            throw $e;
-        }
-
-        if ($buffer === '') {
-            self::throwIfReadTimedOut($stream, $timeoutMessage);
-        }
-
-        return $buffer;
-    }
-
-    private static function throwIfReadTimedOut(
-        StreamInterface $stream,
-        string $message,
-        ?\Throwable $previous = null
-    ): void {
-        if (StreamTimeout::isReadTimedOut($stream)) {
-            throw new TimeoutException($message, 0, $previous);
-        }
-    }
-
-    private static function throwIfWriteTimedOut(StreamInterface $stream, ?\Throwable $previous = null): void
-    {
-        if (StreamTimeout::isWriteTimedOut($stream)) {
-            throw new TimeoutException('Unable to write to stream: timed out', 0, $previous);
-        }
     }
 
     /**
