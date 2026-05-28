@@ -69,6 +69,40 @@ class PumpStreamTest extends TestCase
         }
     }
 
+    public function testReadThrowsWhenSourceReturnsEmptyString(): void
+    {
+        /** @var list<string|false> $chunks */
+        $chunks = ['', false];
+
+        $p = new PumpStream(static function (int $length) use (&$chunks) {
+            return array_shift($chunks);
+        });
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('PumpStream source returned an empty string');
+
+        $p->read(1);
+    }
+
+    public function testFalseAndNullStillMeanEof(): void
+    {
+        self::assertSame('', (new PumpStream(static function () {
+            return false;
+        }))->read(1));
+
+        self::assertSame('', (new PumpStream(static function (): void {
+        }))->read(1));
+    }
+
+    public function testReadAcceptsStringZeroFromSource(): void
+    {
+        $p = new PumpStream(static function (): string {
+            return '0';
+        });
+
+        self::assertSame('0', $p->read(1));
+    }
+
     public function testCanReadFromCallableString(): void
     {
         self::$chunks = ['foo', false];

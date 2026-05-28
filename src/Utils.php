@@ -455,8 +455,9 @@ final class Utils
      *   stream object will be created that wraps the given iterable. Each time the
      *   stream is read from, data from the iterator will fill a buffer and will be
      *   continuously called until the buffer is equal to the requested read size.
-     *   Subsequent read calls will first read from the buffer and then call `next`
-     *   on the underlying iterator until it is exhausted.
+     *   Values that stringify to an empty string are skipped while the iterator
+     *   advances. Subsequent read calls will first read from the buffer and then
+     *   call `next` on the underlying iterator until it is exhausted.
      * - `object` with `__toString()`: If the object has the `__toString()` method,
      *   the object will be cast to a string and then a stream will be returned that
      *   uses the string value.
@@ -465,10 +466,11 @@ final class Utils
      *   and no earlier resource or object rule applies, a read-only stream object
      *   will be created that invokes the given callable. The callable is invoked
      *   with the suggested number of bytes to read. The callable can return fewer
-     *   or more bytes than requested, but MUST return `false` or `null` when there
-     *   is no more data to return. Any additional bytes will be buffered and used
-     *   in subsequent reads. String inputs are always treated as string bodies,
-     *   even when they name callable functions.
+     *   or more bytes than requested, but MUST return a non-empty string when data
+     *   is available and `false` or `null` when there is no more data to return.
+     *   Any additional bytes will be buffered and used in subsequent reads. String
+     *   inputs are always treated as string bodies, even when they name callable
+     *   functions.
      *
      * @param resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable|null $resource Entity body data
      * @param array{size?: int, metadata?: array}                                                $options  Additional options
@@ -509,21 +511,24 @@ final class Utils
                     return $resource;
                 } elseif ($resource instanceof \Iterator) {
                     return new PumpStream(function (int $length) use ($resource) {
-                        if (!$resource->valid()) {
-                            return false;
-                        }
-                        $result = $resource->current();
-                        $resource->next();
+                        while ($resource->valid()) {
+                            $result = $resource->current();
+                            $resource->next();
 
-                        if ($result === null || is_scalar($result)) {
-                            return (string) $result;
+                            if ($result === null || is_scalar($result)) {
+                                $data = (string) $result;
+                            } elseif (is_object($result) && method_exists($result, '__toString')) {
+                                $data = (string) $result;
+                            } else {
+                                throw new \UnexpectedValueException('Iterator must yield scalar, null, or stringable values');
+                            }
+
+                            if ($data !== '') {
+                                return $data;
+                            }
                         }
 
-                        if (is_object($result) && method_exists($result, '__toString')) {
-                            return (string) $result;
-                        }
-
-                        throw new \UnexpectedValueException('Iterator must yield scalar, null, or stringable values');
+                        return false;
                     }, $options);
                 } elseif (method_exists($resource, '__toString')) {
                     return self::streamFor((string) $resource, $options);

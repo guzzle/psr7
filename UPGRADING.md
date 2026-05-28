@@ -324,6 +324,16 @@ Query::build(['tag' => ['a', 'b']]);
 // tag=a&tag=b
 ```
 
+#### PumpStream Source Callables
+
+`PumpStream` source callables must now return a non-empty string when producing
+data. Returning an empty string now throws `RuntimeException` instead of being
+retried indefinitely. Return `false` or `null` to signal EOF.
+
+If your callable used `''` to mean "temporarily no data", update it to wait
+until data is available, return a non-empty string, or return `false` or `null`
+when the stream is complete.
+
 #### Iterator-backed Streams
 
 `Utils::streamFor()` now validates values yielded by `Iterator` instances before
@@ -332,15 +342,19 @@ objects are converted to string chunks. Arrays, resources, and non-stringable
 objects now throw `UnexpectedValueException`.
 
 Iterator exhaustion is now the only EOF signal for iterator-backed streams.
-Yielding `false` or `null` no longer ends the stream; those values are converted
-to empty string chunks instead. If your iterator yielded `false` or `null` to
-stop streaming, update it to finish iteration instead.
+Yielding `false`, `null`, or an empty string no longer ends the stream; those
+values are zero-length chunks and are skipped while the iterator advances. If
+your iterator yielded `false` or `null` to stop streaming, update it to finish
+iteration instead.
+
+Avoid iterators that yield only zero-length chunks indefinitely. Such iterators
+never produce bytes and never reach EOF, so they cannot satisfy stream reads.
 
 ```php
 // Before: yielding false or null could stop an iterator-backed stream early.
 $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 
-// After: false and null are stream chunks. End the iterator to signal EOF.
+// After: false and null are skipped chunks. End the iterator to signal EOF.
 $stream = Utils::streamFor(new ArrayIterator(['body']));
 ```
 

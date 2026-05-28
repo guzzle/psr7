@@ -249,8 +249,10 @@ When invoking the provided callable, the PumpStream will pass the suggested
 number of bytes to read to the callable. The callable can choose to ignore
 this value and return fewer or more bytes than requested. Any extra data
 returned by the provided callable is buffered internally until drained using
-the read() function of the PumpStream. The provided callable MUST return
-false or null when there is no more data to read.
+the read() function of the PumpStream. The provided callable MUST return a
+non-empty string to provide data, and MUST return false or null when there is
+no more data to read. Returning an empty string causes a RuntimeException
+because it cannot satisfy a positive-length read.
 
 Userland callables that declare no parameters are tolerated by PHP, but
 length-aware callables remain the recommended formal shape.
@@ -567,8 +569,9 @@ This method accepts the following `$resource` types:
   stream object will be created that wraps the given iterable. Each time the
   stream is read from, data from the iterator will fill a buffer and will be
   continuously called until the buffer is equal to the requested read size.
-  Subsequent read calls will first read from the buffer and then call `next`
-  on the underlying iterator until it is exhausted.
+  Values that stringify to an empty string are skipped while the iterator
+  advances. Subsequent read calls will first read from the buffer and then call
+  `next` on the underlying iterator until it is exhausted.
 - `object` with `__toString()`: If the object has the `__toString()` method,
   the object will be cast to a string and then a stream will be returned that
   uses the string value.
@@ -577,10 +580,10 @@ This method accepts the following `$resource` types:
   no earlier resource or object rule applies, a read-only stream object will be
   created that invokes the given callable. The callable is invoked with the
   suggested number of bytes to read. The callable can return fewer or more bytes
-  than requested, but MUST return `false` or `null` when there is no more data
-  to return. Any additional bytes will be buffered and used in subsequent reads.
-  String inputs are always treated as string bodies, even when they name
-  callable functions.
+  than requested, but MUST return a non-empty string to provide data and MUST
+  return `false` or `null` when there is no more data to return. Any additional
+  bytes will be buffered and used in subsequent reads. String inputs are always
+  treated as string bodies, even when they name callable functions.
 
 ```php
 $stream = GuzzleHttp\Psr7\Utils::streamFor('foo');
