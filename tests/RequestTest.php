@@ -179,6 +179,112 @@ class RequestTest extends TestCase
         self::assertSame($r1, $r2);
     }
 
+    public function testSameInstanceWhenSameUriAndHostWithPortIsAlreadySynchronized(): void
+    {
+        $request = new Request('GET', 'http://foo.com:8124/bar');
+
+        $updated = $request->withUri($request->getUri());
+
+        self::assertSame($request, $updated);
+        self::assertSame('foo.com:8124', $updated->getHeaderLine('Host'));
+    }
+
+    public function testWithUriSameInstanceAddsMissingHostHeader(): void
+    {
+        $request = (new Request('GET', 'http://foo.com:8124/bar'))->withoutHeader('Host');
+
+        $updated = $request->withUri($request->getUri());
+
+        self::assertNotSame($request, $updated);
+        self::assertFalse($request->hasHeader('Host'));
+        self::assertSame('foo.com:8124', $updated->getHeaderLine('Host'));
+    }
+
+    public function testWithUriSameInstancePreserveHostAddsMissingHostHeader(): void
+    {
+        $request = (new Request('GET', 'http://foo.com:8124/bar'))->withoutHeader('Host');
+
+        $updated = $request->withUri($request->getUri(), true);
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('foo.com:8124', $updated->getHeaderLine('Host'));
+    }
+
+    public function testWithUriSameInstanceOverridesStaleHostWhenNotPreservingHost(): void
+    {
+        $request = new Request('GET', 'http://foo.com:8124/bar', ['Host' => 'wrong.example']);
+
+        $updated = $request->withUri($request->getUri());
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('wrong.example', $request->getHeaderLine('Host'));
+        self::assertSame('foo.com:8124', $updated->getHeaderLine('Host'));
+    }
+
+    public function testWithUriSameInstancePreserveHostUpdatesEmptyHostHeader(): void
+    {
+        $request = new Request('GET', 'http://foo.com:8124/bar', ['Host' => '']);
+
+        $updated = $request->withUri($request->getUri(), true);
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('', $request->getHeaderLine('Host'));
+        self::assertSame('foo.com:8124', $updated->getHeaderLine('Host'));
+    }
+
+    public function testWithUriSameInstancePreserveHostKeepsNonEmptyHost(): void
+    {
+        $request = new Request('GET', 'http://foo.com:8124/bar', ['Host' => 'custom.example']);
+
+        $updated = $request->withUri($request->getUri(), true);
+
+        self::assertSame($request, $updated);
+        self::assertSame('custom.example', $updated->getHeaderLine('Host'));
+    }
+
+    public function testWithUriPreserveHostUpdatesEmptyHostHeaderForDifferentUri(): void
+    {
+        $request = new Request('GET', 'http://foo.com/bar', ['Host' => '']);
+
+        $updated = $request->withUri(new Uri('http://bar.com:8125/baz'), true);
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('bar.com:8125', $updated->getHeaderLine('Host'));
+        self::assertSame('http://bar.com:8125/baz', (string) $updated->getUri());
+    }
+
+    public function testWithUriPreserveHostDoesNotReadUriHostWhenHostIsNonEmpty(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getPath')->willReturn('/new');
+        $uri->method('getQuery')->willReturn('');
+        $uri->expects(self::never())->method('getHost');
+        $uri->expects(self::never())->method('getPort');
+
+        $request = new Request('GET', 'http://foo.com', ['Host' => 'custom.example']);
+
+        $updated = $request->withUri($uri, true);
+
+        self::assertNotSame($request, $updated);
+        self::assertSame($uri, $updated->getUri());
+        self::assertSame('custom.example', $updated->getHeaderLine('Host'));
+    }
+
+    public function testWithUriSameInstanceRejectsInvalidUriHostWhenHostSynchronizationIsRequired(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getPath')->willReturn('/');
+        $uri->method('getQuery')->willReturn('');
+        $uri->method('getHost')->willReturn("foo\nbar");
+        $uri->method('getPort')->willReturn(null);
+
+        $request = new Request('GET', $uri, ['Host' => 'custom.example']);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $request->withUri($request->getUri());
+    }
+
     public function testWithRequestTarget(): void
     {
         $r1 = new Request('GET', '/');
