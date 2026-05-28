@@ -360,10 +360,15 @@ $stream = Utils::streamFor(new ArrayIterator(['body']));
 
 #### Message Body Summaries
 
-`Message::bodySummary()` now restores the original cursor position after reading
-a seekable body. It still summarizes from the beginning of the body, even when
-the body was already partially read. If your code relied on `bodySummary()` to
-rewind the body for later reads, call `Message::rewindBody()` explicitly.
+`Message::bodySummary()` still summarizes seekable bodies from the beginning,
+even when the body was already partially read. It now restores the body cursor to
+the position it had before the summary was created. In 2.x, calling
+`bodySummary()` left seekable bodies rewound to the beginning.
+
+Most applications do not need to change anything. Check your code only if you
+called `bodySummary()` and then read the same body while relying on
+`bodySummary()` to leave the body rewound. If you need to read the body from the
+beginning after summarizing it, call `Message::rewindBody()` explicitly.
 
 #### Stream Lifecycle
 
