@@ -123,16 +123,14 @@ final class PumpStream implements StreamInterface
             throw new \RuntimeException('Length parameter cannot be negative');
         }
 
-        $data = $this->buffer->read($length);
-        $readLen = strlen($data);
-        $this->tellPos += $readLen;
-        $remaining = $length - $readLen;
+        $bufferLength = $this->buffer->getSize() ?? 0;
 
-        if ($remaining) {
-            $this->pump($remaining);
-            $data .= $this->buffer->read($remaining);
-            $this->tellPos += strlen($data) - $readLen;
+        if ($length > $bufferLength) {
+            $this->pump($length - $bufferLength);
         }
+
+        $data = $this->buffer->read($length);
+        $this->tellPos += strlen($data);
 
         return $data;
     }
