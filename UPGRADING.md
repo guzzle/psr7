@@ -617,6 +617,10 @@ of depending on package internals.
 its high-water mark. This keeps the method compatible with the `int` return type
 from `StreamInterface::write()`.
 
+All stream implementations now reject negative `read()` lengths with
+`RuntimeException`. In 2.x, some decorators passed negative lengths through,
+some returned sliced data, and some behavior varied by PHP version.
+
 Timed-out stream operations now throw
 `GuzzleHttp\Psr7\Exception\TimeoutException`, which extends
 `RuntimeException`. `Stream::read()`, `Utils::copyToStream()`,

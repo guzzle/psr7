@@ -56,6 +56,20 @@ class LazyOpenStreamTest extends TestCase
         $l->close();
     }
 
+    public function testReadRejectsNegativeLengthWithoutOpeningFile(): void
+    {
+        $l = new LazyOpenStream($this->fname, 'r');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        try {
+            $l->read(-1);
+        } finally {
+            self::assertFileDoesNotExist($this->fname);
+        }
+    }
+
     public function testDetachesUnderlyingStream(): void
     {
         file_put_contents($this->fname, 'foo');

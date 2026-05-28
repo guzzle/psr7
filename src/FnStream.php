@@ -151,6 +151,10 @@ final class FnStream implements StreamInterface
 
     public function read(int $length): string
     {
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
         return ($this->_fn_read)($length);
     }
 

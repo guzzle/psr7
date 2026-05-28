@@ -135,6 +135,14 @@ class CachingStreamTest extends TestCase
         self::assertSame('test', $this->body->read(4));
     }
 
+    public function testReadRejectsNegativeLength(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        $this->body->read(-1);
+    }
+
     public function testReadThrowsWhenRemoteStreamTimesOut(): void
     {
         $remote = new Psr7\FnStream([

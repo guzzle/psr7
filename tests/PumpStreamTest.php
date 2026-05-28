@@ -50,6 +50,25 @@ class PumpStreamTest extends TestCase
         self::assertSame(6, $p->tell());
     }
 
+    public function testReadRejectsNegativeLengthWithoutCallingSource(): void
+    {
+        $called = false;
+        $p = new PumpStream(function () use (&$called): string {
+            $called = true;
+
+            return 'abc';
+        });
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        try {
+            $p->read(-1);
+        } finally {
+            self::assertFalse($called);
+        }
+    }
+
     public function testCanReadFromCallableString(): void
     {
         self::$chunks = ['foo', false];

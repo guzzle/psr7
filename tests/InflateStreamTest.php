@@ -80,6 +80,16 @@ class InflateStreamTest extends TestCase
         self::assertSame('test', (string) $nonSeekableInflate);
     }
 
+    public function testReadRejectsNegativeLength(): void
+    {
+        $stream = new InflateStream(Psr7\Utils::streamFor(gzencode('test')));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        $stream->read(-1);
+    }
+
     private function getGzipStringWithFilename(string $original_string): string
     {
         $gzipped = bin2hex(gzencode($original_string));

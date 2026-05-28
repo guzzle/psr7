@@ -132,6 +132,14 @@ class LimitStreamTest extends TestCase
         self::assertFalse(is_resource($handle));
     }
 
+    public function testReadRejectsNegativeLength(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        $this->body->read(-1);
+    }
+
     public function testClaimsConsumedWhenReadLimitIsReached(): void
     {
         self::assertFalse($this->body->eof());

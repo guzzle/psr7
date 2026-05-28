@@ -118,6 +118,10 @@ final class PumpStream implements StreamInterface
 
     public function read(int $length): string
     {
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
         $data = $this->buffer->read($length);
         $readLen = strlen($data);
         $this->tellPos += $readLen;

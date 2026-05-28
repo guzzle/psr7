@@ -142,6 +142,10 @@ final class LimitStream implements StreamInterface
 
     public function read(int $length): string
     {
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
         if ($this->limit === -1) {
             return $this->stream->read($length);
         }

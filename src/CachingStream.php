@@ -100,6 +100,10 @@ final class CachingStream implements StreamInterface
 
     public function read(int $length): string
     {
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
         // Perform a regular read on any previously read data from the buffer
         $data = $this->stream->read($length);
         $remaining = $length - strlen($data);

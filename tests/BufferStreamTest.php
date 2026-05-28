@@ -31,6 +31,16 @@ class BufferStreamTest extends TestCase
         self::assertSame('', $b->read(10));
     }
 
+    public function testReadRejectsNegativeLength(): void
+    {
+        $b = new BufferStream();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        $b->read(-1);
+    }
+
     public function testCanCastToStringOrGetContents(): void
     {
         $b = new BufferStream();

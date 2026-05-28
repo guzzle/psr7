@@ -27,4 +27,14 @@ class DroppingStreamTest extends TestCase
         $drop->write('hello');
         self::assertSame(0, $drop->write('test'));
     }
+
+    public function testReadRejectsNegativeLength(): void
+    {
+        $drop = new DroppingStream(new BufferStream(), 5);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        $drop->read(-1);
+    }
 }
