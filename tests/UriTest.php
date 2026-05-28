@@ -101,6 +101,51 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider getHostlessHttpLikeConstructorUris
+     */
+    public function testConstructorPreservesHostlessHttpLikeUrisWithoutFinalStateValidation(
+        string $input,
+        string $scheme,
+        string $path,
+        string $query
+    ): void {
+        $uri = new Uri($input);
+
+        self::assertSame($scheme, $uri->getScheme());
+        self::assertSame('', $uri->getHost());
+        self::assertSame('', $uri->getAuthority());
+        self::assertSame($path, $uri->getPath());
+        self::assertSame($query, $uri->getQuery());
+        self::assertSame($input, (string) $uri);
+    }
+
+    public static function getHostlessHttpLikeConstructorUris(): iterable
+    {
+        yield 'http scheme only' => ['http:', 'http', '', ''];
+        yield 'https scheme only' => ['https:', 'https', '', ''];
+        yield 'http absolute path' => ['http:/path', 'http', '/path', ''];
+        yield 'https query only' => ['https:?q', 'https', '', 'q'];
+    }
+
+    public function testFromPartsAppliesFinalStateValidationToHostlessHttpUris(): void
+    {
+        $uri = Uri::fromParts(['scheme' => 'http']);
+
+        self::assertSame('http', $uri->getScheme());
+        self::assertSame('localhost', $uri->getHost());
+        self::assertSame('localhost', $uri->getAuthority());
+        self::assertSame('http://localhost', (string) $uri);
+
+        $uri = Uri::fromParts(['scheme' => 'https', 'query' => 'q']);
+
+        self::assertSame('https', $uri->getScheme());
+        self::assertSame('localhost', $uri->getHost());
+        self::assertSame('localhost', $uri->getAuthority());
+        self::assertSame('q', $uri->getQuery());
+        self::assertSame('https://localhost?q', (string) $uri);
+    }
+
+    /**
      * @dataProvider getInvalidUris
      */
     public function testInvalidUrisThrowException(string $invalidUri): void
