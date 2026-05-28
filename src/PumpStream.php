@@ -13,8 +13,9 @@ use Psr\Http\Message\StreamInterface;
  * number of bytes to read to the callable. The callable can choose to ignore
  * this value and return fewer or more bytes than requested. Any extra data
  * returned by the callable is buffered internally until drained using the
- * read() function of the PumpStream. The callable MUST return false or null
- * when there is no more data to read.
+ * read() function of the PumpStream. The callable MUST return a non-empty
+ * string when data is available, or false or null when there is no more data
+ * to read.
  *
  * Userland callables that declare no parameters are tolerated by PHP, but
  * length-aware callables remain the recommended formal shape.
@@ -37,10 +38,10 @@ final class PumpStream implements StreamInterface
      *                                                                                        the suggested number of bytes to read, may ignore
      *                                                                                        that value, and may return fewer or more bytes.
      *                                                                                        Extra bytes are buffered. The callable MUST return
-     *                                                                                        a string when called, or false|null on error or EOF.
-     *                                                                                        Userland callables that declare no parameters are
-     *                                                                                        tolerated by PHP, but length-aware callables remain
-     *                                                                                        the recommended formal shape.
+     *                                                                                        a non-empty string when producing data, or false|null
+     *                                                                                        on error or EOF. Userland callables that declare no
+     *                                                                                        parameters are tolerated by PHP, but length-aware
+     *                                                                                        callables remain the recommended formal shape.
      * @param array{size?: int, metadata?: array}                                    $options Stream options:
      *                                                                                        - metadata: Hash of metadata to use with stream.
      *                                                                                        - size: Size of the stream, if known.
@@ -122,16 +123,14 @@ final class PumpStream implements StreamInterface
             throw new \RuntimeException('Length parameter cannot be negative');
         }
 
-        $data = $this->buffer->read($length);
-        $readLen = strlen($data);
-        $this->tellPos += $readLen;
-        $remaining = $length - $readLen;
+        $bufferLength = $this->buffer->getSize() ?? 0;
 
-        if ($remaining) {
-            $this->pump($remaining);
-            $data .= $this->buffer->read($remaining);
-            $this->tellPos += strlen($data) - $readLen;
+        if ($length > $bufferLength) {
+            $this->pump($length - $bufferLength);
         }
+
+        $data = $this->buffer->read($length);
+        $this->tellPos += strlen($data);
 
         return $data;
     }
@@ -164,6 +163,11 @@ final class PumpStream implements StreamInterface
 
                     return;
                 }
+
+                if ($data === '') {
+                    throw new \RuntimeException('PumpStream source returned an empty string');
+                }
+
                 $this->buffer->write($data);
                 $length -= strlen($data);
             } while ($length > 0);

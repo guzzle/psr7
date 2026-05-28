@@ -776,6 +776,38 @@ class UtilsTest extends TestCase
         self::assertSame('foobar', $stream->getContents());
     }
 
+    public function testIteratorBasedStreamSkipsEmptyConvertedChunks(): void
+    {
+        $emptyStringable = new class {
+            public function __toString(): string
+            {
+                return '';
+            }
+        };
+
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([
+            '',
+            false,
+            null,
+            $emptyStringable,
+            'foo',
+            '',
+            'bar',
+            null,
+        ]));
+
+        self::assertSame('foobar', $stream->getContents());
+        self::assertTrue($stream->eof());
+    }
+
+    public function testIteratorBasedStreamTerminatesWhenOnlyEmptyConvertedChunksAreYielded(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator(['', false, null]));
+
+        self::assertSame('', $stream->getContents());
+        self::assertTrue($stream->eof());
+    }
+
     public function testIteratorBasedStreamRejectsArrayValues(): void
     {
         $stream = Psr7\Utils::streamFor(new \ArrayIterator([['x']]));

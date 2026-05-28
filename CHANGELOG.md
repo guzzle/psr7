@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject malformed uploaded file specifications missing `tmp_name`, `size`, or `error`
 - Rewind seekable stream-backed uploaded files before copying them in `UploadedFile::moveTo()`
 - Reject negative stream read lengths consistently across stream implementations
+- Reject empty strings returned by `PumpStream` source callables to prevent no-progress read loops
 - Validate `LimitStream` offset and limit values and track non-seekable offsets by bytes actually skipped
 - Make `FnStream` close and detach terminal, preventing later operation forwarding and invoking close callbacks at most once
 - Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
