@@ -506,7 +506,7 @@ class CachingStreamTest extends TestCase
         $stream->close();
     }
 
-    public function testClosePreservesCacheCloseFailure(): void
+    public function testCloseDoesNotRetryAfterCacheCloseFailure(): void
     {
         $remote = $this->createMock(StreamInterface::class);
         $cache = $this->createMock(StreamInterface::class);
@@ -518,8 +518,12 @@ class CachingStreamTest extends TestCase
 
         $stream = new CachingStream($remote, $cache);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('cache close failed');
+        try {
+            $stream->close();
+            self::fail('Expected close to fail');
+        } catch (\RuntimeException $e) {
+            self::assertSame('cache close failed', $e->getMessage());
+        }
 
         $stream->close();
     }

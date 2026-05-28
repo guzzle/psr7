@@ -184,7 +184,7 @@ final class CachingStream implements StreamInterface
     }
 
     /**
-     * Close both the remote stream and buffer stream
+     * Close the remote stream and any attached cache stream.
      */
     public function close(): void
     {
