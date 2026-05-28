@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Psr7;
 
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -13,6 +14,42 @@ final class StreamTimeout
 {
     private function __construct()
     {
+    }
+
+    public static function read(StreamInterface $stream, int $length, string $timeoutMessage): string
+    {
+        try {
+            $buffer = $stream->read($length);
+        } catch (TimeoutException $e) {
+            throw $e;
+        } catch (\RuntimeException $e) {
+            self::throwIfReadTimedOut($stream, $timeoutMessage, $e);
+
+            throw $e;
+        }
+
+        if ($buffer === '') {
+            self::throwIfReadTimedOut($stream, $timeoutMessage);
+        }
+
+        return $buffer;
+    }
+
+    public static function throwIfReadTimedOut(
+        StreamInterface $stream,
+        string $message,
+        ?\Throwable $previous = null
+    ): void {
+        if (self::isReadTimedOut($stream)) {
+            throw new TimeoutException($message, 0, $previous);
+        }
+    }
+
+    public static function throwIfWriteTimedOut(StreamInterface $stream, ?\Throwable $previous = null): void
+    {
+        if (self::isWriteTimedOut($stream)) {
+            throw new TimeoutException('Unable to write to stream: timed out', 0, $previous);
+        }
     }
 
     public static function isReadTimedOut(StreamInterface $stream): bool
