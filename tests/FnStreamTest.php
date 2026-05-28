@@ -136,6 +136,21 @@ class FnStreamTest extends TestCase
         self::assertSame(1, $called);
     }
 
+    public function testCloseTerminatesStreamAndPreventsFurtherDelegation(): void
+    {
+        $called = [];
+        $s = $this->createInstrumentedStream($called);
+
+        $s->close();
+        $s->close();
+
+        self::assertSame(['close'], $called);
+
+        $this->assertFnStreamIsDetached($s);
+
+        self::assertSame(['close'], $called);
+    }
+
     public function testCloseFailureIsNotRetried(): void
     {
         $called = 0;
@@ -155,9 +170,12 @@ class FnStreamTest extends TestCase
         }
 
         $s->close();
-        unset($s);
+
+        $this->assertFnStreamIsDetached($s);
 
         self::assertSame(1, $called);
+
+        unset($s);
     }
 
     public function testCloseStillThrowsWhenNotImplemented(): void
@@ -168,22 +186,67 @@ class FnStreamTest extends TestCase
         (new FnStream([]))->close();
     }
 
-    public function testCanDetachUsingCallable(): void
+    public function testDetachStillThrowsWhenNotImplemented(): void
     {
-        $called = false;
+        $this->expectException(\BadMethodCallException::class);
+        $this->expectExceptionMessage('detach() is not implemented in the FnStream');
+
+        (new FnStream([]))->detach();
+    }
+
+    public function testDetachTerminatesStreamAndPreventsFurtherDelegation(): void
+    {
+        $called = [];
         $resource = fopen('php://temp', 'r+');
-        $s = new FnStream([
+        $s = $this->createInstrumentedStream($called, [
             'detach' => function () use (&$called, $resource) {
-                $called = true;
+                $called[] = 'detach';
 
                 return $resource;
             },
         ]);
 
-        self::assertSame($resource, $s->detach());
-        self::assertTrue($called);
+        try {
+            self::assertSame($resource, $s->detach());
+            self::assertSame(['detach'], $called);
 
-        fclose($resource);
+            $this->assertFnStreamIsDetached($s);
+
+            self::assertSame(['detach'], $called);
+
+            unset($s);
+
+            self::assertSame(['detach'], $called);
+        } finally {
+            if (is_resource($resource)) {
+                fclose($resource);
+            }
+        }
+    }
+
+    public function testDetachFailureDoesNotTerminateStream(): void
+    {
+        $called = 0;
+        $s = new FnStream([
+            'detach' => function () use (&$called): void {
+                ++$called;
+
+                throw new \RuntimeException('detach failed');
+            },
+            'read' => function (int $length): string {
+                return str_repeat('x', $length);
+            },
+        ]);
+
+        try {
+            $s->detach();
+            self::fail('Expected detach to fail');
+        } catch (\RuntimeException $e) {
+            self::assertSame('detach failed', $e->getMessage());
+        }
+
+        self::assertSame(1, $called);
+        self::assertSame('xxx', $s->read(3));
     }
 
     public function testDoesNotRequireClose(): void
@@ -215,8 +278,12 @@ class FnStreamTest extends TestCase
         $b->seek(0, SEEK_END);
         $b->write('bar');
         self::assertSame('foobar', (string) $b);
-        self::assertIsResource($b->detach());
+
+        $resource = $b->detach();
+        self::assertIsResource($resource);
         $b->close();
+
+        fclose($resource);
     }
 
     public function testDecoratesWithCustomizations(): void
@@ -255,5 +322,138 @@ class FnStreamTest extends TestCase
         $this->expectExceptionMessage('foo');
 
         (string) $a;
+    }
+
+    private function assertFnStreamIsDetached(FnStream $stream): void
+    {
+        self::assertNull($stream->getSize());
+        self::assertFalse($stream->isReadable());
+        self::assertFalse($stream->isWritable());
+        self::assertFalse($stream->isSeekable());
+        self::assertSame([], $stream->getMetadata());
+        self::assertNull($stream->getMetadata('foo'));
+
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            (string) $stream;
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->getContents();
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->read(1);
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->read(-1);
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->write('foo');
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->seek(0);
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->rewind();
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->tell();
+        });
+        $this->assertDetachedOperationThrows(static function () use ($stream): void {
+            $stream->eof();
+        });
+
+        self::assertNull($stream->detach());
+        $stream->close();
+    }
+
+    private function assertDetachedOperationThrows(callable $operation): void
+    {
+        try {
+            $operation();
+        } catch (\RuntimeException $e) {
+            self::assertSame('Stream is detached', $e->getMessage());
+
+            return;
+        }
+
+        self::fail('Expected stream to be detached');
+    }
+
+    /**
+     * @param list<string>            $called
+     * @param array<string, callable> $overrides
+     */
+    private function createInstrumentedStream(array &$called, array $overrides = []): FnStream
+    {
+        return new FnStream($overrides + [
+            '__toString' => static function () use (&$called): string {
+                $called[] = '__toString';
+
+                return 'stream';
+            },
+            'close' => static function () use (&$called): void {
+                $called[] = 'close';
+            },
+            'detach' => static function () use (&$called) {
+                $called[] = 'detach';
+
+                return null;
+            },
+            'getSize' => static function () use (&$called): ?int {
+                $called[] = 'getSize';
+
+                return 3;
+            },
+            'tell' => static function () use (&$called): int {
+                $called[] = 'tell';
+
+                return 0;
+            },
+            'eof' => static function () use (&$called): bool {
+                $called[] = 'eof';
+
+                return false;
+            },
+            'isSeekable' => static function () use (&$called): bool {
+                $called[] = 'isSeekable';
+
+                return true;
+            },
+            'rewind' => static function () use (&$called): void {
+                $called[] = 'rewind';
+            },
+            'seek' => static function (int $offset, int $whence = SEEK_SET) use (&$called): void {
+                $called[] = 'seek';
+            },
+            'isWritable' => static function () use (&$called): bool {
+                $called[] = 'isWritable';
+
+                return true;
+            },
+            'write' => static function (string $string) use (&$called): int {
+                $called[] = 'write';
+
+                return strlen($string);
+            },
+            'isReadable' => static function () use (&$called): bool {
+                $called[] = 'isReadable';
+
+                return true;
+            },
+            'read' => static function (int $length) use (&$called): string {
+                $called[] = 'read';
+
+                return str_repeat('x', $length);
+            },
+            'getContents' => static function () use (&$called): string {
+                $called[] = 'getContents';
+
+                return 'contents';
+            },
+            'getMetadata' => static function (?string $key = null) use (&$called) {
+                $called[] = 'getMetadata';
+
+                return $key === null ? ['foo' => 'bar'] : 'bar';
+            },
+        ]);
     }
 }

@@ -24,7 +24,7 @@ final class FnStream implements StreamInterface
     /** @var array<string, callable> */
     private array $methods;
 
-    private bool $closed = false;
+    private bool $detached = false;
 
     /**
      * @param array<string, callable> $methods Hash of method name to a callable.
@@ -55,7 +55,7 @@ final class FnStream implements StreamInterface
      */
     public function __destruct()
     {
-        if (!$this->closed && isset($this->_fn_close)) {
+        if (!$this->detached && isset($this->_fn_close)) {
             $this->close();
         }
     }
@@ -92,73 +92,111 @@ final class FnStream implements StreamInterface
 
     public function __toString(): string
     {
+        $this->assertAttached();
+
         /** @var string */
         return ($this->_fn___toString)();
     }
 
     public function close(): void
     {
-        if ($this->closed) {
+        if ($this->detached) {
             return;
         }
 
         $close = $this->_fn_close;
-        $this->closed = true;
+        $this->detached = true;
         $close();
     }
 
     public function detach()
     {
-        return ($this->_fn_detach)();
+        if ($this->detached) {
+            return null;
+        }
+
+        $detach = $this->_fn_detach;
+        $result = $detach();
+        $this->detached = true;
+
+        return $result;
     }
 
     public function getSize(): ?int
     {
+        if ($this->detached) {
+            return null;
+        }
+
         return ($this->_fn_getSize)();
     }
 
     public function tell(): int
     {
+        $this->assertAttached();
+
         return ($this->_fn_tell)();
     }
 
     public function eof(): bool
     {
+        $this->assertAttached();
+
         return ($this->_fn_eof)();
     }
 
     public function isSeekable(): bool
     {
+        if ($this->detached) {
+            return false;
+        }
+
         return ($this->_fn_isSeekable)();
     }
 
     public function rewind(): void
     {
+        $this->assertAttached();
+
         ($this->_fn_rewind)();
     }
 
     public function seek(int $offset, int $whence = SEEK_SET): void
     {
+        $this->assertAttached();
+
         ($this->_fn_seek)($offset, $whence);
     }
 
     public function isWritable(): bool
     {
+        if ($this->detached) {
+            return false;
+        }
+
         return ($this->_fn_isWritable)();
     }
 
     public function write(string $string): int
     {
+        $this->assertAttached();
+
         return ($this->_fn_write)($string);
     }
 
     public function isReadable(): bool
     {
+        if ($this->detached) {
+            return false;
+        }
+
         return ($this->_fn_isReadable)();
     }
 
     public function read(int $length): string
     {
+        $this->assertAttached();
+
         if ($length < 0) {
             throw new \RuntimeException('Length parameter cannot be negative');
         }
@@ -168,6 +206,8 @@ final class FnStream implements StreamInterface
 
     public function getContents(): string
     {
+        $this->assertAttached();
+
         return ($this->_fn_getContents)();
     }
 
@@ -176,6 +216,17 @@ final class FnStream implements StreamInterface
      */
     public function getMetadata(?string $key = null)
     {
+        if ($this->detached) {
+            return $key === null ? [] : null;
+        }
+
         return ($this->_fn_getMetadata)($key);
+    }
+
+    private function assertAttached(): void
+    {
+        if ($this->detached) {
+            throw new \RuntimeException('Stream is detached');
+        }
     }
 }
