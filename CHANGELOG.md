@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject malformed uploaded file specifications missing `tmp_name`, `size`, or `error`
 - Rewind seekable stream-backed uploaded files before copying them in `UploadedFile::moveTo()`
 - Reject negative stream read lengths consistently across stream implementations
+- Validate `LimitStream` offset and limit values and track non-seekable offsets by bytes actually skipped
 - Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
 - Harden URI host validation for delimiters, backslashes, and invalid IPv6/IP literals; reject schemes not beginning with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`

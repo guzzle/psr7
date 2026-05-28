@@ -621,6 +621,11 @@ All stream implementations now reject negative `read()` lengths with
 `RuntimeException`. In 2.x, some decorators passed negative lengths through,
 some returned sliced data, and some behavior varied by PHP version.
 
+`LimitStream` now rejects negative offsets and limits below `-1`. For
+non-seekable streams, offsets are tracked by the number of bytes actually
+skipped. Short reads are retried until the offset is reached, EOF is reached, or
+the decorated stream stops making progress.
+
 Timed-out stream operations now throw
 `GuzzleHttp\Psr7\Exception\TimeoutException`, which extends
 `RuntimeException`. `Stream::read()`, `Utils::copyToStream()`,
