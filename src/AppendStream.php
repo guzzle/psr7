@@ -176,6 +176,10 @@ final class AppendStream implements StreamInterface
      */
     public function read(int $length): string
     {
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
         if ($this->streams === []) {
             return '';
         }

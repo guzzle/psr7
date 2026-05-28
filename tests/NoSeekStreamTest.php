@@ -47,4 +47,14 @@ class NoSeekStreamTest extends TestCase
 
         fclose($resource);
     }
+
+    public function testReadRejectsNegativeLength(): void
+    {
+        $wrapped = new NoSeekStream(\GuzzleHttp\Psr7\Utils::streamFor('foo'));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        $wrapped->read(-1);
+    }
 }

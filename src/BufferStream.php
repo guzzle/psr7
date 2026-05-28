@@ -102,6 +102,10 @@ final class BufferStream implements StreamInterface
      */
     public function read(int $length): string
     {
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
         $currentLength = strlen($this->buffer);
 
         if ($length >= $currentLength) {

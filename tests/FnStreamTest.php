@@ -33,6 +33,27 @@ class FnStreamTest extends TestCase
         self::assertSame('foo', $s->read(3));
     }
 
+    public function testReadRejectsNegativeLengthWithoutCallingCallback(): void
+    {
+        $called = false;
+        $s = new FnStream([
+            'read' => function () use (&$called): string {
+                $called = true;
+
+                return 'foo';
+            },
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        try {
+            $s->read(-1);
+        } finally {
+            self::assertFalse($called);
+        }
+    }
+
     public function testProxiesToNonClosureCallable(): void
     {
         $s = new FnStream([

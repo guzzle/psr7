@@ -125,6 +125,10 @@ trait StreamDecoratorTrait
 
     public function read(int $length): string
     {
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
         return $this->stream->read($length);
     }
 

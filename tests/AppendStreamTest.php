@@ -148,6 +148,16 @@ class AppendStreamTest extends TestCase
         self::assertTrue($stream->eof());
     }
 
+    public function testReadRejectsNegativeLength(): void
+    {
+        $stream = new AppendStream();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Length parameter cannot be negative');
+
+        $stream->read(-1);
+    }
+
     public function testReadAfterCloseReturnsEmptyString(): void
     {
         $stream = new AppendStream([Psr7\Utils::streamFor('foo')]);
