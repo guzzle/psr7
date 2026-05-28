@@ -70,6 +70,21 @@ final class Rfc7230
         return [$host, $port];
     }
 
+    public static function isAbsoluteFormRequestTarget(string $target): bool
+    {
+        return preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:\/\//D', $target) === 1;
+    }
+
+    public static function isAsteriskFormRequestTarget(string $method, string $target): bool
+    {
+        return $method === 'OPTIONS' && $target === '*';
+    }
+
+    public static function isConnectAuthorityFormRequestTarget(string $method, string $target): bool
+    {
+        return $method === 'CONNECT' && strpbrk($target, '/?#') === false;
+    }
+
     private static function parseAuthorityPort(string $port): ?int
     {
         if ($port === '' || !ctype_digit($port)) {
