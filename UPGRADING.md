@@ -344,6 +344,14 @@ $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 $stream = Utils::streamFor(new ArrayIterator(['body']));
 ```
 
+#### Stream Lifecycle
+
+`FnStream` now treats `close()` and successful `detach()` calls as terminal
+lifecycle operations. Its configured `close` callback is invoked at most once;
+repeated `close()` calls are no-ops, destruction after explicit close no longer
+invokes the close callback, and closed or detached streams no longer forward
+read, write, seek, metadata, or stringification callbacks.
+
 #### Multipart Part Headers and Metadata
 
 `MultipartStream` no longer adds default `Content-Length` headers to individual
@@ -625,12 +633,6 @@ some returned sliced data, and some behavior varied by PHP version.
 non-seekable streams, offsets are tracked by the number of bytes actually
 skipped. Short reads are retried until the offset is reached, EOF is reached, or
 the decorated stream stops making progress.
-
-`FnStream` now treats `close()` and successful `detach()` calls as terminal
-lifecycle operations. Its configured `close` callback is invoked at most once;
-repeated `close()` calls are no-ops, destruction after explicit close no longer
-invokes the close callback, and closed or detached streams no longer forward
-read, write, seek, metadata, or stringification callbacks.
 
 Timed-out stream operations now throw
 `GuzzleHttp\Psr7\Exception\TimeoutException`, which extends

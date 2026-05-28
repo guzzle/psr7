@@ -151,6 +151,18 @@ class FnStreamTest extends TestCase
         self::assertSame(['close'], $called);
     }
 
+    public function testDetachAfterCloseDoesNotRequireDetachCallback(): void
+    {
+        $s = new FnStream([
+            'close' => function (): void {
+            },
+        ]);
+
+        $s->close();
+
+        self::assertNull($s->detach());
+    }
+
     public function testCloseFailureIsNotRetried(): void
     {
         $called = 0;
@@ -224,6 +236,27 @@ class FnStreamTest extends TestCase
         }
     }
 
+    public function testCloseAfterDetachDoesNotRequireCloseCallback(): void
+    {
+        $resource = fopen('php://temp', 'r+');
+        $s = new FnStream([
+            'detach' => function () use ($resource) {
+                return $resource;
+            },
+        ]);
+
+        try {
+            self::assertSame($resource, $s->detach());
+
+            $s->close();
+            unset($s);
+        } finally {
+            if (is_resource($resource)) {
+                fclose($resource);
+            }
+        }
+    }
+
     public function testDetachFailureDoesNotTerminateStream(): void
     {
         $called = 0;
@@ -281,9 +314,12 @@ class FnStreamTest extends TestCase
 
         $resource = $b->detach();
         self::assertIsResource($resource);
-        $b->close();
 
-        fclose($resource);
+        try {
+            $b->close();
+        } finally {
+            fclose($resource);
+        }
     }
 
     public function testDecoratesWithCustomizations(): void
