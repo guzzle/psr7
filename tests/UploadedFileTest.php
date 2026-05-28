@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Tests\Psr7;
 
+use GuzzleHttp\Psr7\FnStream;
 use GuzzleHttp\Psr7\NoSeekStream;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\UploadedFile;
@@ -256,5 +257,56 @@ class UploadedFileTest extends TestCase
         $uploadedFile->moveTo($to);
 
         self::assertSame('bar!', file_get_contents($to));
+    }
+
+    public function testMoveToCopiesCompleteSeekableStreamBackedUploadAfterPartialRead(): void
+    {
+        $stream = \GuzzleHttp\Psr7\Utils::streamFor('Foo bar!');
+        $uploadedFile = new UploadedFile($stream, $stream->getSize(), UPLOAD_ERR_OK, 'filename.txt', 'text/plain');
+
+        self::assertSame('Foo ', $uploadedFile->getStream()->read(4));
+
+        $this->cleanup[] = $to = tempnam(sys_get_temp_dir(), 'seekable_upload');
+        $uploadedFile->moveTo($to);
+
+        self::assertSame('Foo bar!', file_get_contents($to));
+    }
+
+    public function testMoveToCopiesCompleteSeekableStreamBackedUploadFromEnd(): void
+    {
+        $stream = \GuzzleHttp\Psr7\Utils::streamFor('Foo bar!');
+        $uploadedFile = new UploadedFile($stream, $stream->getSize(), UPLOAD_ERR_OK, 'filename.txt', 'text/plain');
+
+        self::assertSame('Foo bar!', $uploadedFile->getStream()->getContents());
+
+        $this->cleanup[] = $to = tempnam(sys_get_temp_dir(), 'seekable_upload');
+        $uploadedFile->moveTo($to);
+
+        self::assertSame('Foo bar!', file_get_contents($to));
+    }
+
+    public function testMoveToLeavesUploadActiveWhenSeekableStreamCannotRewind(): void
+    {
+        $stream = FnStream::decorate(\GuzzleHttp\Psr7\Utils::streamFor('Foo bar!'), [
+            'isSeekable' => function (): bool {
+                return true;
+            },
+            'rewind' => function (): void {
+                throw new \RuntimeException('Unable to rewind stream');
+            },
+        ]);
+        $uploadedFile = new UploadedFile($stream, 8, UPLOAD_ERR_OK, 'filename.txt', 'text/plain');
+        $this->cleanup[] = $to = tempnam(sys_get_temp_dir(), 'seekable_upload');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to rewind stream');
+
+        try {
+            $uploadedFile->moveTo($to);
+        } catch (\RuntimeException $e) {
+            self::assertFalse($uploadedFile->isMoved());
+
+            throw $e;
+        }
     }
 }
