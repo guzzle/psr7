@@ -358,6 +358,16 @@ $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 $stream = Utils::streamFor(new ArrayIterator(['body']));
 ```
 
+#### Stream Mode Capabilities
+
+`Stream::isReadable()` and `Stream::isWritable()` now follow PHP stream mode
+semantics more closely. Update modes are detected by the presence of `+`,
+including valid modes such as `rt+`, `wt+`, `at+`, `xt+`, and `ct+`.
+
+Literal `rw` metadata is now treated as read-only, matching PHP real-file
+streams. If a custom stream wrapper previously exposed `rw` for a writable
+resource, open it with a valid update mode such as `r+`, `w+`, or `a+` instead.
+
 #### Stream Timeout Detection
 
 Timed-out stream operations now throw
