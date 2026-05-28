@@ -87,18 +87,22 @@ final class Message
             return null;
         }
 
-        $body->rewind();
-        $summary = $body->read($truncateAt);
+        $position = $body->tell();
 
-        if ($size > $truncateAt) {
-            if (preg_match('//u', $summary) !== 1) {
-                $summary = self::trimTrailingIncompleteUtf8Character($summary, $body->read(3));
+        try {
+            $body->rewind();
+            $summary = $body->read($truncateAt);
+
+            if ($size > $truncateAt) {
+                if (preg_match('//u', $summary) !== 1) {
+                    $summary = self::trimTrailingIncompleteUtf8Character($summary, $body->read(3));
+                }
+
+                $summary .= ' (truncated...)';
             }
-
-            $summary .= ' (truncated...)';
+        } finally {
+            $body->seek($position);
         }
-
-        $body->rewind();
 
         // Matches any printable character, including unicode characters:
         // letters, marks, numbers, punctuation, spacing, and separators.

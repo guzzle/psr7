@@ -364,6 +364,9 @@ Get a short summary of the message body.
 
 Will return `null` if the response is not printable.
 
+Reads seekable bodies from the beginning and restores the original cursor
+position before returning.
+
 
 ## `GuzzleHttp\Psr7\Message::rewindBody`
 
