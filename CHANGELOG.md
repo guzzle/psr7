@@ -13,44 +13,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Require `psr/http-message:^2.0` and add compatible native parameter and return types
+- Require `psr/http-message:^2.0` and add native parameter and return types
 - Require `psr/http-factory:^1.1`
-- Preserve HTTP request method casing for explicitly constructed requests while continuing to uppercase `ServerRequest::fromGlobals()` methods for server-global compatibility
+- Preserve request method casing, except `ServerRequest::fromGlobals()` still uppercases
 - Reject empty arrays and non-string values as header values
 - Reject invalid uploaded file trees and invalid parsed body values
-- Reject malformed uploaded file specifications missing `tmp_name`, `size`, or `error`
-- Rewind seekable stream-backed uploaded files before copying them in `UploadedFile::moveTo()`
-- Reject negative stream read lengths consistently across stream implementations
-- Recognize PHP stream update modes with text or binary flags before `+` when reporting `Stream::isReadable()` and `Stream::isWritable()`
-- Reject empty strings returned by `PumpStream` source callables to prevent no-progress read loops
-- Make `PumpStream::close()` and `PumpStream::detach()` discard internally buffered unread bytes
-- Restore the original body cursor after `Message::bodySummary()` reads seekable bodies
-- Validate `LimitStream` offset and limit values and track non-seekable offsets by bytes actually skipped
-- Make `FnStream` close and detach terminal, preventing later operation forwarding and invoking close callbacks at most once
-- Suppress exceptions thrown by `FnStream` close callbacks during destructor cleanup
-- Make `CachingStream::close()` idempotent while preserving remote cleanup after cache detachment
-- Normalize multiple leading slashes to one slash in `Uri::getPath()` and URI-derived `Request::getRequestTarget()` values
-- Harden URI host validation for delimiters, backslashes, and invalid IPv6/IP literals; reject schemes not beginning with a letter
+- Reject uploaded file specs missing `tmp_name`, `size`, or `error`
+- Rewind seekable uploaded-file streams before copying in `UploadedFile::moveTo()`
+- Reject negative `read()` lengths across all stream implementations
+- Detect the `+` flag anywhere in a mode for `Stream::isReadable()`/`isWritable()`
+- Reject empty strings returned by `PumpStream` source callables
+- Discard buffered bytes on `PumpStream` close and detach
+- Restore the original stream position after `Message::bodySummary()`
+- Validate `LimitStream` offset/limit and track non-seekable offset by bytes skipped
+- Make `FnStream` close and detach terminal, calling close callbacks at most once
+- Suppress exceptions from `FnStream` close callbacks during destructor cleanup
+- Make `CachingStream::close()` idempotent, preserving remote cleanup after detach
+- Normalize multiple leading slashes in `Uri::getPath()` and origin-form request targets
+- Harden URI host validation (delimiters, backslashes, IPv6, embedded ports); require schemes to start with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
-- Reject zero-port `HTTP_HOST` authorities and malformed `SERVER_PORT` values in `ServerRequest::getUriFromGlobals()`
-- Use valid absolute-form and CONNECT request-target authorities before validating fallback `SERVER_PORT` in `ServerRequest::getUriFromGlobals()`
-- Reject zero-port `Host` authorities and normalize leading-zero ports in `Message::parseRequest()` URI derivation
-- Reject duplicate `Host` field lines in `Message::parseRequest()`
-- Validate present raw `Host` field values in `Message::parseRequest()` for all request-target forms
-- Apply PSR-7 Host header synchronization in `Request::withUri()` for same-instance URIs and empty Host headers
-- Include URI ports when `Message::toString()` synthesizes a missing `Host` header
-- Normalize server request URI reconstruction from globals, including `REQUEST_METHOD` values used for request-target parsing
+- Rebuild server request URIs from `$_SERVER` by `REQUEST_METHOD`, using target authority before `SERVER_PORT`
+- Reject zero-port `HTTP_HOST` and malformed `SERVER_PORT` in `ServerRequest::getUriFromGlobals()`
+- Reject zero-port `Host` and normalize leading-zero ports in `Message::parseRequest()`
+- Reject duplicate `Host` headers and validate present values for all request-target forms
+- Synchronize the `Host` header in `Request::withUri()` when the URI changes or Host is empty
+- Include the URI port in `Host` headers synthesized by `Message::toString()`
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
-- Reject malformed HTTP start-line fields
-- Reject hosts with embedded ports in `Uri::withHost()`
+- Reject malformed HTTP request/response start-lines
 - Validate iterator chunks passed to `Utils::streamFor()`
 - Validate unsupported values passed to `Query::build()`
-- Reject invalid `Utils::modifyRequest()` change values before applying request modifications
+- Reject invalid `Utils::modifyRequest()` change values
 - Use PHP debug type names in type error messages
-- Throw `TimeoutException` when `Stream::read()`, `Stream::write()`, stream copy, hash, and line operations detect timeout metadata
+- Throw `TimeoutException` from `Stream` read/write and `Utils` copy/hash/readLine on stream timeouts
 - Translate `StreamWrapper` runtime failures to PHP stream failure values
-- Stop adding default `Content-Length` headers to `multipart/form-data` parts to comply with RFC 7578 section 4.8
-- Escape generated multipart `Content-Disposition` parameters and reject unsafe multipart boundary and part header metadata
+- Stop adding default `Content-Length` to `multipart/form-data` parts (RFC 7578 §4.8)
+- Escape multipart `Content-Disposition` parameters and reject unsafe boundaries and part headers
 - Made static utility classes non-instantiable
 
 ### Removed
