@@ -12,13 +12,6 @@ use Psr\Http\Message\StreamInterface;
  */
 class Stream implements StreamInterface
 {
-    /**
-     * @see https://www.php.net/manual/en/function.fopen.php
-     * @see https://www.php.net/manual/en/function.gzopen.php
-     */
-    private const READABLE_MODES = '/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/';
-    private const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
-
     /** @var resource */
     private $stream;
     private ?int $size = null;
@@ -57,8 +50,8 @@ class Stream implements StreamInterface
         $this->stream = $stream;
         $meta = stream_get_meta_data($this->stream);
         $this->seekable = $meta['seekable'];
-        $this->readable = (bool) preg_match(self::READABLE_MODES, $meta['mode']);
-        $this->writable = (bool) preg_match(self::WRITABLE_MODES, $meta['mode']);
+        $this->readable = self::isReadableMode($meta['mode']);
+        $this->writable = self::isWritableMode($meta['mode']);
         $this->uri = $meta['uri'] ?? null;
     }
 
@@ -301,6 +294,28 @@ class Stream implements StreamInterface
         $meta = stream_get_meta_data($this->stream);
 
         return $meta[$key] ?? null;
+    }
+
+    /**
+     * @see https://www.php.net/manual/en/function.fopen.php
+     * @see https://www.php.net/manual/en/function.gzopen.php
+     */
+    private static function isReadableMode(string $mode): bool
+    {
+        return strpos($mode, 'r') === 0 || strpos($mode, '+') !== false;
+    }
+
+    /**
+     * @see https://www.php.net/manual/en/function.fopen.php
+     * @see https://www.php.net/manual/en/function.gzopen.php
+     */
+    private static function isWritableMode(string $mode): bool
+    {
+        return strpos($mode, 'a') === 0
+            || strpos($mode, 'w') === 0
+            || strpos($mode, 'x') === 0
+            || strpos($mode, 'c') === 0
+            || strpos($mode, '+') !== false;
     }
 
     private function timedOut(): bool

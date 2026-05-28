@@ -504,6 +504,97 @@ class StreamTest extends TestCase
         return [
             ['mode' => 'rb9', 'readable' => true, 'writable' => false],
             ['mode' => 'wb2', 'readable' => false, 'writable' => true],
+            ['mode' => 'wb6f', 'readable' => false, 'writable' => true],
+            ['mode' => 'wb1h', 'readable' => false, 'writable' => true],
+            ['mode' => 'ab9', 'readable' => false, 'writable' => true],
+        ];
+    }
+
+    /**
+     * @dataProvider fileModeCapabilityProvider
+     */
+    public function testFileStreamModeCapabilities(string $mode, bool $readable, bool $writable): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'guzzle-psr7-mode-');
+        if ($path === false) {
+            self::fail('Unable to create temporary file');
+        }
+
+        try {
+            if ($mode[0] === 'x') {
+                if (!unlink($path)) {
+                    self::fail('Unable to remove temporary file before exclusive create test');
+                }
+            } else {
+                if (file_put_contents($path, 'data') === false) {
+                    self::fail('Unable to write temporary file');
+                }
+            }
+
+            $r = fopen($path, $mode);
+            if (!is_resource($r)) {
+                self::fail(sprintf('Unable to open temporary file using mode "%s"', $mode));
+            }
+
+            $stream = new Stream($r);
+
+            try {
+                self::assertSame($readable, $stream->isReadable());
+                self::assertSame($writable, $stream->isWritable());
+            } finally {
+                $stream->close();
+            }
+        } finally {
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+    }
+
+    public static function fileModeCapabilityProvider(): iterable
+    {
+        return [
+            'r' => ['mode' => 'r', 'readable' => true, 'writable' => false],
+            'rb' => ['mode' => 'rb', 'readable' => true, 'writable' => false],
+            'rt' => ['mode' => 'rt', 'readable' => true, 'writable' => false],
+            'rw' => ['mode' => 'rw', 'readable' => true, 'writable' => false],
+            'r+' => ['mode' => 'r+', 'readable' => true, 'writable' => true],
+            'rb+' => ['mode' => 'rb+', 'readable' => true, 'writable' => true],
+            'r+b' => ['mode' => 'r+b', 'readable' => true, 'writable' => true],
+            'rt+' => ['mode' => 'rt+', 'readable' => true, 'writable' => true],
+            'r+t' => ['mode' => 'r+t', 'readable' => true, 'writable' => true],
+            'w' => ['mode' => 'w', 'readable' => false, 'writable' => true],
+            'wb' => ['mode' => 'wb', 'readable' => false, 'writable' => true],
+            'wt' => ['mode' => 'wt', 'readable' => false, 'writable' => true],
+            'w+' => ['mode' => 'w+', 'readable' => true, 'writable' => true],
+            'wb+' => ['mode' => 'wb+', 'readable' => true, 'writable' => true],
+            'w+b' => ['mode' => 'w+b', 'readable' => true, 'writable' => true],
+            'wt+' => ['mode' => 'wt+', 'readable' => true, 'writable' => true],
+            'w+t' => ['mode' => 'w+t', 'readable' => true, 'writable' => true],
+            'a' => ['mode' => 'a', 'readable' => false, 'writable' => true],
+            'ab' => ['mode' => 'ab', 'readable' => false, 'writable' => true],
+            'at' => ['mode' => 'at', 'readable' => false, 'writable' => true],
+            'a+' => ['mode' => 'a+', 'readable' => true, 'writable' => true],
+            'ab+' => ['mode' => 'ab+', 'readable' => true, 'writable' => true],
+            'a+b' => ['mode' => 'a+b', 'readable' => true, 'writable' => true],
+            'at+' => ['mode' => 'at+', 'readable' => true, 'writable' => true],
+            'a+t' => ['mode' => 'a+t', 'readable' => true, 'writable' => true],
+            'x' => ['mode' => 'x', 'readable' => false, 'writable' => true],
+            'xb' => ['mode' => 'xb', 'readable' => false, 'writable' => true],
+            'xt' => ['mode' => 'xt', 'readable' => false, 'writable' => true],
+            'x+' => ['mode' => 'x+', 'readable' => true, 'writable' => true],
+            'xb+' => ['mode' => 'xb+', 'readable' => true, 'writable' => true],
+            'x+b' => ['mode' => 'x+b', 'readable' => true, 'writable' => true],
+            'xt+' => ['mode' => 'xt+', 'readable' => true, 'writable' => true],
+            'x+t' => ['mode' => 'x+t', 'readable' => true, 'writable' => true],
+            'c' => ['mode' => 'c', 'readable' => false, 'writable' => true],
+            'cb' => ['mode' => 'cb', 'readable' => false, 'writable' => true],
+            'ct' => ['mode' => 'ct', 'readable' => false, 'writable' => true],
+            'c+' => ['mode' => 'c+', 'readable' => true, 'writable' => true],
+            'cb+' => ['mode' => 'cb+', 'readable' => true, 'writable' => true],
+            'c+b' => ['mode' => 'c+b', 'readable' => true, 'writable' => true],
+            'ct+' => ['mode' => 'ct+', 'readable' => true, 'writable' => true],
+            'c+t' => ['mode' => 'c+t', 'readable' => true, 'writable' => true],
         ];
     }
 
@@ -571,7 +662,6 @@ class StreamTest extends TestCase
         return [
             ['w'],
             ['w+'],
-            ['rw'],
             ['r+'],
             ['x+'],
             ['c+'],

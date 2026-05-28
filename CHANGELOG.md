@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject malformed uploaded file specifications missing `tmp_name`, `size`, or `error`
 - Rewind seekable stream-backed uploaded files before copying them in `UploadedFile::moveTo()`
 - Reject negative stream read lengths consistently across stream implementations
+- Recognize PHP stream update modes with text or binary flags before `+` when reporting `Stream::isReadable()` and `Stream::isWritable()`
 - Reject empty strings returned by `PumpStream` source callables to prevent no-progress read loops
 - Make `PumpStream::close()` and `PumpStream::detach()` discard internally buffered unread bytes
 - Restore the original body cursor after `Message::bodySummary()` reads seekable bodies
