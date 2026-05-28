@@ -632,7 +632,7 @@ class Uri implements UriInterface, \JsonSerializable
     private function filterUserInfoComponent(string $component): string
     {
         return preg_replace_callback(
-            '/(?:[^%'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.']+|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^%'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.']++|%(?!'.Rfc3986::HEX_OCTET.'))/',
             [$this, 'rawurlencodeMatchZero'],
             $component
         );
@@ -719,7 +719,7 @@ class Uri implements UriInterface, \JsonSerializable
     private function filterPath(string $path): string
     {
         return preg_replace_callback(
-            '/(?:[^'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.'%:@\/]++|%(?!'.Rfc3986::HEX_OCTET.'))/',
             [$this, 'rawurlencodeMatchZero'],
             $path
         );
@@ -733,7 +733,7 @@ class Uri implements UriInterface, \JsonSerializable
     private function filterQueryAndFragment(string $str): string
     {
         return preg_replace_callback(
-            '/(?:[^'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.'%:@\/\?]++|%(?!'.Rfc3986::HEX_OCTET.'))/',
             [$this, 'rawurlencodeMatchZero'],
             $str
         );

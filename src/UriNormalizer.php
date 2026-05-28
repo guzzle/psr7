@@ -183,7 +183,7 @@ final class UriNormalizer
 
     private static function capitalizePercentEncoding(UriInterface $uri): UriInterface
     {
-        $regex = '/(?:%[A-Fa-f0-9]{2})++/';
+        $regex = '/(?:%'.Rfc3986::HEX_OCTET.')++/';
 
         $callback = function (array $match): string {
             return strtoupper($match[0]);
