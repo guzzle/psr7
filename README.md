@@ -72,8 +72,8 @@ preferred size of the buffer.
 ```php
 use GuzzleHttp\Psr7;
 
-// When more than 1024 bytes are in the buffer, it will begin returning
-// 0 to writes. This is an indication that writers should slow down.
+// When the buffer reaches or exceeds 1024 bytes, it will begin returning 0 to
+// writes. This is an indication that writers should slow down.
 $buffer = new Psr7\BufferStream(1024);
 ```
 
@@ -482,6 +482,11 @@ Remove the items given by the keys, case insensitively from the data.
 
 Copy the contents of a stream into another stream until the given number
 of bytes have been read.
+
+The destination must accept writes that make positive progress. Streams that
+return 0 as a backpressure or drop signal — a `BufferStream` past its high water
+mark, or a full `DroppingStream` — will cause this method to throw. For full
+copies, use a normal writable stream such as a file or `php://temp` stream.
 
 Throws `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout
 metadata can be detected after a source read or destination write cannot make

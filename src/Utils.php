@@ -41,6 +41,10 @@ final class Utils
      * Copy the contents of a stream into another stream until the given number
      * of bytes have been read.
      *
+     * The destination must accept writes that make positive progress. Streams
+     * that return 0 as a backpressure or drop signal (a BufferStream at its high
+     * water mark, or a full DroppingStream) will cause this method to throw.
+     *
      * @param StreamInterface $source Stream to read from
      * @param StreamInterface $dest   Stream to write to
      * @param int             $maxLen Maximum number of bytes to read. Pass -1
