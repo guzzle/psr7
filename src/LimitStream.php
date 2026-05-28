@@ -112,17 +112,50 @@ final class LimitStream implements StreamInterface
      */
     public function setOffset(int $offset): void
     {
+        if ($offset < 0) {
+            throw new \InvalidArgumentException('Offset must be a non-negative integer');
+        }
+
         $current = $this->stream->tell();
 
-        if ($current !== $offset) {
-            // If the stream cannot seek to the offset position, then read to it
-            if ($this->stream->isSeekable()) {
-                $this->stream->seek($offset);
-            } elseif ($current > $offset) {
-                throw new \RuntimeException("Could not seek to stream offset $offset");
-            } else {
-                $this->stream->read($offset - $current);
+        if ($current === $offset) {
+            $this->offset = $offset;
+
+            return;
+        }
+
+        // If the stream cannot seek to the offset position, then read to it.
+        if ($this->stream->isSeekable()) {
+            $this->stream->seek($offset);
+            $this->offset = $offset;
+
+            return;
+        }
+
+        if ($current > $offset) {
+            throw new \RuntimeException("Could not seek to stream offset $offset");
+        }
+
+        while ($current < $offset) {
+            if ($this->stream->eof()) {
+                $this->offset = $current;
+
+                return;
             }
+
+            $result = $this->stream->read($offset - $current);
+
+            if ($result === '') {
+                if ($this->stream->eof()) {
+                    $this->offset = $current;
+
+                    return;
+                }
+
+                throw new \RuntimeException("Could not seek to stream offset $offset");
+            }
+
+            $current += strlen($result);
         }
 
         $this->offset = $offset;
@@ -137,6 +170,10 @@ final class LimitStream implements StreamInterface
      */
     public function setLimit(int $limit): void
     {
+        if ($limit < -1) {
+            throw new \InvalidArgumentException('Limit must be -1 or a non-negative integer');
+        }
+
         $this->limit = $limit;
     }
 

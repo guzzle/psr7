@@ -103,6 +103,12 @@ parameters:
 			path: src/Header.php
 
 		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 1
+			path: src/LimitStream.php
+
+		-
 			message: '#^PHPDoc tag @var with type array\<array\> is not subtype of native type list\<array\<string\>\>\.$#'
 			identifier: varTag.nativeType
 			count: 1
