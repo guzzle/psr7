@@ -255,19 +255,40 @@ class PumpStreamTest extends TestCase
         }
     }
 
-    public function testCloseDetachesSourceButLeavesBufferedBytesReadable(): void
+    public function testCloseClearsBufferedBytesAndResetsPosition(): void
     {
         $p = new PumpStream(function (): string {
             return 'abc';
         });
 
         self::assertSame('a', $p->read(1));
+        self::assertSame(1, $p->tell());
 
         $p->close();
 
         self::assertTrue($p->eof());
-        self::assertSame('bc', $p->read(10));
-        self::assertSame(2, $p->tell());
+        self::assertSame(0, $p->tell());
+        self::assertSame('', $p->read(10));
+        self::assertSame(0, $p->tell());
+        self::assertSame('', $p->getContents());
+    }
+
+    public function testDetachClearsBufferedBytesAndResetsPosition(): void
+    {
+        $p = new PumpStream(function (): string {
+            return 'abc';
+        });
+
+        self::assertSame('a', $p->read(1));
+        self::assertSame(1, $p->tell());
+
+        self::assertNull($p->detach());
+
+        self::assertTrue($p->eof());
+        self::assertSame(0, $p->tell());
+        self::assertSame('', $p->getContents());
+        self::assertSame('', $p->read(10));
+        self::assertSame(0, $p->tell());
     }
 
     public function testThatConvertingStreamToStringWillThrowException(): void

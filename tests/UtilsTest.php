@@ -808,6 +808,32 @@ class UtilsTest extends TestCase
         self::assertTrue($stream->eof());
     }
 
+    public function testCallableStreamCloseClearsBufferedBytes(): void
+    {
+        $stream = Psr7\Utils::streamFor(static function (): string {
+            return 'abc';
+        });
+
+        self::assertSame('a', $stream->read(1));
+
+        $stream->close();
+
+        self::assertSame('', $stream->read(10));
+        self::assertTrue($stream->eof());
+    }
+
+    public function testIteratorStreamCloseClearsBufferedBytes(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator(['abc']));
+
+        self::assertSame('a', $stream->read(1));
+
+        $stream->close();
+
+        self::assertSame('', $stream->read(10));
+        self::assertTrue($stream->eof());
+    }
+
     public function testIteratorBasedStreamRejectsArrayValues(): void
     {
         $stream = Psr7\Utils::streamFor(new \ArrayIterator([['x']]));
