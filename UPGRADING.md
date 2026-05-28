@@ -229,6 +229,28 @@ For server globals, applications that need to reject malformed inbound `Host`
 headers should validate the original server parameters before calling
 `getUriFromGlobals()` or inspect them afterward.
 
+#### Request Host Synchronization
+
+`Request::withUri()` now applies PSR-7 Host header synchronization before using
+the same-URI no-op shortcut. When the provided URI is the same object already
+attached to the request, the method may still return a new request if the URI
+has a host and the current Host header is missing, empty, or stale.
+
+With `$preserveHost = true`, a non-empty Host header is still preserved. Missing
+or empty Host headers are treated as absent and are populated from the URI when
+the URI contains a host.
+
+```php
+$request = (new Request('GET', 'http://example.com:8124/'))->withoutHeader('Host');
+
+$updated = $request->withUri($request->getUri());
+
+$updated->getHeaderLine('Host'); // example.com:8124
+```
+
+If your application intentionally sends an empty or stale Host header, set it
+after calling `withUri()` or preserve a non-empty Host header explicitly.
+
 #### URI Paths and Request Targets
 
 `Uri::getPath()` now normalizes multiple leading slashes to one slash when

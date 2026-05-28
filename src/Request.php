@@ -98,19 +98,28 @@ class Request implements RequestInterface
 
     public function withUri(UriInterface $uri, bool $preserveHost = false): RequestInterface
     {
-        if ($uri === $this->uri) {
-            return $this;
+        $sameUri = $uri === $this->uri;
+
+        if (!$sameUri && $this->requestTarget === null) {
+            self::getRequestTargetFromUri($uri);
         }
 
-        if ($this->requestTarget === null) {
-            self::getRequestTargetFromUri($uri);
+        $currentHost = $this->getHeaderLine('Host');
+        $host = null;
+
+        if (!$preserveHost || $currentHost === '') {
+            $host = $this->getHostFromUri($uri);
+        }
+
+        if ($sameUri && ($host === null || $currentHost === $host)) {
+            return $this;
         }
 
         $new = clone $this;
         $new->uri = $uri;
 
-        if (!$preserveHost || !isset($this->headerNames['host'])) {
-            $new->updateHostFromUri();
+        if ($host !== null) {
+            $new->setHostHeader($host);
         }
 
         return $new;
@@ -118,20 +127,36 @@ class Request implements RequestInterface
 
     private function updateHostFromUri(): void
     {
-        $host = $this->uri->getHost();
+        $host = $this->getHostFromUri($this->uri);
 
-        if ($host == '') {
+        if ($host === null) {
             return;
+        }
+
+        $this->setHostHeader($host);
+    }
+
+    private function getHostFromUri(UriInterface $uri): ?string
+    {
+        $host = $uri->getHost();
+
+        if ($host === '') {
+            return null;
         }
 
         Uri::assertValidHost($host);
 
-        if (($port = $this->uri->getPort()) !== null) {
+        if (($port = $uri->getPort()) !== null) {
             $host .= ':'.$port;
         }
 
         $this->assertValue($host);
 
+        return $host;
+    }
+
+    private function setHostHeader(string $host): void
+    {
         if (isset($this->headerNames['host'])) {
             $header = $this->headerNames['host'];
         } else {
