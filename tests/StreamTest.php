@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Tests\Psr7;
 
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use GuzzleHttp\Psr7\FnStream;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\StreamWrapper;
@@ -15,6 +16,21 @@ use PHPUnit\Framework\TestCase;
 class StreamTest extends TestCase
 {
     public static bool $isFReadError = false;
+    public static bool $isFWriteError = false;
+    public static bool $isFWriteZero = false;
+    public static bool $isFWriteException = false;
+    public static bool $isStreamTimedOut = false;
+    public static bool $isStreamMetadataError = false;
+
+    protected function tearDown(): void
+    {
+        self::$isFReadError = false;
+        self::$isFWriteError = false;
+        self::$isFWriteZero = false;
+        self::$isFWriteException = false;
+        self::$isStreamTimedOut = false;
+        self::$isStreamMetadataError = false;
+    }
 
     public function testConstructorThrowsExceptionOnInvalidArgument(): void
     {
@@ -302,6 +318,171 @@ class StreamTest extends TestCase
         $stream->read(1);
     }
 
+    public function testStreamWritingFwriteFalseThrowsRuntimeException(): void
+    {
+        self::$isFWriteError = true;
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to write to stream');
+
+        try {
+            $stream->write('x');
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingFwriteFalseWhenTimedOutThrowsTimeoutException(): void
+    {
+        self::$isFWriteError = true;
+        self::$isStreamTimedOut = true;
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+
+        $this->expectException(TimeoutException::class);
+        $this->expectExceptionMessage('Unable to write to stream: timed out');
+
+        try {
+            $stream->write('x');
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingZeroBytesWhenTimedOutThrowsTimeoutException(): void
+    {
+        self::$isFWriteZero = true;
+        self::$isStreamTimedOut = true;
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+
+        $this->expectException(TimeoutException::class);
+        $this->expectExceptionMessage('Unable to write to stream: timed out');
+
+        try {
+            $stream->write('x');
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingZeroBytesWithoutTimeoutReturnsZero(): void
+    {
+        self::$isFWriteZero = true;
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+
+        try {
+            self::assertSame(0, $stream->write('x'));
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingEmptyStringReturnsZeroWithoutWritingOrInvalidatingSize(): void
+    {
+        $r = fopen('php://temp', 'w+');
+        fwrite($r, 'data');
+        $stream = new Stream($r);
+        self::assertSame(4, $stream->getSize());
+
+        self::$isFWriteException = true;
+        self::$isStreamTimedOut = true;
+        self::$isStreamMetadataError = true;
+
+        try {
+            self::assertSame(0, $stream->write(''));
+            self::assertSame(4, $stream->getSize());
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingEmptyStringStillRequiresWritableStream(): void
+    {
+        $r = fopen('php://input', 'r');
+        $stream = new Stream($r);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Cannot write to a non-writable stream');
+
+        try {
+            $stream->write('');
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingPositiveBytesIgnoresStaleTimeoutMetadata(): void
+    {
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+        self::$isStreamTimedOut = true;
+
+        try {
+            self::assertSame(3, $stream->write('foo'));
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingFwriteExceptionWhenTimedOutThrowsTimeoutExceptionWithPrevious(): void
+    {
+        self::$isFWriteException = true;
+        self::$isStreamTimedOut = true;
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+
+        try {
+            $stream->write('x');
+            self::fail('Expected timeout exception');
+        } catch (TimeoutException $e) {
+            self::assertSame('Unable to write to stream: timed out', $e->getMessage());
+            self::assertInstanceOf(\ErrorException::class, $e->getPrevious());
+            self::assertSame('Some write error', $e->getPrevious()->getMessage());
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingFwriteExceptionWithoutTimeoutThrowsRuntimeExceptionWithPrevious(): void
+    {
+        self::$isFWriteException = true;
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+
+        try {
+            $stream->write('x');
+            self::fail('Expected runtime exception');
+        } catch (\RuntimeException $e) {
+            self::assertNotInstanceOf(TimeoutException::class, $e);
+            self::assertSame('Unable to write to stream', $e->getMessage());
+            self::assertInstanceOf(\ErrorException::class, $e->getPrevious());
+            self::assertSame('Some write error', $e->getPrevious()->getMessage());
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamWritingFwriteFalseWhenMetadataProbeFailsPreservesGenericRuntimeException(): void
+    {
+        self::$isFWriteError = true;
+        $r = fopen('php://temp', 'w+');
+        $stream = new Stream($r);
+        self::$isStreamMetadataError = true;
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to write to stream');
+
+        try {
+            $stream->write('x');
+        } finally {
+            $stream->close();
+        }
+    }
+
     /**
      * @requires extension zlib
      *
@@ -450,4 +631,50 @@ use GuzzleHttp\Tests\Psr7\StreamTest;
 function fread($handle, int $length)
 {
     return StreamTest::$isFReadError ? false : \fread($handle, $length);
+}
+
+/**
+ * @param resource $handle
+ *
+ * @return int|false
+ */
+function fwrite($handle, string $string, ?int $length = null)
+{
+    if (StreamTest::$isFWriteException) {
+        throw new \ErrorException('Some write error');
+    }
+
+    if (StreamTest::$isFWriteError) {
+        return false;
+    }
+
+    if (StreamTest::$isFWriteZero) {
+        return 0;
+    }
+
+    if ($length === null) {
+        return \fwrite($handle, $string);
+    }
+
+    return \fwrite($handle, $string, $length);
+}
+
+/**
+ * @param resource $stream
+ *
+ * @return array<string, mixed>
+ */
+function stream_get_meta_data($stream): array
+{
+    if (StreamTest::$isStreamMetadataError) {
+        throw new \RuntimeException('metadata failed');
+    }
+
+    $metadata = \stream_get_meta_data($stream);
+
+    if (StreamTest::$isStreamTimedOut) {
+        $metadata['timed_out'] = true;
+    }
+
+    return $metadata;
 }

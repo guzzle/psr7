@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate unsupported values passed to `Query::build()`
 - Reject invalid `Utils::modifyRequest()` change values before applying request modifications
 - Use PHP debug type names in type error messages
-- Throw `TimeoutException` when stream read, copy, hash, and line operations detect timeout metadata
+- Throw `TimeoutException` when `Stream::read()`, `Stream::write()`, stream copy, hash, and line operations detect timeout metadata
 - Translate `StreamWrapper` runtime failures to PHP stream failure values
 - Stop adding default `Content-Length` headers to `multipart/form-data` parts to comply with RFC 7578 section 4.8
 - Escape generated multipart `Content-Disposition` parameters and reject unsafe multipart boundary and part header metadata

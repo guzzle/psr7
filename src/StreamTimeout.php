@@ -51,4 +51,19 @@ final class StreamTimeout
             return false;
         }
     }
+
+    /**
+     * @param resource $resource
+     */
+    public static function isResourceWriteTimedOut($resource): bool
+    {
+        try {
+            /** @var array<string, mixed> $metadata */
+            $metadata = stream_get_meta_data($resource);
+
+            return ($metadata['timed_out'] ?? false) === true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
 }
