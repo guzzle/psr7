@@ -73,4 +73,33 @@ class Rfc7230Test extends TestCase
         yield 'contains query' => ['CONNECT', 'example.com?a=b', false];
         yield 'contains fragment' => ['CONNECT', 'example.com#a', false];
     }
+
+    /**
+     * @dataProvider portProvider
+     */
+    public function testParsePort(string $port, ?int $expected): void
+    {
+        self::assertSame($expected, Rfc7230::parsePort($port));
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: int|null}>
+     */
+    public static function portProvider(): iterable
+    {
+        yield 'minimum' => ['1', 1];
+        yield 'http' => ['80', 80];
+        yield 'https' => ['443', 443];
+        yield 'maximum' => ['65535', 65535];
+        yield 'leading zero' => ['080', 80];
+        yield 'multiple leading zeros' => ['0080', 80];
+        yield 'zero' => ['0', null];
+        yield 'zeros' => ['00', null];
+        yield 'empty' => ['', null];
+        yield 'non-numeric' => ['abc', null];
+        yield 'numeric suffix' => ['80x', null];
+        yield 'plus sign' => ['+80', null];
+        yield 'out of range' => ['65536', null];
+        yield 'too many digits' => ['999999', null];
+    }
 }

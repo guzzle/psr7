@@ -211,20 +211,12 @@ final class ServerRequestGlobalsFactory
 
     private static function parseServerPort(string $port): int
     {
-        if ($port === '' || !ctype_digit($port)) {
+        $parsed = Rfc7230::parsePort($port);
+        if ($parsed === null) {
             throw new InvalidArgumentException('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
         }
 
-        $port = ltrim($port, '0');
-        if ($port === '') {
-            throw new InvalidArgumentException('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
-        }
-
-        if (strlen($port) > 5 || (int) $port > 0xFFFF) {
-            throw new InvalidArgumentException('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
-        }
-
-        return (int) $port;
+        return $parsed;
     }
 
     private static function withHostFromServer(UriInterface $uri, ?string $host): ?UriInterface

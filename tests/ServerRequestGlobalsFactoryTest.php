@@ -207,6 +207,20 @@ class ServerRequestGlobalsFactoryTest extends TestCase
         self::assertSame(['native'], $request->getHeader('X-Native'));
     }
 
+    public function testFromArraysRejectsInvalidServerPort(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
+
+        ServerRequestGlobalsFactory::fromArrays(
+            ['REQUEST_URI' => '/', 'HTTP_HOST' => 'www.example.org', 'SERVER_PORT' => '0'],
+            [],
+            [],
+            [],
+            []
+        );
+    }
+
     /**
      * @dataProvider authorizationHeaderFromServerProvider
      */

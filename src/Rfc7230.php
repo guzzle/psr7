@@ -50,14 +50,14 @@ final class Rfc7230
                     return null;
                 }
 
-                $port = self::parseAuthorityPort(substr($remainder, 1));
+                $port = self::parsePort(substr($remainder, 1));
                 if ($port === null) {
                     return null;
                 }
             }
         } elseif (false !== ($colon = strpos($authority, ':'))) {
             $host = substr($authority, 0, $colon);
-            $port = self::parseAuthorityPort(substr($authority, $colon + 1));
+            $port = self::parsePort(substr($authority, $colon + 1));
             if ($port === null) {
                 return null;
             }
@@ -85,7 +85,7 @@ final class Rfc7230
         return $method === 'CONNECT' && strpbrk($target, '/?#') === false;
     }
 
-    private static function parseAuthorityPort(string $port): ?int
+    public static function parsePort(string $port): ?int
     {
         if ($port === '' || !ctype_digit($port)) {
             return null;
