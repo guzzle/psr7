@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apply `UriNormalizer` percent-encoding normalizations to URI fragments
 - Make `LimitStream::getSize()` return `0` for slices past the underlying stream end
 - Make `AppendStream::read()` return an empty string when no streams are attached
+- Make `CachingStream::read()` throw on an incomplete cache-target write instead of silently corrupting replays
 - Prevent `CachingStream::seek()` from looping indefinitely when the remote stream makes no progress
 
 ## 2.10.3 - 2026-05-27
