@@ -229,6 +229,22 @@ class CachingStreamTest extends TestCase
         }
     }
 
+    public function testReadThrowsWhenCacheTargetDoesNotPersistEntireWrite(): void
+    {
+        $remote = Psr7\Utils::streamFor('ABCDEFGHIJ');
+        $lossyCache = Psr7\FnStream::decorate(Psr7\Utils::streamFor(''), [
+            'write' => function (string $string): int {
+                return max(0, strlen($string) - 1);
+            },
+        ]);
+        $stream = new CachingStream($remote, $lossyCache);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to cache the entire read from the remote stream');
+
+        $stream->read(10);
+    }
+
     public function testSeekStopsWhenRemoteReadMakesNoProgress(): void
     {
         $reads = 0;
