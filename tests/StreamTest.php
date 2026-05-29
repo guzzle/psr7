@@ -16,6 +16,8 @@ use PHPUnit\Framework\TestCase;
 class StreamTest extends TestCase
 {
     public static bool $isFReadError = false;
+    public static bool $isFReadZero = false;
+    public static bool $isFReadException = false;
     public static bool $isFWriteError = false;
     public static bool $isFWriteZero = false;
     public static bool $isFWriteException = false;
@@ -25,6 +27,8 @@ class StreamTest extends TestCase
     protected function tearDown(): void
     {
         self::$isFReadError = false;
+        self::$isFReadZero = false;
+        self::$isFReadException = false;
         self::$isFWriteError = false;
         self::$isFWriteZero = false;
         self::$isFWriteException = false;
@@ -316,6 +320,89 @@ class StreamTest extends TestCase
 
         $stream = new Stream($r);
         $stream->read(1);
+    }
+
+    public function testStreamReadingFreadFalseWhenTimedOutThrowsTimeoutException(): void
+    {
+        self::$isFReadError = true;
+        self::$isStreamTimedOut = true;
+        $r = fopen('php://temp', 'r+');
+        $stream = new Stream($r);
+
+        $this->expectException(TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        try {
+            $stream->read(1);
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamReadingEmptyStringWhenTimedOutThrowsTimeoutException(): void
+    {
+        self::$isFReadZero = true;
+        self::$isStreamTimedOut = true;
+        $r = fopen('php://temp', 'r+');
+        $stream = new Stream($r);
+
+        $this->expectException(TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        try {
+            $stream->read(1);
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamReadingFreadExceptionWhenTimedOutThrowsTimeoutExceptionWithPrevious(): void
+    {
+        self::$isFReadException = true;
+        self::$isStreamTimedOut = true;
+        $r = fopen('php://temp', 'r+');
+        $stream = new Stream($r);
+
+        try {
+            $stream->read(1);
+            self::fail('Expected timeout exception');
+        } catch (TimeoutException $e) {
+            self::assertSame('Unable to read from stream: timed out', $e->getMessage());
+            self::assertInstanceOf(\ErrorException::class, $e->getPrevious());
+            self::assertSame('Some read error', $e->getPrevious()->getMessage());
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamReadingEmptyStringWithoutTimeoutReturnsEmptyString(): void
+    {
+        self::$isFReadZero = true;
+        $r = fopen('php://temp', 'r+');
+        $stream = new Stream($r);
+
+        try {
+            self::assertSame('', $stream->read(1));
+        } finally {
+            $stream->close();
+        }
+    }
+
+    public function testStreamReadingFreadFalseWithoutTimeoutThrowsRuntimeException(): void
+    {
+        self::$isFReadError = true;
+        $r = fopen('php://temp', 'r+');
+        $stream = new Stream($r);
+
+        try {
+            $stream->read(1);
+            self::fail('Expected runtime exception');
+        } catch (\RuntimeException $e) {
+            self::assertNotInstanceOf(TimeoutException::class, $e);
+            self::assertSame('Unable to read from stream', $e->getMessage());
+        } finally {
+            $stream->close();
+        }
     }
 
     public function testStreamWritingFwriteFalseThrowsRuntimeException(): void
@@ -720,7 +807,19 @@ use GuzzleHttp\Tests\Psr7\StreamTest;
  */
 function fread($handle, int $length)
 {
-    return StreamTest::$isFReadError ? false : \fread($handle, $length);
+    if (StreamTest::$isFReadException) {
+        throw new \ErrorException('Some read error');
+    }
+
+    if (StreamTest::$isFReadError) {
+        return false;
+    }
+
+    if (StreamTest::$isFReadZero) {
+        return '';
+    }
+
+    return \fread($handle, $length);
 }
 
 /**
