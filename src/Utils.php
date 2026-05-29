@@ -36,12 +36,15 @@ final class Utils
      * Copy the contents of a stream into another stream until the given number
      * of bytes have been read.
      *
+     * The copy stops if the destination write returns 0, for example a
+     * BufferStream at its high water mark or a full DroppingStream. For a
+     * guaranteed full copy use a normal writable stream such as a file or
+     * php://temp stream.
+     *
      * @param StreamInterface $source Stream to read from
      * @param StreamInterface $dest   Stream to write to
      * @param int             $maxLen Maximum number of bytes to read. Pass -1
      *                                to read the entire stream.
-     *
-     * @throws \RuntimeException on error.
      */
     public static function copyToStream(StreamInterface $source, StreamInterface $dest, int $maxLen = -1): void
     {
@@ -54,7 +57,9 @@ final class Utils
                     break;
                 }
 
-                self::writeAll($dest, $buf);
+                if (!self::writeAll($dest, $buf)) {
+                    break;
+                }
             }
         } else {
             $remaining = $maxLen;
@@ -65,12 +70,19 @@ final class Utils
                     break;
                 }
                 $remaining -= $len;
-                self::writeAll($dest, $buf);
+                if (!self::writeAll($dest, $buf)) {
+                    break;
+                }
             }
         }
     }
 
-    private static function writeAll(StreamInterface $dest, string $buf): void
+    /**
+     * Writes the full buffer to the destination, retrying short writes.
+     *
+     * Returns false when the destination write returns 0 or less.
+     */
+    private static function writeAll(StreamInterface $dest, string $buf): bool
     {
         $written = 0;
         $len = strlen($buf);
@@ -78,11 +90,13 @@ final class Utils
         while ($written < $len) {
             $result = $dest->write(substr($buf, $written));
             if ($result <= 0) {
-                throw new \RuntimeException('Unable to write to stream');
+                return false;
             }
 
             $written += $result;
         }
+
+        return true;
     }
 
     /**

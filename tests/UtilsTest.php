@@ -89,36 +89,53 @@ class UtilsTest extends TestCase
         self::assertSame(3, $writes);
     }
 
-    public function testCopyToStreamThrowsWhenWriteFails(): void
+    public function testCopyToStreamStopsWhenDestinationMakesNoProgress(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
-        $s2 = Psr7\Utils::streamFor('');
-        $s2 = FnStream::decorate($s2, [
+        $sink = Psr7\Utils::streamFor('');
+        $s2 = FnStream::decorate($sink, [
             'write' => function () {
                 return 0;
             },
         ]);
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unable to write to stream');
 
         Psr7\Utils::copyToStream($s1, $s2);
+
+        self::assertSame('', (string) $sink);
     }
 
-    public function testCopyToStreamThrowsWhenWriteFailsWithMaxLen(): void
+    public function testCopyToStreamStopsWhenDestinationMakesNoProgressWithMaxLen(): void
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
-        $s2 = Psr7\Utils::streamFor('');
-        $s2 = FnStream::decorate($s2, [
+        $sink = Psr7\Utils::streamFor('');
+        $s2 = FnStream::decorate($sink, [
             'write' => function () {
                 return 0;
             },
         ]);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unable to write to stream');
-
         Psr7\Utils::copyToStream($s1, $s2, 10);
+
+        self::assertSame('', (string) $sink);
+    }
+
+    public function testCopyToStreamStopsWithoutThrowingWhenDestinationBufferStreamReachesHighWaterMark(): void
+    {
+        $dest = new Psr7\BufferStream(3);
+
+        Psr7\Utils::copyToStream(Psr7\Utils::streamFor('foobaz'), $dest);
+
+        self::assertSame('foobaz', (string) $dest);
+    }
+
+    public function testCopyToStreamStopsWithoutThrowingWhenDestinationDroppingStreamIsFull(): void
+    {
+        $underlying = new Psr7\BufferStream();
+        $dest = new Psr7\DroppingStream($underlying, 3);
+
+        Psr7\Utils::copyToStream(Psr7\Utils::streamFor('foobaz'), $dest);
+
+        self::assertSame('foo', (string) $underlying);
     }
 
     public function testCopyToStreamReadsInChunksInsteadOfAllInMemory(): void
