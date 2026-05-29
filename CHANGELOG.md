@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject invalid `Utils::modifyRequest()` change values
 - Use PHP debug type names in type error messages
 - Throw `TimeoutException` from `Stream` read/write and `Utils` copy/hash/readLine on stream timeouts
+- Re-throw `TimeoutException` from `InflateStream` when the decoded source stream times out
 - Translate `StreamWrapper` runtime failures to PHP stream failure values
 - Stop adding default `Content-Length` to `multipart/form-data` parts (RFC 7578 §4.8)
 - Escape multipart `Content-Disposition` parameters and reject unsafe boundaries and part headers

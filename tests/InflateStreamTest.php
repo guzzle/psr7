@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GuzzleHttp\Tests\Psr7;
 
 use GuzzleHttp\Psr7;
+use GuzzleHttp\Psr7\Exception\TimeoutException;
 use GuzzleHttp\Psr7\InflateStream;
 use GuzzleHttp\Psr7\NoSeekStream;
 use PHPUnit\Framework\TestCase;
@@ -88,6 +89,73 @@ class InflateStreamTest extends TestCase
         $this->expectExceptionMessage('Length parameter cannot be negative');
 
         $stream->read(-1);
+    }
+
+    public function testReadSurfacesSourceReadTimeout(): void
+    {
+        $source = new Psr7\FnStream([
+            'isReadable' => static fn (): bool => true,
+            'isWritable' => static fn (): bool => false,
+            'isSeekable' => static fn (): bool => false,
+            'eof' => static fn (): bool => false,
+            'read' => static function (int $length): string {
+                throw new TimeoutException('Unable to read from stream: timed out');
+            },
+            'getMetadata' => static function (?string $key = null) {
+                return $key === 'timed_out' ? true : null;
+            },
+        ]);
+
+        $stream = new InflateStream($source);
+
+        $this->expectException(TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        $stream->read(1024);
+    }
+
+    public function testReadReturnsEmptyStringOnCleanEofWithoutTimeout(): void
+    {
+        $stream = new InflateStream(Psr7\Utils::streamFor(gzencode('test')));
+
+        self::assertSame('test', (string) $stream);
+        self::assertSame('', $stream->read(1024));
+    }
+
+    public function testReadSurfacesPartialGzipSourceReadTimeout(): void
+    {
+        $compressed = gzencode(str_repeat('A', 100000));
+        $offset = 0;
+        $timedOut = false;
+
+        $source = new Psr7\FnStream([
+            'isReadable' => static fn (): bool => true,
+            'isWritable' => static fn (): bool => false,
+            'isSeekable' => static fn (): bool => false,
+            'eof' => static fn (): bool => false,
+            'read' => static function (int $length) use ($compressed, &$offset, &$timedOut): string {
+                if ($offset >= 64) {
+                    $timedOut = true;
+
+                    throw new TimeoutException('Unable to read from stream: timed out');
+                }
+
+                $chunk = substr($compressed, $offset, min($length, 64 - $offset));
+                $offset += strlen($chunk);
+
+                return $chunk;
+            },
+            'getMetadata' => static function (?string $key = null) use (&$timedOut) {
+                return $key === 'timed_out' ? $timedOut : null;
+            },
+        ]);
+
+        $stream = new InflateStream($source);
+
+        $this->expectException(TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read from stream: timed out');
+
+        Psr7\Utils::copyToString($stream);
     }
 
     private function getGzipStringWithFilename(string $original_string): string
