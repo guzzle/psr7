@@ -102,6 +102,13 @@ echo $stream->tell();
 // 0
 ```
 
+By default the bytes are cached in a `php://temp` stream. You can supply your own
+cache target as the second constructor argument, but it is used as a random-access
+byte buffer to replay the remote stream, so it must be readable, writable, and
+seekable, report an accurate position and size, and store writes losslessly. Lossy
+or non-seekable streams such as `BufferStream` and `DroppingStream` are not valid
+targets.
+
 
 ## DroppingStream
 
