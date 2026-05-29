@@ -65,8 +65,30 @@ final class InflateStream implements StreamInterface
 
     public function close(): void
     {
+        $source = $this->source;
         $this->source = null;
-        $this->stream->close();
+
+        $exception = null;
+
+        try {
+            $this->stream->close();
+        } catch (\Throwable $e) {
+            $exception = $e;
+        }
+
+        if ($source !== null) {
+            try {
+                $source->close();
+            } catch (\Throwable $e) {
+                if ($exception === null) {
+                    $exception = $e;
+                }
+            }
+        }
+
+        if ($exception !== null) {
+            throw $exception;
+        }
     }
 
     public function detach()

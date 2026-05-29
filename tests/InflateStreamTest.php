@@ -122,6 +122,78 @@ class InflateStreamTest extends TestCase
         self::assertSame('', $stream->read(1024));
     }
 
+    public function testCloseClosesSourceStream(): void
+    {
+        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
+        fwrite($resource, gzencode('test'));
+        rewind($resource);
+
+        $stream = new InflateStream(Psr7\Utils::streamFor($resource));
+
+        $stream->close();
+
+        self::assertFalse(is_resource($resource));
+    }
+
+    public function testCloseClosesSourceStreamOnlyOnce(): void
+    {
+        $closed = 0;
+
+        $source = new Psr7\FnStream([
+            'isReadable' => static fn (): bool => true,
+            'isWritable' => static fn (): bool => false,
+            'isSeekable' => static fn (): bool => false,
+            'eof' => static fn (): bool => true,
+            'read' => static fn (int $length): string => '',
+            'close' => static function () use (&$closed): void {
+                ++$closed;
+            },
+        ]);
+
+        $stream = new InflateStream($source);
+
+        $stream->close();
+        $stream->close();
+
+        self::assertSame(1, $closed);
+    }
+
+    public function testDetachDoesNotCloseOrDetachSourceStream(): void
+    {
+        $closed = 0;
+        $detached = 0;
+        $source = new Psr7\FnStream([
+            'isReadable' => static fn (): bool => true,
+            'isWritable' => static fn (): bool => false,
+            'isSeekable' => static fn (): bool => false,
+            'eof' => static fn (): bool => true,
+            'read' => static fn (int $length): string => '',
+            'close' => static function () use (&$closed): void {
+                ++$closed;
+            },
+            'detach' => static function () use (&$detached) {
+                ++$detached;
+
+                return null;
+            },
+        ]);
+
+        $stream = new InflateStream($source);
+        $resource = $stream->detach();
+
+        try {
+            self::assertIsResource($resource);
+            self::assertSame(0, $closed);
+            self::assertSame(0, $detached);
+        } finally {
+            if (is_resource($resource)) {
+                fclose($resource);
+            }
+
+            $source->close();
+        }
+    }
+
     public function testReadSurfacesPartialGzipSourceReadTimeout(): void
     {
         $compressed = gzencode(str_repeat('A', 100000));
