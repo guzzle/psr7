@@ -124,7 +124,11 @@ final class CachingStream implements StreamInterface
             }
 
             $data .= $remoteData;
-            $this->stream->write($remoteData);
+
+            // A short cache write would silently corrupt later replays, so fail loudly.
+            if ($this->stream->write($remoteData) !== strlen($remoteData)) {
+                throw new \RuntimeException('Unable to cache the entire read from the remote stream');
+            }
         }
 
         return $data;
