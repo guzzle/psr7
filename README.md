@@ -469,6 +469,11 @@ Remove the items given by the keys, case insensitively from the data.
 Copy the contents of a stream into another stream until the given number
 of bytes have been read.
 
+The copy stops if the destination `write()` returns 0, for example a
+`BufferStream` at its high water mark or a full `DroppingStream`. For a
+guaranteed full copy, use a normal writable stream such as a file or
+`php://temp` stream.
+
 
 ## `GuzzleHttp\Psr7\Utils::copyToString`
 
