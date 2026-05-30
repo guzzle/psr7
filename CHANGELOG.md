@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate unsupported values passed to `Query::build()`
 - Reject invalid `Utils::modifyRequest()` change values
 - Use PHP debug type names in type error messages
-- Changed `Utils::copyToStream()` to throw a `RuntimeException` when a destination stream cannot make progress, for example a `BufferStream` past its high-water mark or a full `DroppingStream`
+- Changed `Utils::copyToStream()` to throw when destination streams cannot make progress
 - Throw `TimeoutException` from `Stream` read/write and `Utils` copy/hash/readLine on stream timeouts
 - Re-throw `TimeoutException` from `InflateStream` when the decoded source stream times out
 - Translate `StreamWrapper` runtime failures to PHP stream failure values
