@@ -368,6 +368,14 @@ Literal `rw` metadata is now treated as read-only, matching PHP real-file
 streams. If a custom stream wrapper previously exposed `rw` for a writable
 resource, open it with a valid update mode such as `r+`, `w+`, or `a+` instead.
 
+#### Stream Copy Behavior
+
+`Utils::copyToStream()` now throws a `RuntimeException` when the destination
+stream cannot make progress, for example a `BufferStream` at its high-water mark
+or a full `DroppingStream`. In 2.x, the copy stopped silently in this case. For a
+guaranteed full copy, use a normal writable stream such as a file or `php://temp`
+stream.
+
 #### Stream Timeout Detection
 
 Timed-out stream operations now throw
