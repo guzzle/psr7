@@ -486,6 +486,13 @@ Custom multipart part header names and values are also validated before
 serialization. Header names must be valid HTTP tokens, and header values must be
 strings without CR, LF, or other invalid control bytes.
 
+`MultipartStream` now preserves trailing spaces and tabs in custom multipart
+part header values when serializing the body. In 2.x, the final serialized part
+header line was trimmed as a side effect of removing the generated header
+terminator. Normal multipart parsers treat this optional whitespace as
+insignificant, but tests, signatures, or snapshots that compare raw multipart
+body bytes may need updated expectations.
+
 #### URI Userinfo Redaction
 
 `Utils::redactUserInfo()` now redacts all non-empty URI userinfo, including
