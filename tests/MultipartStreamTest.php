@@ -923,6 +923,58 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    public function testPreservesTrailingWhitespaceInFinalCustomPartHeader(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => 'body',
+                'headers' => [
+                    'Content-Disposition' => 'form-data; name="field"',
+                    'X-Trailing' => "value \t",
+                ],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"field\"\r\n",
+            "X-Trailing: value \t\r\n",
+            "\r\n",
+            "body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+        self::assertSame(\strlen($expected), $b->getSize());
+    }
+
+    public function testPreservesAllWhitespaceFinalCustomPartHeaderValue(): void
+    {
+        $b = new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => 'body',
+                'headers' => [
+                    'Content-Disposition' => 'form-data; name="field"',
+                    'X-Blank' => " \t ",
+                ],
+            ],
+        ], 'boundary');
+
+        $expected = \implode('', [
+            "--boundary\r\n",
+            "Content-Disposition: form-data; name=\"field\"\r\n",
+            "X-Blank:  \t \r\n",
+            "\r\n",
+            "body\r\n",
+            "--boundary--\r\n",
+        ]);
+
+        self::assertSame($expected, (string) $b);
+        self::assertSame(\strlen($expected), $b->getSize());
+    }
+
     /**
      * @dataProvider unstringableCustomHeaderValueProvider
      */

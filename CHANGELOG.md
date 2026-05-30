@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Translate `StreamWrapper` runtime failures to PHP stream failure values
 - Stop adding default `Content-Length` to `multipart/form-data` parts (RFC 7578 §4.8)
 - Escape multipart `Content-Disposition` parameters and reject unsafe boundaries and part headers
+- Preserve trailing whitespace in custom `MultipartStream` part header values
 - Made static utility classes non-instantiable
 
 ### Removed
