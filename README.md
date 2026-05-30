@@ -485,10 +485,10 @@ Remove the items given by the keys, case insensitively from the data.
 
 ## `GuzzleHttp\Psr7\Utils::copyToStream`
 
-`public static function copyToStream(StreamInterface $source, StreamInterface $dest, int $maxLen = -1): void`
+`public static function copyToStream(StreamInterface $source, StreamInterface $dest, int $maxLen = -1): int`
 
 Copy the contents of a stream into another stream until the given number
-of bytes have been read.
+of bytes have been read. Returns the number of bytes copied.
 
 The destination must accept writes that make positive progress. Streams that
 return 0 as a backpressure or drop signal — a `BufferStream` past its high water

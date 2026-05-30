@@ -156,14 +156,38 @@ class UtilsTest extends TestCase
     {
         $s1 = Psr7\Utils::streamFor('foobaz');
         $s2 = Psr7\Utils::streamFor('');
-        Psr7\Utils::copyToStream($s1, $s2);
+        self::assertSame(6, Psr7\Utils::copyToStream($s1, $s2));
         self::assertSame('foobaz', (string) $s2);
         $s2 = Psr7\Utils::streamFor('');
         $s1->seek(0);
-        Psr7\Utils::copyToStream($s1, $s2, 3);
+        self::assertSame(3, Psr7\Utils::copyToStream($s1, $s2, 3));
         self::assertSame('foo', (string) $s2);
-        Psr7\Utils::copyToStream($s1, $s2, 3);
+        self::assertSame(3, Psr7\Utils::copyToStream($s1, $s2, 3));
         self::assertSame('foobaz', (string) $s2);
+    }
+
+    public function testCopyToStreamReturnsActualBytesWhenSourceShorterThanMaxLen(): void
+    {
+        $dest = Psr7\Utils::streamFor('');
+
+        self::assertSame(2, Psr7\Utils::copyToStream(Psr7\Utils::streamFor('ab'), $dest, 5));
+        self::assertSame('ab', (string) $dest);
+    }
+
+    public function testCopyToStreamWithZeroMaxLenCopiesNothing(): void
+    {
+        $dest = Psr7\Utils::streamFor('');
+
+        self::assertSame(0, Psr7\Utils::copyToStream(Psr7\Utils::streamFor('abc'), $dest, 0));
+        self::assertSame('', (string) $dest);
+    }
+
+    public function testCopyToStreamWithNegativeMaxLenOtherThanMinusOneCopiesNothing(): void
+    {
+        $dest = Psr7\Utils::streamFor('');
+
+        self::assertSame(0, Psr7\Utils::copyToStream(Psr7\Utils::streamFor('abc'), $dest, -2));
+        self::assertSame('', (string) $dest);
     }
 
     public function testCopyToStreamRetriesShortWrites(): void
@@ -180,7 +204,7 @@ class UtilsTest extends TestCase
             },
         ]);
 
-        Psr7\Utils::copyToStream($s1, $s2);
+        self::assertSame(6, Psr7\Utils::copyToStream($s1, $s2));
 
         self::assertSame('foobaz', (string) $sink);
         self::assertSame(6, $writes);
@@ -200,7 +224,7 @@ class UtilsTest extends TestCase
             },
         ]);
 
-        Psr7\Utils::copyToStream($s1, $s2, 3);
+        self::assertSame(3, Psr7\Utils::copyToStream($s1, $s2, 3));
 
         self::assertSame('foo', (string) $sink);
         self::assertSame(3, $writes);
@@ -315,7 +339,7 @@ class UtilsTest extends TestCase
         ]);
         $s2 = Psr7\Utils::streamFor('');
 
-        Psr7\Utils::copyToStream($s1, $s2, 3);
+        self::assertSame(3, Psr7\Utils::copyToStream($s1, $s2, 3));
 
         self::assertSame('foo', (string) $s2);
     }
@@ -399,7 +423,7 @@ class UtilsTest extends TestCase
             },
         ]);
         $s2 = Psr7\Utils::streamFor('');
-        Psr7\Utils::copyToStream($s1, $s2, 16394);
+        self::assertSame(16394, Psr7\Utils::copyToStream($s1, $s2, 16394));
         $s2->seek(0);
         self::assertSame(16394, strlen($s2->getContents()));
         self::assertSame(8192, $sizes[0]);
@@ -416,7 +440,7 @@ class UtilsTest extends TestCase
             },
         ]);
         $s2 = Psr7\Utils::streamFor('');
-        Psr7\Utils::copyToStream($s1, $s2, 10);
+        self::assertSame(0, Psr7\Utils::copyToStream($s1, $s2, 10));
         self::assertSame('', (string) $s2);
     }
 
