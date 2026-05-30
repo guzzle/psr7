@@ -39,7 +39,7 @@ final class Utils
 
     /**
      * Copy the contents of a stream into another stream until the given number
-     * of bytes have been read.
+     * of bytes have been read, returning the number of bytes copied.
      *
      * The destination must accept writes that make positive progress. Streams
      * that return 0 as a backpressure or drop signal (a BufferStream at its high
@@ -52,9 +52,10 @@ final class Utils
      *
      * @throws \RuntimeException on error.
      */
-    public static function copyToStream(StreamInterface $source, StreamInterface $dest, int $maxLen = -1): void
+    public static function copyToStream(StreamInterface $source, StreamInterface $dest, int $maxLen = -1): int
     {
         $bufferSize = 8192;
+        $copied = 0;
 
         if ($maxLen === -1) {
             while (!$source->eof()) {
@@ -64,6 +65,7 @@ final class Utils
                 }
 
                 self::writeAll($dest, $buf);
+                $copied += strlen($buf);
             }
         } else {
             $remaining = $maxLen;
@@ -75,8 +77,11 @@ final class Utils
                 }
                 $remaining -= $len;
                 self::writeAll($dest, $buf);
+                $copied += $len;
             }
         }
+
+        return $copied;
     }
 
     private static function writeAll(StreamInterface $dest, string $buf): void
