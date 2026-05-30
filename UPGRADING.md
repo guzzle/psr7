@@ -373,11 +373,9 @@ resource, open it with a valid update mode such as `r+`, `w+`, or `a+` instead.
 `Utils::copyToStream()` now returns the number of bytes copied and throws a
 `RuntimeException` when the destination stream cannot make progress, for example
 a `BufferStream` at its high-water mark or a full `DroppingStream`. Callers that
-ignore the return value are unaffected, but reflection, generated docs, and
-static-analysis consumers will observe an `int` return instead of `void`.
-In 2.x, the copy stopped silently when the destination could not make progress.
-For a guaranteed full copy, use a normal writable stream such as a file or
-`php://temp` stream.
+ignore the return value do not need to change anything. In 2.x, the copy stopped
+silently when the destination could not make progress. For a guaranteed full
+copy, use a normal writable stream such as a file or `php://temp` stream.
 
 #### Stream Timeout Detection
 
