@@ -195,7 +195,8 @@ $uri = new Uri('https://example.com:8080/path');
 ```
 
 `Uri::fromParts()` accepts integer and decimal digit string ports, but floats and
-other port values are no longer cast.
+other port values are no longer cast. URI strings now reject malformed authority
+ports before native parsing can truncate or reinterpret them.
 
 Common host forms such as `localhost`, single-label hosts, underscores, Unicode
 hosts, valid IPv6 literals, and normal host and port URI strings remain

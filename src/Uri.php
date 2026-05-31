@@ -99,6 +99,10 @@ class Uri implements UriInterface, \JsonSerializable
             return self::parsePathNoSchemeReference($url);
         }
 
+        if (self::hasMalformedPort($url)) {
+            return false;
+        }
+
         // Preserve bracketed IPv6 literals before encoding, including dotted IPv4 tails.
         $prefix = '';
         if (preg_match('%^([0-9A-Za-z+.-]+://\[[0-9:.a-fA-F]+\])(.*?)$%', $url, $matches)) {
@@ -127,6 +131,74 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return array_map('urldecode', $result);
+    }
+
+    private static function hasMalformedPort(string $url): bool
+    {
+        $authority = null;
+
+        if (preg_match('%^[A-Za-z][A-Za-z0-9+.-]*://([^/?#]*)%', $url, $matches)) {
+            $authority = $matches[1];
+        } elseif (0 === strpos($url, '//')) {
+            $authority = substr($url, 2, strcspn($url, '/?#', 2));
+            if ($authority === false) {
+                return false;
+            }
+        }
+
+        if ($authority === null || $authority === '') {
+            return false;
+        }
+
+        $lastAt = strrpos($authority, '@');
+        if ($lastAt !== false) {
+            $authority = substr($authority, $lastAt + 1);
+            if ($authority === false) {
+                return false;
+            }
+        }
+
+        if ($authority === '') {
+            return false;
+        }
+
+        if ($authority[0] === '[') {
+            $closingBracket = strpos($authority, ']');
+            if ($closingBracket === false) {
+                return false;
+            }
+
+            $remainder = substr($authority, $closingBracket + 1);
+            if ($remainder === '') {
+                return false;
+            }
+
+            if ($remainder[0] !== ':') {
+                return false;
+            }
+
+            $port = substr($remainder, 1);
+        } else {
+            $colon = strrpos($authority, ':');
+            if ($colon === false) {
+                return false;
+            }
+
+            $port = substr($authority, $colon + 1);
+        }
+
+        if ($port === '') {
+            return false;
+        }
+
+        if (!ctype_digit($port)) {
+            return true;
+        }
+
+        $normalized = ltrim($port, '0');
+
+        return $normalized !== ''
+            && (strlen($normalized) > 5 || (int) $normalized > 0xFFFF);
     }
 
     private static function isPathNoSchemeReference(string $url): bool

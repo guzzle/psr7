@@ -681,6 +681,15 @@ class ServerRequestTest extends TestCase
             'x=1',
         ];
 
+        yield 'absolute-form ipv6 empty port target supplies authority before malformed SERVER_PORT' => [
+            ['REQUEST_URI' => 'http://[::1]:/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://[::1]/admin',
+            '[::1]',
+            null,
+            '/admin',
+            '',
+        ];
+
         yield 'absolute-form userinfo target is normalized before malformed SERVER_PORT' => [
             ['REQUEST_URI' => 'http://trusted.example@evil.example/admin', 'HTTP_HOST' => 'trusted.example', 'SERVER_PORT' => '+443'],
             'http://evil.example/admin',
@@ -968,6 +977,12 @@ class ServerRequestTest extends TestCase
             ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://[::1]:8080/admin?x=1', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
             'http://[::1]:8080/admin?x=1',
             'http://[::1]:8080/admin?x=1',
+        ];
+
+        yield 'absolute-form ipv6 empty port target is normalized before malformed SERVER_PORT' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://[::1]:/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
+            'http://[::1]/admin',
+            'http://[::1]/admin',
         ];
 
         yield 'absolute-form userinfo target is stripped from request target before malformed SERVER_PORT' => [

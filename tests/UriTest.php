@@ -309,6 +309,69 @@ class UriTest extends TestCase
         yield 'huge finite float' => [1.0e100];
     }
 
+    /**
+     * @dataProvider malformedParsedPorts
+     */
+    public function testParseUriRejectsMalformedPortsBeforeParseUrlCanTruncate(string $uri): void
+    {
+        $this->expectException(MalformedUriException::class);
+        $this->expectExceptionMessage('Unable to parse URI');
+
+        new Uri($uri);
+    }
+
+    public static function malformedParsedPorts(): iterable
+    {
+        yield 'decimal network-path port' => ['//example.com:1.9'];
+        yield 'exponent network-path port' => ['//example.com:1e2'];
+        yield 'trailing alpha network-path port' => ['//example.com:8080abc'];
+        yield 'leading plus network-path port' => ['//example.com:+8080'];
+        yield 'negative network-path port' => ['//example.com:-1'];
+        yield 'whitespace network-path port' => ["//example.com:80\t"];
+        yield 'absolute URI decimal port' => ['http://example.com:1.9/path'];
+        yield 'absolute URI exponent port' => ['http://example.com:1e2/path'];
+        yield 'IPv6 decimal port' => ['//[::1]:1.9'];
+        yield 'IPv6 exponent port' => ['//[::1]:1e2'];
+        yield 'IPv4-tail IPv6 decimal port' => ['//[::ffff:192.0.2.128]:1.9'];
+    }
+
+    /**
+     * @dataProvider emptyParsedPorts
+     */
+    public function testParseUriAcceptsEmptyPorts(string $uri, string $expected): void
+    {
+        $parsed = new Uri($uri);
+
+        self::assertNull($parsed->getPort());
+        self::assertSame($expected, (string) $parsed);
+    }
+
+    public static function emptyParsedPorts(): iterable
+    {
+        yield 'network-path empty port' => ['//example.com:', '//example.com'];
+        yield 'absolute URI empty port' => ['http://example.com:/path', 'http://example.com/path'];
+        yield 'IPv6 empty port' => ['http://[::1]:/path', 'http://[::1]/path'];
+        yield 'userinfo empty port' => ['http://user@example.com:/path', 'http://user@example.com/path'];
+        yield 'query empty port' => ['http://example.com:?x=1', 'http://example.com?x=1'];
+    }
+
+    /**
+     * @dataProvider validParsedPorts
+     */
+    public function testParseUriAcceptsValidPorts(string $uri, int $port): void
+    {
+        self::assertSame($port, (new Uri($uri))->getPort());
+    }
+
+    public static function validParsedPorts(): iterable
+    {
+        yield 'zero' => ['//example.com:0', 0];
+        yield 'zero padded zero' => ['//example.com:0000', 0];
+        yield 'max' => ['//example.com:65535', 65535];
+        yield 'leading zero non-zero' => ['//example.com:08080', 8080];
+        yield 'IPv6 max' => ['//[::1]:65535', 65535];
+    }
+
     public function testParseUriPortCannotBeNegative(): void
     {
         $this->expectException(\InvalidArgumentException::class);
