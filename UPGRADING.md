@@ -194,6 +194,9 @@ Normal URI strings with ports are still supported:
 $uri = new Uri('https://example.com:8080/path');
 ```
 
+`Uri::fromParts()` accepts integer and decimal digit string ports, but floats and
+other port values are no longer cast.
+
 Common host forms such as `localhost`, single-label hosts, underscores, Unicode
 hosts, valid IPv6 literals, and normal host and port URI strings remain
 supported.

@@ -594,7 +594,7 @@ class Uri implements UriInterface, \JsonSerializable
             ? $this->filterHost($parts['host'])
             : '';
         $this->port = isset($parts['port'])
-            ? $this->filterPort((int) $parts['port'])
+            ? $this->filterPortPart($parts['port'])
             : null;
         $this->path = isset($parts['path'])
             ? $this->filterPath($parts['path'])
@@ -665,6 +665,75 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return $port;
+    }
+
+    /**
+     * @param mixed $port
+     *
+     * @throws \InvalidArgumentException If the port is invalid.
+     */
+    private function filterPortPart($port): ?int
+    {
+        if (\is_int($port)) {
+            return $this->filterPort($port);
+        }
+
+        if (!\is_string($port) || $port === '' || !\ctype_digit($port)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Invalid port: %s. Must be between 0 and 65535',
+                self::describeInvalidPort($port)
+            ));
+        }
+
+        $normalized = \ltrim($port, '0');
+        if ($normalized === '') {
+            return 0;
+        }
+
+        if (\strlen($normalized) > 5 || (int) $normalized > 0xFFFF) {
+            throw new \InvalidArgumentException(sprintf(
+                'Invalid port: %s. Must be between 0 and 65535',
+                $normalized
+            ));
+        }
+
+        return (int) $normalized;
+    }
+
+    /**
+     * @param mixed $port
+     */
+    private static function describeInvalidPort($port): string
+    {
+        if (\is_string($port)) {
+            return $port;
+        }
+
+        if (\is_int($port)) {
+            return (string) $port;
+        }
+
+        if (\is_bool($port)) {
+            return $port ? 'true' : 'false';
+        }
+
+        if ($port === null) {
+            return 'null';
+        }
+
+        if (\is_float($port)) {
+            if (\is_nan($port)) {
+                return 'NAN';
+            }
+
+            if (\is_infinite($port)) {
+                return $port > 0 ? 'INF' : '-INF';
+            }
+
+            return \sprintf('%.14G', $port);
+        }
+
+        return \get_debug_type($port);
     }
 
     /**
