@@ -133,12 +133,12 @@ trees. Every leaf must be an `UploadedFileInterface` instance.
 `ServerRequest::normalizeFiles()` and `ServerRequest::fromGlobals()` now reject
 malformed `$_FILES` specifications earlier. Single-file specifications must
 contain non-null `tmp_name`, `size`, and `error` values. Single-file and nested
-file `size` values must be non-negative PHP integers; numeric strings are no
-longer cast. If PHP supplies an upload size as a string because the byte count
-cannot fit in `PHP_INT_MAX`, it is rejected rather than truncated or cast.
-Nested specifications must provide `tmp_name`, `size`, and `error` as arrays
-with matching keys. When nested `name` or `type` metadata is provided, it must
-also be an array.
+file `size` values and `error` values must be non-negative PHP integers;
+numeric strings are no longer cast. If PHP supplies an upload size as a string
+because the byte count cannot fit in `PHP_INT_MAX`, it is rejected rather than
+truncated or cast. Nested specifications must provide `tmp_name`, `size`, and
+`error` as arrays with matching keys. When nested `name` or `type` metadata is
+provided, it must also be an array.
 
 If your tests or adapters build `$_FILES` arrays manually, populate the full
 shape or create `UploadedFile` instances directly.
