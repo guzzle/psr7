@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject empty strings returned by `PumpStream` source callables
 - Discard buffered bytes on `PumpStream` close and detach
 - Restore the original stream position after `Message::bodySummary()`
+- Allow `null` for the `Message::bodySummary()` truncation length to use the default
 - Validate `LimitStream` offset/limit and track non-seekable offset by bytes skipped
 - Make `FnStream` close and detach terminal, calling close callbacks at most once
 - Suppress exceptions from `FnStream` close callbacks during destructor cleanup

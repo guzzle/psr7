@@ -11,6 +11,8 @@ use Psr\Http\Message\UriInterface;
 
 final class Message
 {
+    private const DEFAULT_BODY_SUMMARY_TRUNCATE_AT = 120;
+
     private function __construct()
     {
     }
@@ -71,10 +73,12 @@ final class Message
      * Will return `null` if the response is not printable.
      *
      * @param MessageInterface $message    The message to get the body summary
-     * @param int              $truncateAt The maximum allowed size of the summary
+     * @param int|null         $truncateAt The maximum allowed size of the summary
      */
-    public static function bodySummary(MessageInterface $message, int $truncateAt = 120): ?string
+    public static function bodySummary(MessageInterface $message, ?int $truncateAt = null): ?string
     {
+        $truncateAt ??= self::DEFAULT_BODY_SUMMARY_TRUNCATE_AT;
+
         $body = $message->getBody();
 
         if (!$body->isSeekable() || !$body->isReadable()) {

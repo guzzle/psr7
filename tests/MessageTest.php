@@ -660,6 +660,16 @@ class MessageTest extends TestCase
         self::assertSame('Lorem ipsu (truncated...)', Psr7\Message::bodySummary($message, 10));
     }
 
+    public function testMessageBodySummaryAcceptsNullTruncationLength(): void
+    {
+        $message = new Psr7\Response(200, [], str_repeat('a', 121));
+
+        self::assertSame(
+            Psr7\Message::bodySummary($message, 120),
+            Psr7\Message::bodySummary($message, null)
+        );
+    }
+
     public function testMessageBodySummaryWithSpecialUTF8Characters(): void
     {
         $message = new Psr7\Response(200, [], '’é€௵ဪ‱');

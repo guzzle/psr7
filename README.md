@@ -365,14 +365,15 @@ echo GuzzleHttp\Psr7\Message::toString($request);
 
 ## `GuzzleHttp\Psr7\Message::bodySummary`
 
-`public static function bodySummary(MessageInterface $message, int $truncateAt = 120): string|null`
+`public static function bodySummary(MessageInterface $message, ?int $truncateAt = null): string|null`
 
 Get a short summary of the message body.
 
 Will return `null` if the response is not printable.
 
 Reads seekable bodies from the beginning and restores the original cursor
-position before returning.
+position before returning. Pass `null` for `$truncateAt` to use the default
+summary length.
 
 
 ## `GuzzleHttp\Psr7\Message::rewindBody`
