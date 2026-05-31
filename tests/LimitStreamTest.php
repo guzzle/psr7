@@ -239,6 +239,30 @@ class LimitStreamTest extends TestCase
         $this->body->read(-1);
     }
 
+    public function testReadThrowsWhenOffsetAndLimitOverflow(): void
+    {
+        $stream = new FnStream([
+            'tell' => static function (): int {
+                return 0;
+            },
+            'isSeekable' => static function (): bool {
+                return true;
+            },
+            'seek' => static function (int $offset, int $whence = SEEK_SET): void {
+            },
+            'eof' => static function (): bool {
+                return false;
+            },
+        ]);
+
+        $limited = new LimitStream($stream, 1, \PHP_INT_MAX);
+
+        $this->expectException(\OverflowException::class);
+        $this->expectExceptionMessage('Stream byte count exceeds the maximum integer size supported on this platform');
+
+        $limited->read(1);
+    }
+
     public function testClaimsConsumedWhenReadLimitIsReached(): void
     {
         self::assertFalse($this->body->eof());

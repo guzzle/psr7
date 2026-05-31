@@ -70,13 +70,13 @@ final class CachingStream implements StreamInterface
         if ($whence === SEEK_SET) {
             $byte = $offset;
         } elseif ($whence === SEEK_CUR) {
-            $byte = $offset + $this->tell();
+            $byte = Integers::addSigned($this->tell(), $offset);
         } elseif ($whence === SEEK_END) {
             $size = $this->remoteStream->getSize();
             if ($size === null) {
                 $size = $this->cacheEntireStream();
             }
-            $byte = $size + $offset;
+            $byte = Integers::addSigned($size, $offset);
         } else {
             throw new \InvalidArgumentException('Invalid whence');
         }
@@ -122,7 +122,7 @@ final class CachingStream implements StreamInterface
             // position. This mimics the behavior of other PHP stream wrappers.
             $remoteData = StreamTimeout::read(
                 $this->remoteStream,
-                $remaining + $this->skipReadBytes,
+                Integers::add($remaining, $this->skipReadBytes),
                 'Unable to read from stream: timed out'
             );
 
@@ -149,9 +149,9 @@ final class CachingStream implements StreamInterface
         // to skip bytes from being read from the remote stream to emulate
         // other stream wrappers. Basically replacing bytes of data of a fixed
         // length.
-        $overflow = (strlen($string) + $this->tell()) - $this->remoteStream->tell();
+        $overflow = Integers::add(strlen($string), $this->tell()) - $this->remoteStream->tell();
         if ($overflow > 0) {
-            $this->skipReadBytes += $overflow;
+            $this->skipReadBytes = Integers::add($this->skipReadBytes, $overflow);
         }
 
         return $this->stream->write($string);

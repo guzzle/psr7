@@ -50,7 +50,7 @@ final class LimitStream implements StreamInterface
             return false;
         }
 
-        return $this->stream->tell() >= $this->offset + $this->limit;
+        return $this->stream->tell() >= Integers::add($this->offset, $this->limit);
     }
 
     /**
@@ -84,11 +84,12 @@ final class LimitStream implements StreamInterface
             ));
         }
 
-        $offset += $this->offset;
+        $offset = Integers::add($this->offset, $offset);
 
         if ($this->limit !== -1) {
-            if ($offset > $this->offset + $this->limit) {
-                $offset = $this->offset + $this->limit;
+            $upperBound = Integers::add($this->offset, $this->limit);
+            if ($offset > $upperBound) {
+                $offset = $upperBound;
             }
         }
 
@@ -112,9 +113,7 @@ final class LimitStream implements StreamInterface
      */
     public function setOffset(int $offset): void
     {
-        if ($offset < 0) {
-            throw new \InvalidArgumentException('Offset must be a non-negative integer');
-        }
+        $offset = Integers::assertNonNegativeInteger($offset, 'Offset');
 
         $current = $this->stream->tell();
 
@@ -155,7 +154,7 @@ final class LimitStream implements StreamInterface
                 throw new \RuntimeException("Could not seek to stream offset $offset");
             }
 
-            $current += strlen($result);
+            $current = Integers::add($current, strlen($result));
         }
 
         $this->offset = $offset;
@@ -170,11 +169,7 @@ final class LimitStream implements StreamInterface
      */
     public function setLimit(int $limit): void
     {
-        if ($limit < -1) {
-            throw new \InvalidArgumentException('Limit must be -1 or a non-negative integer');
-        }
-
-        $this->limit = $limit;
+        $this->limit = Integers::assertLimitInteger($limit, 'Limit');
     }
 
     public function read(int $length): string
@@ -189,7 +184,7 @@ final class LimitStream implements StreamInterface
 
         // Check if the current position is less than the total allowed
         // bytes + original offset
-        $remaining = ($this->offset + $this->limit) - $this->stream->tell();
+        $remaining = Integers::add($this->offset, $this->limit) - $this->stream->tell();
         if ($remaining > 0) {
             // Only return the amount of requested data, ensuring that the byte
             // limit is not exceeded

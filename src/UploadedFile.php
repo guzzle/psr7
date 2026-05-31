@@ -47,7 +47,7 @@ class UploadedFile implements UploadedFileInterface
         ?string $clientMediaType = null
     ) {
         $this->setError($errorStatus);
-        $this->size = $size;
+        $this->size = Integers::assertOptionalNonNegativeSize($size, 'Uploaded file size');
         $this->clientFilename = $clientFilename;
         $this->clientMediaType = $clientMediaType;
 

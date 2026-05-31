@@ -23,8 +23,8 @@ class ServerRequestTest extends TestCase
                         'name' => 'MyFile.txt',
                         'type' => 'text/plain',
                         'tmp_name' => '/tmp/php/php1h4j1o',
-                        'error' => '0',
-                        'size' => '123',
+                        'error' => UPLOAD_ERR_OK,
+                        'size' => 123,
                     ],
                 ],
                 [
@@ -41,8 +41,8 @@ class ServerRequestTest extends TestCase
                 [
                     'file' => [
                         'tmp_name' => '/tmp/php/php1h4j1o',
-                        'error' => '0',
-                        'size' => '123',
+                        'error' => UPLOAD_ERR_OK,
+                        'size' => 123,
                     ],
                 ],
                 [
@@ -59,8 +59,8 @@ class ServerRequestTest extends TestCase
                         'name' => '',
                         'type' => '',
                         'tmp_name' => '',
-                        'error' => '4',
-                        'size' => '0',
+                        'error' => UPLOAD_ERR_NO_FILE,
+                        'size' => 0,
                     ],
                 ],
                 [
@@ -137,15 +137,15 @@ class ServerRequestTest extends TestCase
                         'name' => 'MyFile.txt',
                         'type' => 'text/plain',
                         'tmp_name' => '/tmp/php/php1h4j1o',
-                        'error' => '0',
-                        'size' => '123',
+                        'error' => UPLOAD_ERR_OK,
+                        'size' => 123,
                     ],
                     'image_file' => [
                         'name' => '',
                         'type' => '',
                         'tmp_name' => '',
-                        'error' => '4',
-                        'size' => '0',
+                        'error' => UPLOAD_ERR_NO_FILE,
+                        'size' => 0,
                     ],
                 ],
                 [
@@ -181,12 +181,12 @@ class ServerRequestTest extends TestCase
                             1 => '/tmp/php/php1h4j1o',
                         ],
                         'error' => [
-                            0 => '0',
-                            1 => '0',
+                            0 => UPLOAD_ERR_OK,
+                            1 => UPLOAD_ERR_OK,
                         ],
                         'size' => [
-                            0 => '123',
-                            1 => '7349',
+                            0 => 123,
+                            1 => 7349,
                         ],
                     ],
                     'nested' => [
@@ -212,17 +212,17 @@ class ServerRequestTest extends TestCase
                             ],
                         ],
                         'error' => [
-                            'other' => '0',
+                            'other' => UPLOAD_ERR_OK,
                             'test' => [
-                                0 => '0',
-                                1 => '4',
+                                0 => UPLOAD_ERR_OK,
+                                1 => UPLOAD_ERR_NO_FILE,
                             ],
                         ],
                         'size' => [
-                            'other' => '421',
+                            'other' => 421,
                             'test' => [
-                                0 => '32',
-                                1 => '0',
+                                0 => 32,
+                                1 => 0,
                             ],
                         ],
                     ],
@@ -278,10 +278,10 @@ class ServerRequestTest extends TestCase
                             0 => '/tmp/php/hp9hskjhf',
                         ],
                         'error' => [
-                            0 => '0',
+                            0 => UPLOAD_ERR_OK,
                         ],
                         'size' => [
-                            0 => '123',
+                            0 => 123,
                         ],
                     ],
                 ],
@@ -327,32 +327,47 @@ class ServerRequestTest extends TestCase
         ];
 
         yield 'single file missing size' => [
-            ['file' => ['tmp_name' => '/tmp/php123', 'error' => '0']],
+            ['file' => ['tmp_name' => '/tmp/php123', 'error' => UPLOAD_ERR_OK]],
             'Invalid file specification',
         ];
 
         yield 'single file missing error' => [
-            ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123']],
+            ['file' => ['tmp_name' => '/tmp/php123', 'size' => 123]],
             'Invalid file specification',
         ];
 
+        yield 'single file string size' => [
+            ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123', 'error' => UPLOAD_ERR_OK]],
+            'Uploaded file size must be a non-negative integer',
+        ];
+
+        yield 'single file negative size' => [
+            ['file' => ['tmp_name' => '/tmp/php123', 'size' => -1, 'error' => UPLOAD_ERR_OK]],
+            'Uploaded file size must be a non-negative integer',
+        ];
+
         yield 'nested file missing size array' => [
-            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'error' => [0 => '0']]],
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'error' => [0 => UPLOAD_ERR_OK]]],
             'Invalid file specification',
         ];
 
         yield 'nested file missing error array' => [
-            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => [0 => '123']]],
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => [0 => 123]]],
             'Invalid file specification',
         ];
 
+        yield 'nested file string size' => [
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => [0 => '123'], 'error' => [0 => UPLOAD_ERR_OK]]],
+            'Uploaded file size must be a non-negative integer',
+        ];
+
         yield 'nested file scalar size' => [
-            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => '123', 'error' => [0 => '0']]],
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => 123, 'error' => [0 => UPLOAD_ERR_OK]]],
             'Invalid nested file specification',
         ];
 
         yield 'nested file scalar error' => [
-            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => [0 => '123'], 'error' => '0']],
+            ['file' => ['tmp_name' => [0 => '/tmp/php123'], 'size' => [0 => 123], 'error' => UPLOAD_ERR_OK]],
             'Invalid nested file specification',
         ];
 
@@ -360,8 +375,8 @@ class ServerRequestTest extends TestCase
             [
                 'file' => [
                     'tmp_name' => [0 => '/tmp/a', 1 => '/tmp/b'],
-                    'size' => [0 => '123'],
-                    'error' => [0 => '0', 1 => '0'],
+                    'size' => [0 => 123],
+                    'error' => [0 => UPLOAD_ERR_OK, 1 => UPLOAD_ERR_OK],
                 ],
             ],
             'matching keys',
@@ -371,8 +386,8 @@ class ServerRequestTest extends TestCase
             [
                 'file' => [
                     'tmp_name' => [0 => '/tmp/a', 1 => '/tmp/b'],
-                    'size' => [0 => '123', 1 => '456'],
-                    'error' => [0 => '0'],
+                    'size' => [0 => 123, 1 => 456],
+                    'error' => [0 => UPLOAD_ERR_OK],
                 ],
             ],
             'matching keys',
@@ -382,8 +397,8 @@ class ServerRequestTest extends TestCase
             [
                 'file' => [
                     'tmp_name' => [0 => '/tmp/a'],
-                    'size' => [0 => '123'],
-                    'error' => [0 => '0'],
+                    'size' => [0 => 123],
+                    'error' => [0 => UPLOAD_ERR_OK],
                     'name' => 'a.txt',
                 ],
             ],

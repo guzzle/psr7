@@ -29,7 +29,7 @@ final class BufferStream implements StreamInterface
      */
     public function __construct(int $hwm = 16384)
     {
-        $this->hwm = $hwm;
+        $this->hwm = Integers::assertNonNegativeInteger($hwm, 'High water mark');
     }
 
     public function __toString(): string

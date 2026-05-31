@@ -36,7 +36,13 @@ final class HttpFactory implements RequestFactoryInterface, ResponseFactoryInter
             $size = $stream->getSize();
         }
 
-        return new UploadedFile($stream, $size, $error, $clientFilename, $clientMediaType);
+        return new UploadedFile(
+            $stream,
+            Integers::assertOptionalNonNegativeSize($size, 'Uploaded file size'),
+            $error,
+            $clientFilename,
+            $clientMediaType
+        );
     }
 
     public function createStream(string $content = ''): StreamInterface

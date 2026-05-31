@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject empty arrays and non-string values as header values
 - Reject invalid uploaded file trees and invalid parsed body values
 - Reject uploaded file specs missing `tmp_name`, `size`, or `error`
+- Reject invalid stream/upload sizes, buffer high-water marks, and dropping-stream limits
 - Rewind seekable uploaded-file streams before copying in `UploadedFile::moveTo()`
 - Reject negative `read()` lengths across all stream implementations
 - Detect the `+` flag anywhere in a mode for `Stream::isReadable()`/`isWritable()`
@@ -49,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Throw `TimeoutException` from `Stream` read/write and `Utils` copy/hash/readLine on stream timeouts
 - Re-throw `TimeoutException` from `InflateStream` when the decoded source stream times out
 - Return the number of bytes copied from `Utils::copyToStream()`
+- Throw `OverflowException` when stream byte counts or offsets exceed `PHP_INT_MAX`
 - Translate `StreamWrapper` runtime failures to PHP stream failure values
 - Stop adding default `Content-Length` to `multipart/form-data` parts (RFC 7578 §4.8)
 - Escape multipart `Content-Disposition` parameters and reject unsafe boundaries and part headers

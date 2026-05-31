@@ -49,7 +49,7 @@ final class PumpStream implements StreamInterface
     public function __construct(callable $source, array $options = [])
     {
         $this->source = $source;
-        $this->size = $options['size'] ?? null;
+        $this->size = Integers::assertOptionalNonNegativeSize($options['size'] ?? null, 'Stream size');
         $this->metadata = $options['metadata'] ?? [];
         $this->buffer = new BufferStream();
     }
@@ -131,7 +131,7 @@ final class PumpStream implements StreamInterface
         }
 
         $data = $this->buffer->read($length);
-        $this->tellPos += strlen($data);
+        $this->tellPos = Integers::add($this->tellPos, strlen($data));
 
         return $data;
     }

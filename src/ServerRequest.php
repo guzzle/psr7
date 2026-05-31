@@ -109,7 +109,7 @@ class ServerRequest extends Request implements ServerRequestInterface
 
         return new UploadedFile(
             $value['tmp_name'],
-            (int) $value['size'],
+            Integers::assertNonNegativeInteger($value['size'], 'Uploaded file size'),
             (int) $value['error'],
             $value['name'] ?? null,
             $value['type'] ?? null
