@@ -396,7 +396,9 @@ reported as generic write failures or no-progress writes.
 `Message::bodySummary()` still summarizes seekable bodies from the beginning,
 even when the body was already partially read. It now restores the body cursor to
 the position it had before the summary was created. In 2.x, calling
-`bodySummary()` left seekable bodies rewound to the beginning.
+`bodySummary()` left seekable bodies rewound to the beginning. The optional
+`$truncateAt` argument now accepts `null` as an explicit request for the default
+summary length, matching the behavior of omitting the argument.
 
 Most applications do not need to change anything. Check your code only if you
 called `bodySummary()` and then read the same body while relying on
