@@ -267,6 +267,48 @@ class UriTest extends TestCase
         (new Uri())->withPort(-1);
     }
 
+    public function testFromPartsAcceptsDecimalDigitStringPort(): void
+    {
+        $uri = Uri::fromParts([
+            'scheme' => 'http',
+            'host' => 'example.com',
+            'port' => '8080',
+        ]);
+
+        self::assertSame(8080, $uri->getPort());
+    }
+
+    /**
+     * @dataProvider invalidFromPartsPorts
+     *
+     * @param mixed $port
+     */
+    public function testFromPartsRejectsInvalidPortBeforeCasting($port): void
+    {
+        $this->expectException(MalformedUriException::class);
+        $this->expectExceptionMessage('Invalid port');
+
+        Uri::fromParts([
+            'scheme' => 'http',
+            'host' => 'example.com',
+            'port' => $port,
+        ]);
+    }
+
+    public static function invalidFromPartsPorts(): iterable
+    {
+        yield 'string with trailing text' => ['8080abc'];
+        yield 'decimal float' => [1.9];
+        yield 'true' => [true];
+        yield 'false' => [false];
+        yield 'empty string' => [''];
+        yield 'infinity' => [\INF];
+        yield 'negative infinity' => [-\INF];
+        yield 'not a number' => [\NAN];
+        yield 'int max float boundary' => [(float) \PHP_INT_MAX];
+        yield 'huge finite float' => [1.0e100];
+    }
+
     public function testParseUriPortCannotBeNegative(): void
     {
         $this->expectException(\InvalidArgumentException::class);
