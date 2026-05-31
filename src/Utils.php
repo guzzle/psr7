@@ -45,6 +45,8 @@ final class Utils
      * @param StreamInterface $dest   Stream to write to
      * @param int             $maxLen Maximum number of bytes to read. Pass -1
      *                                to read the entire stream.
+     *
+     * @throws \RuntimeException on error.
      */
     public static function copyToStream(StreamInterface $source, StreamInterface $dest, int $maxLen = -1): void
     {
