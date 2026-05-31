@@ -336,6 +336,16 @@ class ServerRequestTest extends TestCase
             'Invalid file specification',
         ];
 
+        yield 'single file string error' => [
+            ['file' => ['tmp_name' => '/tmp/php123', 'size' => 123, 'error' => '0']],
+            'Uploaded file error must be a non-negative integer',
+        ];
+
+        yield 'single file float error' => [
+            ['file' => ['tmp_name' => '/tmp/php123', 'size' => 123, 'error' => (float) \PHP_INT_MAX]],
+            'Uploaded file error must be a non-negative integer',
+        ];
+
         yield 'single file string size' => [
             ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123', 'error' => UPLOAD_ERR_OK]],
             'Uploaded file size must be a non-negative integer',
