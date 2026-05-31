@@ -784,6 +784,27 @@ class MessageTest extends TestCase
         Psr7\Message::bodySummary($message);
     }
 
+    public function testMessageBodySummaryPropagatesOverflow(): void
+    {
+        $body = new FnStream([
+            'isSeekable' => static function (): bool {
+                return true;
+            },
+            'isReadable' => static function (): bool {
+                return true;
+            },
+            'getSize' => static function (): int {
+                throw new \OverflowException('size overflow');
+            },
+        ]);
+        $message = new Psr7\Response(200, [], $body);
+
+        $this->expectException(\OverflowException::class);
+        $this->expectExceptionMessage('size overflow');
+
+        Psr7\Message::bodySummary($message);
+    }
+
     public function testGetResponseBodySummaryOfNonReadableStream(): void
     {
         $message = new Psr7\Response(500, [], new ReadSeekOnlyStream());

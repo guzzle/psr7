@@ -75,6 +75,14 @@ class UploadedFileTest extends TestCase
         self::assertSame($stream, $uploadStream);
     }
 
+    public function testRejectsNegativeSize(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Uploaded file size must be a non-negative integer or null');
+
+        new UploadedFile('not ok', -1, UPLOAD_ERR_NO_FILE);
+    }
+
     public function testGetStreamReturnsStreamForFile(): void
     {
         $this->cleanup[] = $stream = tempnam(sys_get_temp_dir(), 'stream_file');

@@ -25,7 +25,7 @@ final class DroppingStream implements StreamInterface
     public function __construct(StreamInterface $stream, int $maxLength)
     {
         $this->stream = $stream;
-        $this->maxLength = $maxLength;
+        $this->maxLength = Integers::assertNonNegativeInteger($maxLength, 'Maximum length');
     }
 
     public function write(string $string): int

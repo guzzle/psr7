@@ -120,7 +120,7 @@ final class AppendStream implements StreamInterface
             if ($s === null) {
                 return null;
             }
-            $size += $s;
+            $size = Integers::add($size, $s);
         }
 
         return $size;
@@ -209,7 +209,7 @@ final class AppendStream implements StreamInterface
             $remaining = $length - strlen($buffer);
         }
 
-        $this->pos += strlen($buffer);
+        $this->pos = Integers::add($this->pos, strlen($buffer));
 
         return $buffer;
     }

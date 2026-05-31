@@ -132,9 +132,13 @@ trees. Every leaf must be an `UploadedFileInterface` instance.
 
 `ServerRequest::normalizeFiles()` and `ServerRequest::fromGlobals()` now reject
 malformed `$_FILES` specifications earlier. Single-file specifications must
-contain non-null `tmp_name`, `size`, and `error` values. Nested specifications
-must provide `tmp_name`, `size`, and `error` as arrays with matching keys. When
-nested `name` or `type` metadata is provided, it must also be an array.
+contain non-null `tmp_name`, `size`, and `error` values. Single-file and nested
+file `size` values must be non-negative PHP integers; numeric strings are no
+longer cast. If PHP supplies an upload size as a string because the byte count
+cannot fit in `PHP_INT_MAX`, it is rejected rather than truncated or cast.
+Nested specifications must provide `tmp_name`, `size`, and `error` as arrays
+with matching keys. When nested `name` or `type` metadata is provided, it must
+also be an array.
 
 If your tests or adapters build `$_FILES` arrays manually, populate the full
 shape or create `UploadedFile` instances directly.
@@ -144,7 +148,7 @@ shape or create `UploadedFile` instances directly.
 $files = ['file' => ['tmp_name' => '/tmp/php123', 'error' => '0']];
 
 // 3.0
-$files = ['file' => ['tmp_name' => '/tmp/php123', 'size' => '123', 'error' => '0']];
+$files = ['file' => ['tmp_name' => '/tmp/php123', 'size' => 123, 'error' => UPLOAD_ERR_OK]];
 ```
 
 For stream-backed uploads, `UploadedFile::moveTo()` now rewinds seekable streams
@@ -369,6 +373,11 @@ streams. If a custom stream wrapper previously exposed `rw` for a writable
 resource, open it with a valid update mode such as `r+`, `w+`, or `a+` instead.
 
 #### Stream Copy Behavior
+
+Stream sizes, offsets, high-water marks, and byte counts are now validated as
+non-negative PHP integers where applicable. Operations that would overflow
+`PHP_INT_MAX` throw `OverflowException` instead of silently wrapping or producing
+an invalid position or size.
 
 `Utils::copyToStream()` now returns the number of bytes copied and throws a
 `RuntimeException` when the destination stream cannot make progress, for example

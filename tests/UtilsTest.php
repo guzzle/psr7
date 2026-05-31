@@ -782,6 +782,26 @@ class UtilsTest extends TestCase
         self::assertSame(10, $s->getSize());
     }
 
+    /**
+     * @dataProvider invalidStreamSizes
+     *
+     * @param mixed $size
+     */
+    public function testStreamForRejectsInvalidSizeOption($size): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Stream size must be a non-negative integer or null');
+
+        Psr7\Utils::streamFor('', ['size' => $size]);
+    }
+
+    public static function invalidStreamSizes(): iterable
+    {
+        yield 'negative integer' => [-1];
+        yield 'string integer' => ['10'];
+        yield 'float' => [10.0];
+    }
+
     public function testCanCreateIteratorBasedStream(): void
     {
         $a = new \ArrayIterator(['foo', 'bar', '123']);

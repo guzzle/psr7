@@ -324,6 +324,26 @@ class AppendStreamTest extends TestCase
         self::assertNull($a->getSize());
     }
 
+    public function testGetSizeThrowsWhenCombinedSizeOverflows(): void
+    {
+        $first = $this->createMock(StreamInterface::class);
+        $first->method('isReadable')->willReturn(true);
+        $first->method('isSeekable')->willReturn(true);
+        $first->method('getSize')->willReturn(\PHP_INT_MAX);
+
+        $second = $this->createMock(StreamInterface::class);
+        $second->method('isReadable')->willReturn(true);
+        $second->method('isSeekable')->willReturn(true);
+        $second->method('getSize')->willReturn(1);
+
+        $stream = new AppendStream([$first, $second]);
+
+        $this->expectException(\OverflowException::class);
+        $this->expectExceptionMessage('Stream byte count exceeds the maximum integer size supported on this platform');
+
+        $stream->getSize();
+    }
+
     public function testThrowsExceptionsWhenCastingToString(): void
     {
         $s = $this->createMock(StreamInterface::class);

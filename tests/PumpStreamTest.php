@@ -39,6 +39,26 @@ class PumpStreamTest extends TestCase
         self::assertSame(100, $p->getSize());
     }
 
+    /**
+     * @dataProvider invalidSizes
+     *
+     * @param mixed $size
+     */
+    public function testRejectsInvalidSizeOption($size): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Stream size must be a non-negative integer or null');
+
+        new PumpStream(static function (): void {
+        }, ['size' => $size]);
+    }
+
+    public static function invalidSizes(): iterable
+    {
+        yield 'negative integer' => [-1];
+        yield 'string integer' => ['100'];
+    }
+
     public function testCanReadFromCallable(): void
     {
         $p = Psr7\Utils::streamFor(function ($size) {

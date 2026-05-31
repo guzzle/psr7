@@ -42,9 +42,7 @@ class Stream implements StreamInterface
             throw new \InvalidArgumentException('Stream must be a resource');
         }
 
-        if (isset($options['size'])) {
-            $this->size = $options['size'];
-        }
+        $this->size = Integers::assertOptionalNonNegativeSize($options['size'] ?? null, 'Stream size');
 
         $this->customMetadata = $options['metadata'] ?? [];
         $this->stream = $stream;
@@ -125,13 +123,13 @@ class Stream implements StreamInterface
         }
 
         $stats = fstat($this->stream);
-        if (is_array($stats) && isset($stats['size'])) {
-            $this->size = $stats['size'];
-
-            return $this->size;
+        if ($stats === false) {
+            return null;
         }
 
-        return null;
+        $this->size = Integers::assertEngineInteger($stats['size'], 'Stream size');
+
+        return $this->size;
     }
 
     public function isReadable(): bool
@@ -165,12 +163,16 @@ class Stream implements StreamInterface
         }
 
         $result = ftell($this->stream);
-
         if ($result === false) {
             throw new \RuntimeException('Unable to determine stream position');
         }
 
-        return $result;
+        $position = Integers::assertEngineInteger($result, 'Stream position');
+        if ($position === null) {
+            throw new \RuntimeException('Unable to determine stream position');
+        }
+
+        return $position;
     }
 
     public function rewind(): void

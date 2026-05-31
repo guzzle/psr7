@@ -65,7 +65,7 @@ final class Utils
                 }
 
                 self::writeAll($dest, $buf);
-                $copied += strlen($buf);
+                $copied = Integers::add($copied, strlen($buf));
             }
         } else {
             $remaining = $maxLen;
@@ -77,7 +77,7 @@ final class Utils
                 }
                 $remaining -= $len;
                 self::writeAll($dest, $buf);
-                $copied += $len;
+                $copied = Integers::add($copied, $len);
             }
         }
 

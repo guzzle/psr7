@@ -20,6 +20,14 @@ class BufferStreamTest extends TestCase
         self::assertSame([], $b->getMetadata());
     }
 
+    public function testRejectsNegativeHighWaterMark(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('High water mark must be a non-negative integer');
+
+        new BufferStream(-1);
+    }
+
     public function testRemovesReadDataFromBuffer(): void
     {
         $b = new BufferStream();
