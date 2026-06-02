@@ -62,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped support for PHP 7.2 and 7.3
 - Removed the `ralouphie/getallheaders` dependency
 
-## 2.11.0 - TBD
+## 2.11.0 - 2026-06-02
 
 ### Changed
 
@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated empty header value arrays that guzzlehttp/psr7 3.0 will reject
 - Deprecated URI schemes that do not match guzzlehttp/psr7 3.0 syntax requirements
 - Deprecated multipart boundary and custom part header metadata that guzzlehttp/psr7 3.0 will reject
-- Deprecated relying on automatic uppercasing of explicitly provided HTTP request methods; guzzlehttp/psr7 3.0 preserves request method casing
+- Deprecated reliance on automatic uppercasing of request methods; guzzlehttp/psr7 3.0 preserves method casing
 - Deprecated invalid `Utils::modifyRequest()` change values that guzzlehttp/psr7 3.0 will reject
 
 ### Fixed
