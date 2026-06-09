@@ -528,6 +528,12 @@ use GuzzleHttp\Psr7\Utils;
 (string) Utils::redactUserInfo(new Uri('https://user:pass@example.com'));
 ```
 
+#### Header List Helpers
+
+The deprecated `Header::normalize()` method was removed. Use
+`Header::splitList()` to split HTTP headers that are defined as comma-separated
+lists.
+
 #### Non-instantiable Utility Classes
 
 Static utility and constant classes such as `Header`, `Message`, `MimeType`,

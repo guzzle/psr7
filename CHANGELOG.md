@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Dropped support for PHP 7.2 and 7.3
 - Removed the `ralouphie/getallheaders` dependency
+- Removed deprecated `Header::normalize()` method
 
 ## 2.11.0 - 2026-06-02
 
