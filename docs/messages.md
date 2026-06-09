@@ -15,7 +15,7 @@ echo $request->getMethod();
 echo $request->getUri();
 ```
 
-PSR-7 messages are immutable. Methods named `with...()` return a modified copy.
+PSR-7 messages are immutable. Methods such as `withHeader()` and `withUri()` return a modified copy.
 
 ```php
 $jsonRequest = $request->withHeader('Accept', 'application/json');
@@ -44,8 +44,12 @@ echo $uri->getHost();
 echo $uri->getQuery();
 ```
 
-For URI-specific helper methods, see [URI helpers](uri.md).
+For URI-specific helper methods, see [URI Helpers](uri.md).
 
 ## HTTP Method Casing
 
-HTTP method names are case-sensitive in PSR-7. Requests created explicitly with `Request`, `ServerRequest`, `withMethod()`, `Message::parseRequest()`, or the PSR-17 factories preserve the method string as provided. `ServerRequest::fromGlobals()` normalizes `$_SERVER['REQUEST_METHOD']` to uppercase for compatibility when hydrating requests from PHP server globals.
+HTTP method names are case-sensitive in PSR-7. Requests created explicitly with
+`Request`, `ServerRequest`, `withMethod()`, `Message::parseRequest()`, or the
+PSR-17 factories preserve the method string as provided. `ServerRequest::fromGlobals()`
+normalizes `$_SERVER['REQUEST_METHOD']` to uppercase for compatibility when
+hydrating requests from PHP server globals.
