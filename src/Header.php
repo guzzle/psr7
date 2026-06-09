@@ -90,26 +90,6 @@ final class Header
     }
 
     /**
-     * Converts an array of header values that may contain comma separated
-     * headers into an array of headers with no comma separated values.
-     *
-     * @param string|array $header Header to normalize.
-     *
-     * @deprecated Use self::splitList() instead.
-     */
-    public static function normalize($header): array
-    {
-        $result = [];
-        foreach ((array) $header as $value) {
-            foreach (self::splitList($value) as $parsed) {
-                $result[] = $parsed;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
      * Splits a HTTP header defined to contain a comma-separated list into
      * each individual value. Empty values will be removed.
      *

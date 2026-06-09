@@ -47,6 +47,20 @@ $response = $response->withHeader('Empty-Value', '');
 
 Use `withoutHeader()` to remove a header.
 
+#### Header List Helpers
+
+The deprecated `Header::normalize()` method was removed. Use
+`Header::splitList()` to split HTTP headers that are defined as comma-separated
+lists.
+
+```php
+// 2.x, deprecated
+$values = Header::normalize($request->getHeader('if-none-match'));
+
+// 3.0
+$values = Header::splitList($request->getHeader('if-none-match'));
+```
+
 #### Request Method Casing
 
 Request methods passed explicitly to `Request`, `ServerRequest`, `withMethod()`,
@@ -610,9 +624,9 @@ $stream = Utils::streamFor('body');
 | `get_message_body_summary` | `Message::bodySummary` |
 | `_caseless_remove` | `Utils::caselessRemove` |
 
-`Header::normalize()` remains the direct 2.0 replacement for
-`normalize_header()`. In newer 2.x versions, prefer `Header::splitList()` for
-new code.
+`Header::normalize()` remained the direct 2.0 replacement for
+`normalize_header()`. In newer 2.x versions and in 3.0, prefer
+`Header::splitList()` for new code.
 
 #### Deprecated URI Methods Removed
 

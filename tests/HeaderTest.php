@@ -202,17 +202,6 @@ class HeaderTest extends TestCase
      *
      * @param string|string[] $header
      */
-    public function testNormalize($header, array $result): void
-    {
-        self::assertSame($result, Psr7\Header::normalize([$header]));
-        self::assertSame($result, Psr7\Header::normalize($header));
-    }
-
-    /**
-     * @dataProvider normalizeProvider
-     *
-     * @param string|string[] $header
-     */
     public function testSplitList($header, array $result): void
     {
         self::assertSame($result, Psr7\Header::splitList($header));
