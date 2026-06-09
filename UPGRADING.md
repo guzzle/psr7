@@ -47,20 +47,6 @@ $response = $response->withHeader('Empty-Value', '');
 
 Use `withoutHeader()` to remove a header.
 
-#### Header List Helpers
-
-The deprecated `Header::normalize()` method was removed. Use
-`Header::splitList()` to split HTTP headers that are defined as comma-separated
-lists.
-
-```php
-// 2.x, deprecated
-$values = Header::normalize($request->getHeader('if-none-match'));
-
-// 3.0
-$values = Header::splitList($request->getHeader('if-none-match'));
-```
-
 #### Request Method Casing
 
 Request methods passed explicitly to `Request`, `ServerRequest`, `withMethod()`,
@@ -547,6 +533,20 @@ use GuzzleHttp\Psr7\Utils;
 Static utility and constant classes such as `Header`, `Message`, `MimeType`,
 `Query`, `Rfc7230`, and `Utils` now have private constructors. Replace any
 accidental instantiation with static method calls or constant access.
+
+#### Header List Helpers
+
+The deprecated `Header::normalize()` method was removed. Use
+`Header::splitList()` to split HTTP headers that are defined as comma-separated
+lists.
+
+```php
+// 2.x, deprecated
+$values = Header::normalize($request->getHeader('if-none-match'));
+
+// 3.0
+$values = Header::splitList($request->getHeader('if-none-match'));
+```
 
 1.x to 2.0
 ----------
