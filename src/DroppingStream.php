@@ -13,6 +13,7 @@ use Psr\Http\Message\StreamInterface;
 final class DroppingStream implements StreamInterface
 {
     use StreamDecoratorTrait;
+    use NonSerializableStreamTrait;
 
     private int $maxLength;
 

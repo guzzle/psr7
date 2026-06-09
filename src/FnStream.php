@@ -15,6 +15,8 @@ use Psr\Http\Message\StreamInterface;
 #[\AllowDynamicProperties]
 final class FnStream implements StreamInterface
 {
+    use NonSerializableStreamTrait;
+
     private const SLOTS = [
         '__toString', 'close', 'detach', 'rewind',
         'getSize', 'tell', 'eof', 'isSeekable', 'seek', 'isWritable', 'write',
@@ -73,6 +75,17 @@ final class FnStream implements StreamInterface
      */
     public function __wakeup(): void
     {
+        $this->methods = [];
+        $this->detached = true;
+
+        throw new \LogicException('FnStream should never be unserialized');
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->methods = [];
+        $this->detached = true;
+
         throw new \LogicException('FnStream should never be unserialized');
     }
 

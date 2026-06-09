@@ -23,6 +23,12 @@ Guzzle PSR-7 3.0 requires `psr/http-message:^2.0` and
 `psr/http-message:^1.1 || ^2.0` and `psr/http-factory:^1.0`. If your dependency
 constraints pin `psr/http-message` to v1, update them before upgrading.
 
+#### Native PHP Serialization Of Streams
+
+Guzzle PSR-7 stream implementations no longer support native PHP `serialize()`
+or `unserialize()`. Persist stream contents explicitly and recreate streams with
+`Utils::streamFor()` when needed.
+
 Guzzle PSR-7 no longer depends on `ralouphie/getallheaders` and no longer
 provides a transitive global `getallheaders()` polyfill.
 `ServerRequest::fromGlobals()` continues to collect request headers internally.

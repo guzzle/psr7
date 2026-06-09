@@ -12,6 +12,8 @@ use Psr\Http\Message\StreamInterface;
  */
 class Stream implements StreamInterface
 {
+    use NonSerializableStreamTrait;
+
     /** @var resource */
     private $stream;
     private ?int $size = null;

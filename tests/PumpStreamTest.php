@@ -323,4 +323,67 @@ class PumpStreamTest extends TestCase
 
         (string) $p;
     }
+
+    public function testUnserializationCannotInvokeSourceFromDestructor(): void
+    {
+        PumpStreamUnserializeMarker::$calls = 0;
+        $payload = self::serializedObjectWithProperties(PumpStreamUnserializeStringCastOnDestruct::class, [
+            'stream' => self::serializedObjectWithProperties(PumpStream::class, [
+                self::privateProperty(PumpStream::class, 'source') => serialize([PumpStreamUnserializeMarker::class, 'mark']),
+            ]),
+        ]);
+
+        try {
+            unserialize($payload);
+            self::fail('Expected unserialization to fail.');
+        } catch (\LogicException $e) {
+            self::assertSame('PumpStream should never be unserialized', $e->getMessage());
+        }
+
+        self::assertSame(0, PumpStreamUnserializeMarker::$calls);
+    }
+
+    private static function privateProperty(string $class, string $property): string
+    {
+        return "\0".$class."\0".$property;
+    }
+
+    /**
+     * @param array<string, string> $properties Serialized property values indexed by property name.
+     */
+    private static function serializedObjectWithProperties(string $class, array $properties): string
+    {
+        $body = '';
+        foreach ($properties as $name => $serializedValue) {
+            $body .= serialize($name).$serializedValue;
+        }
+
+        return sprintf('O:%d:"%s":%d:{%s}', strlen($class), $class, count($properties), $body);
+    }
+}
+
+final class PumpStreamUnserializeStringCastOnDestruct
+{
+    /** @var mixed */
+    public $stream;
+
+    public function __destruct()
+    {
+        try {
+            (string) $this->stream;
+        } catch (\Throwable $e) {
+        }
+    }
+}
+
+final class PumpStreamUnserializeMarker
+{
+    public static int $calls = 0;
+
+    public static function mark(): string
+    {
+        ++self::$calls;
+
+        return 'marked';
+    }
 }
