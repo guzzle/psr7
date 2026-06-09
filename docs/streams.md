@@ -1,5 +1,69 @@
 # Streams and Decorators
 
+PSR-7 request and response bodies are streams. Streams allow HTTP messages to represent small strings, large files, generated data, remote resources, and other body sources through a common interface.
+
+The PSR-7 `Psr\Http\Message\StreamInterface` exposes methods that let consumers read, write, seek, and inspect body data without requiring the entire body to be loaded into memory.
+
+Streams expose their capabilities using `isReadable()`, `isWritable()`, and `isSeekable()`. These methods help collaborators determine whether a stream supports the operations they need.
+
+## Creating Streams
+
+Use `GuzzleHttp\Psr7\Utils::streamFor()` to create streams from common PHP values. It accepts strings, resources returned from `fopen()`, objects that implement `__toString()`, iterators, callable arrays, closures, invokable objects, and existing `Psr\Http\Message\StreamInterface` instances.
+
+Callable sources receive a suggested read length, may return fewer or more bytes, and end the stream by returning `false` or `null`. Strings remain literal body contents, even when they name a callable.
+
+```php
+use GuzzleHttp\Psr7\Utils;
+
+$stream = Utils::streamFor('string data');
+echo $stream;
+// string data
+echo $stream->read(3);
+// str
+echo $stream->getContents();
+// ing data
+var_export($stream->eof());
+// true
+var_export($stream->tell());
+// 11
+```
+
+You can create streams from iterators. The iterator can yield any number of bytes per iteration. Any excess bytes returned by the iterator that were not requested by a stream consumer will be buffered until a subsequent read.
+
+```php
+use GuzzleHttp\Psr7\Utils;
+
+$generator = function ($bytes) {
+    for ($i = 0; $i < $bytes; $i++) {
+        yield '.';
+    }
+};
+
+$stream = Utils::streamFor($generator(1024));
+echo $stream->read(3);
+// ...
+```
+
+## Metadata
+
+Streams expose stream metadata through `getMetadata()`. This method provides the data returned by PHP's [stream_get_meta_data()](https://www.php.net/manual/en/function.stream-get-meta-data.php), and can optionally expose custom metadata.
+
+```php
+use GuzzleHttp\Psr7\Utils;
+
+$resource = Utils::tryFopen('/path/to/file', 'r');
+$stream = Utils::streamFor($resource);
+
+echo $stream->getMetadata('uri');
+// /path/to/file
+var_export($stream->isReadable());
+// true
+var_export($stream->isWritable());
+// false
+var_export($stream->isSeekable());
+// true
+```
+
 ## AppendStream
 
 `GuzzleHttp\Psr7\AppendStream`
