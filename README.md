@@ -42,11 +42,11 @@ $request = $request->withHeader('Accept', 'application/json');
 
 ## Documentation
 
-- [Full documentation](docs/index.md)
-- [Streams and decorators](docs/index.md#appendstream)
-- [Static API helpers](docs/index.md#static-api)
-- [Additional URI methods](docs/index.md#additional-uri-methods)
-- [Upgrade guide](UPGRADING.md)
+- [Messages](docs/messages.md)
+- [Streams and Decorators](docs/streams.md)
+- [Static API Helpers](docs/static-api.md)
+- [URI Helpers](docs/uri.md)
+- [Upgrade Guide](UPGRADING.md)
 
 ## Security
 
