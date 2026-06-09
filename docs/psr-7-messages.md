@@ -1,8 +1,8 @@
 # PSR-7 Messages
 
-This package provides PSR-7 request, response, server request, uploaded file, URI, and stream implementations. Use these objects when you need HTTP messages that can move between Guzzle, PSR-18 clients, PSR-15 middleware, and other PSR-7 compatible libraries.
+This page covers the PSR-7 message objects provided by this package: requests, responses, server requests, uploaded files, and the message-specific header, URI, and body APIs. Use these objects when you need HTTP messages that can move between Guzzle, PSR-18 clients, PSR-15 middleware, and other PSR-7 compatible libraries.
 
-HTTP requests and responses are both messages. A message has a start line, headers, and an optional body stream.
+HTTP requests and responses are both messages. A message has a start line, headers, and an optional body stream. Message and URI objects are immutable; methods named `with*()` return changed copies. Body streams are mutable handles, so reads and writes can change their cursor or contents. For body details, see [Streams and Decorators](streams.md). For URI helpers, see [URI Helpers](uri.md).
 
 ## Creating Requests
 
@@ -36,6 +36,48 @@ echo $response->getProtocolVersion();
 // You can provide a status, headers, body, and protocol version.
 $response = new Response(200, ['Content-Type' => 'application/json'], '{"ok":true}', '1.1');
 ```
+
+## Creating Server Requests
+
+Server requests represent incoming HTTP requests on the server side. They include the normal request method, URI, headers, and body, plus server parameters, cookies, query parameters, parsed body data, attributes, and uploaded files.
+
+```php
+use GuzzleHttp\Psr7\ServerRequest;
+
+$request = new ServerRequest('POST', 'https://example.com/form', [], 'name=Guzzle', '1.1', [
+    'REMOTE_ADDR' => '192.0.2.1',
+]);
+
+$request = $request
+    ->withCookieParams(['session' => 'abc'])
+    ->withQueryParams(['page' => '1'])
+    ->withParsedBody(['name' => 'Guzzle'])
+    ->withAttribute('route', 'profile');
+
+echo $request->getServerParams()['REMOTE_ADDR'];
+echo $request->getCookieParams()['session'];
+echo $request->getQueryParams()['page'];
+echo $request->getParsedBody()['name'];
+echo $request->getAttribute('route');
+```
+
+Use `ServerRequest::fromGlobals()` to create a server request from PHP superglobals. It reads `$_SERVER`, `$_GET`, `$_POST`, `$_COOKIE`, and `$_FILES`, and attempts to include request headers when available.
+
+```php
+use GuzzleHttp\Psr7\ServerRequest;
+
+$request = ServerRequest::fromGlobals();
+```
+
+Use `ServerRequest::getUriFromGlobals()` when you only need the URI derived from `$_SERVER`.
+
+```php
+use GuzzleHttp\Psr7\ServerRequest;
+
+$uri = ServerRequest::getUriFromGlobals();
+```
+
+For URI construction and normalization helpers, see [URI Helpers](uri.md).
 
 ## Requests
 
@@ -180,6 +222,70 @@ echo $body->getContents();
 
 For more stream creation and decorator examples, see [Streams and Decorators](streams.md).
 
+## Uploaded Files
+
+Uploaded files are represented by `Psr\Http\Message\UploadedFileInterface` instances. This package provides `GuzzleHttp\Psr7\UploadedFile`, which can wrap a local file path, PHP stream resource, or PSR-7 stream.
+
+```php
+use GuzzleHttp\Psr7\UploadedFile;
+use GuzzleHttp\Psr7\Utils;
+
+$stream = Utils::streamFor('file contents');
+$upload = new UploadedFile($stream, $stream->getSize(), UPLOAD_ERR_OK, 'example.txt', 'text/plain');
+
+echo $upload->getClientFilename();
+echo $upload->getClientMediaType();
+echo $upload->getSize();
+```
+
+Call `getStream()` to read the uploaded content, or `moveTo()` to move or copy it to a target path. After `moveTo()` succeeds, `isMoved()` returns `true`, and calls that need the active upload stream will throw.
+
+```php
+$body = $upload->getStream();
+echo $body->getContents();
+
+$upload->moveTo('/path/to/target.txt');
+var_export($upload->isMoved());
+// true
+```
+
+If the upload error code is not `UPLOAD_ERR_OK`, the object still exposes `getError()`, `getSize()`, `getClientFilename()`, and `getClientMediaType()`, but `getStream()` and `moveTo()` throw because no successful upload content is available.
+
+`ServerRequest::normalizeFiles()` converts a `$_FILES`-style array into a tree of uploaded file instances. It accepts simple file specs, nested PHP `$_FILES` shapes, existing `UploadedFileInterface` instances, and nested arrays of uploaded files.
+
+```php
+use GuzzleHttp\Psr7\ServerRequest;
+
+$files = ServerRequest::normalizeFiles([
+    'avatar' => [
+        'tmp_name' => '/tmp/php123',
+        'size' => 1024,
+        'error' => UPLOAD_ERR_OK,
+        'name' => 'avatar.png',
+        'type' => 'image/png',
+    ],
+    'photos' => [
+        'tmp_name' => [
+            'first' => '/tmp/php456',
+        ],
+        'size' => [
+            'first' => 2048,
+        ],
+        'error' => [
+            'first' => UPLOAD_ERR_OK,
+        ],
+        'name' => [
+            'first' => 'photo.jpg',
+        ],
+        'type' => [
+            'first' => 'image/jpeg',
+        ],
+    ],
+]);
+
+$request = (new ServerRequest('POST', '/upload'))->withUploadedFiles($files);
+```
+
 ## HTTP Method Casing
 
 HTTP method names are case-sensitive in PSR-7. Requests created explicitly with
@@ -286,3 +392,9 @@ echo $response->getReasonPhrase();
 echo $response->getProtocolVersion();
 // 1.1
 ```
+
+## Related
+
+- [Streams and Decorators](streams.md)
+- [URI Helpers](uri.md)
+- [Static API Helpers and PSR-17 Factories](static-api-helpers-and-psr-17-factories.md)

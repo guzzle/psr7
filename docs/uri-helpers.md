@@ -1,7 +1,9 @@
 # URI Helpers
 
-Aside from the standard `Psr\Http\Message\UriInterface` implementation in form of the `GuzzleHttp\Psr7\Uri` class,
-this library also provides additional functionality when working with URIs as static methods.
+This page covers this package's `Psr\Http\Message\UriInterface` implementation and URI helper classes for classifying, composing, resolving, normalizing, comparing, and safely modifying URIs.
+
+Aside from the standard `Psr\Http\Message\UriInterface` implementation provided by the `GuzzleHttp\Psr7\Uri` class,
+this library also provides additional static methods for working with URIs.
 
 ## URI Types
 
@@ -27,13 +29,13 @@ Whether the URI is absolute, i.e. it has a scheme.
 `public static function isNetworkPathReference(UriInterface $uri): bool`
 
 Whether the URI is a network-path reference. A relative reference that begins with two slash characters is
-termed an network-path reference.
+termed a network-path reference.
 
 ### `GuzzleHttp\Psr7\Uri::isAbsolutePathReference`
 
 `public static function isAbsolutePathReference(UriInterface $uri): bool`
 
-Whether the URI is a absolute-path reference. A relative reference that begins with a single slash character is
+Whether the URI is an absolute-path reference. A relative reference that begins with a single slash character is
 termed an absolute-path reference.
 
 ### `GuzzleHttp\Psr7\Uri::isRelativePathReference`
@@ -101,23 +103,23 @@ provided key are removed.
 
 ## Cross-Origin Detection
 
-`GuzzleHttp\Psr7\UriComparator` provides methods to determine if a modified URL should be considered cross-origin.
+`GuzzleHttp\Psr7\UriComparator` provides methods to determine if a modified URI should be considered cross-origin.
 
 ### `GuzzleHttp\Psr7\UriComparator::isCrossOrigin`
 
 `public static function isCrossOrigin(UriInterface $original, UriInterface $modified): bool`
 
-Determines if a modified URL should be considered cross-origin with respect to an original URL.
+Determines if a modified URI should be considered cross-origin with respect to an original URI.
 
-Two URLs are cross-origin when their scheme, host, or effective port differ. Host comparison is case-insensitive, and missing ports use the default port for `http` or `https`. Other schemes do not receive implicit default ports.
+Two URIs are cross-origin when their scheme, host, or effective port differ. Host comparison is case-insensitive, and missing ports use the default port for `http` or `https`. Other schemes do not receive implicit default ports.
 
 This helper only compares URI origins. It does not implement redirect handling or credential policy.
 
 ## Reference Resolution
 
 `GuzzleHttp\Psr7\UriResolver` provides methods to resolve a URI reference in the context of a base URI according
-to [RFC 3986 Section 5](https://datatracker.ietf.org/doc/html/rfc3986#section-5). This is for example also what web
-browsers do when resolving a link in a website based on the current request URI.
+to [RFC 3986 Section 5](https://datatracker.ietf.org/doc/html/rfc3986#section-5). This is also what web
+browsers do when resolving a link in a document based on the current request URI.
 
 ### `GuzzleHttp\Psr7\UriResolver::resolve`
 
@@ -136,13 +138,13 @@ Removes dot segments from a path and returns the new path according to
 
 `public static function relativize(UriInterface $base, UriInterface $target): UriInterface`
 
-Returns the target URI as a relative reference from the base URI. This method is the counterpart to resolve():
+Returns the target URI as a relative reference from the base URI. This method is the counterpart to `resolve()`:
 
 ```php
 (string) $target === (string) UriResolver::resolve($base, UriResolver::relativize($base, $target))
 ```
 
-One use-case is to use the current request URI as base URI and then generate relative links in your documents
+One use case is to use the current request URI as the base URI and then generate relative links in your documents
 to reduce the document size or offer self-contained downloadable document archives.
 
 ```php
@@ -163,7 +165,7 @@ echo UriResolver::relativize($base, new Uri('http://example.org/a/b/'));   // pr
 `public static function normalize(UriInterface $uri, $flags = self::PRESERVING_NORMALIZATIONS): UriInterface`
 
 Returns a normalized URI. The scheme and host component are already normalized to lowercase per PSR-7 UriInterface.
-This methods adds additional normalizations that can be configured with the `$flags` parameter which is a bitmask
+This method adds additional normalizations that can be configured with the `$flags` parameter, which is a bitmask
 of normalizations to apply. The following normalizations are available:
 
 - `UriNormalizer::PRESERVING_NORMALIZATIONS`
@@ -236,3 +238,9 @@ Whether two URIs can be considered equivalent. Both URIs are normalized automati
 `$normalizations` bitmask. The method also accepts relative URI references and returns true when they are equivalent.
 This of course assumes they will be resolved against the same base URI. If this is not the case, determination of
 equivalence or difference of relative references does not mean anything.
+
+## Related
+
+- [PSR-7 Messages](psr-7-messages.md)
+- [Streams and Decorators](streams.md)
+- [Static API Helpers and PSR-17 Factories](static-api-helpers-and-psr-17-factories.md)

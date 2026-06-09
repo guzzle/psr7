@@ -2,7 +2,7 @@
 
 `guzzlehttp/psr7` is a PSR-7 HTTP message implementation for PHP. It provides request, response, URI, uploaded file, and stream objects that work with Guzzle and any other library using the PSR-7 interfaces.
 
-Use this package directly when you need to create or inspect PSR-7 messages without sending HTTP requests. If you only want to make HTTP requests, install [`guzzlehttp/guzzle`](https://github.com/guzzle/guzzle) instead; it already depends on this package.
+Use this package directly when you need to create or inspect PSR-7 messages without sending HTTP requests. If you only want to make HTTP requests, install [`guzzlehttp/guzzle`](https://github.com/guzzle/guzzle/blob/8.0/README.md) instead; it already depends on this package.
 
 ## Installation
 
@@ -34,7 +34,7 @@ echo $response->getStatusCode();
 echo $stream;
 ```
 
-PSR-7 objects are immutable. Methods such as `withHeader()` and `withUri()` return a changed copy instead of modifying the original object.
+PSR-7 messages and URIs are immutable. Methods such as `withHeader()` and `withUri()` return a changed copy instead of modifying the original object. Streams are mutable body handles; reading, writing, seeking, and closing a stream can change its cursor, contents, or usability.
 
 ```php
 $request = $request->withHeader('Accept', 'application/json');
@@ -42,11 +42,12 @@ $request = $request->withHeader('Accept', 'application/json');
 
 ## Documentation
 
-- [Messages](docs/messages.md)
-- [Streams and Decorators](docs/streams.md)
-- [Static API Helpers](docs/static-api.md)
-- [URI Helpers](docs/uri.md)
+- [PSR-7 Messages](docs/psr-7-messages.md)
+- [Streams and Decorators](docs/streams-and-decorators.md)
+- [URI Helpers](docs/uri-helpers.md)
+- [Static API Helpers and PSR-17 Factories](docs/static-api-helpers-and-psr-17-factories.md)
 - [Upgrade Guide](UPGRADING.md)
+- [Changelog](CHANGELOG.md)
 
 ## Security
 

@@ -1,6 +1,32 @@
-# Static API Helpers
+# Static API Helpers and PSR-17 Factories
 
-There are various static methods available under the `GuzzleHttp\Psr7` namespace.
+This page covers utility APIs in the `GuzzleHttp\Psr7` namespace: static helpers for messages, headers, queries, streams, URIs, and MIME types, plus the package's PSR-17 `HttpFactory` implementation. For conceptual message, stream, and URI behavior, see the related pages at the end.
+
+
+## `GuzzleHttp\Psr7\HttpFactory`
+
+`GuzzleHttp\Psr7\HttpFactory` implements all PSR-17 factory interfaces: `RequestFactoryInterface`, `ResponseFactoryInterface`, `ServerRequestFactoryInterface`, `StreamFactoryInterface`, `UploadedFileFactoryInterface`, and `UriFactoryInterface`.
+
+Use it when code expects PSR-17 factories and you want this package's PSR-7 implementations.
+
+```php
+use GuzzleHttp\Psr7\HttpFactory;
+
+$factory = new HttpFactory();
+
+$request = $factory->createRequest('GET', 'https://example.com');
+$response = $factory->createResponse(200);
+$serverRequest = $factory->createServerRequest('POST', '/submit', ['REMOTE_ADDR' => '192.0.2.1']);
+$stream = $factory->createStream('body');
+$uri = $factory->createUri('https://example.com/path');
+```
+
+It also creates streams from files and resources, and uploaded files from streams.
+
+```php
+$stream = $factory->createStreamFromFile('/path/to/file.txt', 'r');
+$upload = $factory->createUploadedFile($stream, $stream->getSize(), UPLOAD_ERR_OK, 'file.txt', 'text/plain');
+```
 
 
 ## `GuzzleHttp\Psr7\Message::toString`
@@ -75,7 +101,7 @@ Parses a response message string into a response object.
 `public static function parse(string|array $header): array`
 
 Parse an array of header values containing ";" separated data into an
-array of associative arrays representing the header key value pair data
+array of associative arrays representing the header key-value pair data
 of the header. When a parameter does not contain a value, but just
 contains a key, this function will inject a key with a '' string value.
 
@@ -84,7 +110,7 @@ contains a key, this function will inject a key with a '' string value.
 
 `public static function splitList(string|string[] $header): string[]`
 
-Splits a HTTP header defined to contain a comma-separated list into
+Splits an HTTP header defined to contain a comma-separated list into
 each individual value:
 
 ```
@@ -99,11 +125,11 @@ Example headers include `accept`, `cache-control` and `if-none-match`.
 `public static function normalize(string|array $header): array`
 
 `Header::normalize()` is deprecated in favor of [`Header::splitList()`](#guzzlehttppsr7headersplitlist)
-which performs the same operation with a cleaned up API and improved
+which performs the same operation with a cleaned-up API and improved
 documentation.
 
-Converts an array of header values that may contain comma separated
-headers into an array of headers with no comma separated values.
+Converts an array of header values that may contain comma-separated
+headers into an array of headers with no comma-separated values.
 
 
 ## `GuzzleHttp\Psr7\Query::parse`
@@ -112,8 +138,8 @@ headers into an array of headers with no comma separated values.
 
 Parse a query string into an associative array.
 
-If multiple values are found for the same key, the value of that key
-value pair will become an array. This function does not parse nested
+If multiple values are found for the same key, the value of that
+key-value pair becomes an array. This function does not parse nested
 PHP style arrays into an associative array (e.g., `foo[a]=1&foo[b]=2`
 will be parsed into `['foo[a]' => '1', 'foo[b]' => '2'])`.
 
@@ -122,7 +148,7 @@ will be parsed into `['foo[a]' => '1', 'foo[b]' => '2'])`.
 
 `public static function build(array $params, int|false $encoding = PHP_QUERY_RFC3986, bool $treatBoolsAsInts = true): string`
 
-Build a query string from an array of key value pairs.
+Build a query string from an array of key-value pairs.
 
 This function can use the return value of `parse()` to build a query
 string. This function does not modify the provided keys when an array is
@@ -131,9 +157,9 @@ encountered (like `http_build_query()` would).
 
 ## `GuzzleHttp\Psr7\Utils::caselessRemove`
 
-`public static function caselessRemove(iterable<string> $keys, $keys, array $data): array`
+`public static function caselessRemove(array $keys, array $data): array`
 
-Remove the items given by the keys, case insensitively from the data.
+Remove the items given by the keys from the data, case-insensitively.
 
 
 ## `GuzzleHttp\Psr7\Utils::copyToStream`
@@ -225,7 +251,7 @@ Redact the user info part of a URI.
 
 Create a new stream based on the input type.
 
-Options is an associative array that can contain the following keys:
+Options are provided as an associative array that can contain the following keys:
 
 - metadata: Array of custom metadata.
 - size: Size of the stream.
@@ -263,7 +289,7 @@ $generator = function ($bytes) {
     for ($i = 0; $i < $bytes; $i++) {
         yield ' ';
     }
-}
+};
 
 $stream = GuzzleHttp\Psr7\Utils::streamFor($generator(100));
 ```
@@ -297,22 +323,29 @@ metadata can be detected after the stream read cannot make progress.
 
 `public static function uriFor(string|UriInterface $uri): UriInterface`
 
-Returns a UriInterface for the given value.
+Returns a `UriInterface` for the given value.
 
-This function accepts a string or UriInterface and returns a
-UriInterface for the given value. If the value is already a
-UriInterface, it is returned as-is.
+This function accepts a string or `UriInterface` and returns a
+`UriInterface` for the given value. If the value is already a
+`UriInterface`, it is returned as-is.
 
 
 ## `GuzzleHttp\Psr7\MimeType::fromFilename`
 
 `public static function fromFilename(string $filename): string|null`
 
-Determines the mimetype of a file by looking at its extension.
+Determines the MIME type of a file by looking at its extension.
 
 
 ## `GuzzleHttp\Psr7\MimeType::fromExtension`
 
 `public static function fromExtension(string $extension): string|null`
 
-Maps a file extensions to a mimetype.
+Maps a file extension to a MIME type.
+
+
+## Related
+
+- [PSR-7 Messages](psr-7-messages.md)
+- [Streams and Decorators](streams.md)
+- [URI Helpers](uri.md)

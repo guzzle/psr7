@@ -1,6 +1,8 @@
 # Streams and Decorators
 
-PSR-7 request and response bodies are streams. Streams allow HTTP messages to represent small strings, large files, generated data, remote resources, and other body sources through a common interface.
+PSR-7 request and response bodies are streams. This page covers stream creation, cursor and I/O behavior, built-in stream decorators, and wrapping PSR-7 streams as PHP resources.
+
+Streams allow HTTP messages to represent small strings, large files, generated data, remote resources, and other body sources through a common interface.
 
 The PSR-7 `Psr\Http\Message\StreamInterface` exposes methods that let consumers read, write, seek, and inspect body data without requiring the entire body to be loaded into memory.
 
@@ -9,6 +11,8 @@ Streams expose their capabilities using `isReadable()`, `isWritable()`, and `isS
 ## Creating Streams
 
 Use `GuzzleHttp\Psr7\Utils::streamFor()` to create streams from common PHP values. It accepts strings, resources returned from `fopen()`, objects that implement `__toString()`, iterators, callable arrays, closures, invokable objects, and existing `Psr\Http\Message\StreamInterface` instances.
+
+Scalar values and `null` are stored in `php://temp` streams. PHP keeps `php://temp` data in memory until the stream exceeds 2 MB, then spills to a temporary file on disk.
 
 Callable sources receive a suggested read length, may return fewer or more bytes, and end the stream by returning `false` or `null`. Strings remain literal body contents, even when they name a callable.
 
@@ -87,8 +91,8 @@ echo $composed; // abc, 123. Above all listen to me.
 
 `GuzzleHttp\Psr7\BufferStream`
 
-Provides a buffer stream that can be written to fill a buffer, and read
-from to remove bytes from the buffer.
+Provides a buffer stream that can be written to fill a buffer, then read
+from it to remove bytes from the buffer.
 
 This stream returns a "hwm" metadata value that tells upstream consumers
 what the configured high water mark of the stream is, or the maximum
@@ -190,16 +194,15 @@ $fnStream->rewind();
 Uses PHP's zlib.inflate filter to inflate zlib (HTTP deflate, RFC1950) or gzipped (RFC1952) content.
 
 This stream decorator converts the provided stream to a PHP stream resource,
-then appends the zlib.inflate filter. The stream is then converted back
-to a Guzzle stream resource to be used as a Guzzle stream.
+appends the zlib.inflate filter, and wraps the filtered resource as a stream.
 
 
 ## LazyOpenStream
 
 `GuzzleHttp\Psr7\LazyOpenStream`
 
-Lazily reads or writes to a file that is opened only after an IO operation
-take place on the stream.
+Lazily reads from or writes to a file that is opened only after an I/O operation
+takes place on the stream.
 
 ```php
 use GuzzleHttp\Psr7;
@@ -240,8 +243,8 @@ echo $stream->tell();
 
 `GuzzleHttp\Psr7\MultipartStream`
 
-Stream that when read returns bytes for a streaming multipart or
-multipart/form-data stream.
+A stream that returns bytes for a streaming multipart or multipart/form-data
+body when read.
 
 Each multipart element must contain a `name` and `contents` key. `contents` may
 be any non-array value accepted by `GuzzleHttp\Psr7\Utils::streamFor()`,
@@ -265,9 +268,13 @@ echo $noSeek->read(3);
 // foo
 var_export($noSeek->isSeekable());
 // false
-$noSeek->seek(0);
-var_export($noSeek->read(3));
-// NULL
+
+try {
+    $noSeek->seek(0);
+} catch (\RuntimeException $e) {
+    echo $e->getMessage();
+    // Cannot seek a NoSeekStream
+}
 ```
 
 
@@ -275,13 +282,13 @@ var_export($noSeek->read(3));
 
 `GuzzleHttp\Psr7\PumpStream`
 
-Provides a read only stream that pumps data from a PHP callable.
+Provides a read-only stream that pumps data from a PHP callable.
 
 When invoking the provided callable, the PumpStream will pass the suggested
 number of bytes to read to the callable. The callable can choose to ignore
 this value and return fewer or more bytes than requested. Any extra data
 returned by the provided callable is buffered internally until drained using
-the read() function of the PumpStream. The provided callable MUST return a
+the `read()` method of the PumpStream. The provided callable MUST return a
 non-empty string to provide data, and MUST return false or null when there is
 no more data to read. Returning an empty string causes a RuntimeException
 because it cannot satisfy a positive-length read.
@@ -369,3 +376,9 @@ $stream = GuzzleHttp\Psr7\Utils::streamFor('hello!');
 $resource = StreamWrapper::getResource($stream);
 echo fread($resource, 6); // outputs hello!
 ```
+
+## Related
+
+- [PSR-7 Messages](psr-7-messages.md)
+- [Static API Helpers and PSR-17 Factories](static-api-helpers-and-psr-17-factories.md)
+- [URI Helpers](uri.md)
