@@ -2,7 +2,7 @@
 
 This page covers the PSR-7 message objects provided by this package: requests, responses, server requests, uploaded files, and the message-specific header, URI, and body APIs. Use these objects when you need HTTP messages that can move between Guzzle, PSR-18 clients, PSR-15 middleware, and other PSR-7 compatible libraries.
 
-HTTP requests and responses are both messages. A message has a start line, headers, and an optional body stream. Message and URI objects are immutable; methods named `with*()` return changed copies. Body streams are mutable handles, so reads and writes can change their cursor or contents. For body details, see [Streams and Decorators](streams.md). For URI helpers, see [URI Helpers](uri.md).
+HTTP requests and responses are both messages. A message has a start line, headers, and an optional body stream. Message and URI objects are immutable; methods named `with*()` return changed copies. Body streams are mutable handles, so reads and writes can change their cursor or contents. For body details, see [Streams and Decorators](streams-and-decorators.md). For URI helpers, see [URI Helpers](uri-helpers.md).
 
 ## Creating Requests
 
@@ -77,7 +77,7 @@ use GuzzleHttp\Psr7\ServerRequest;
 $uri = ServerRequest::getUriFromGlobals();
 ```
 
-For URI construction and normalization helpers, see [URI Helpers](uri.md).
+For URI construction and normalization helpers, see [URI Helpers](uri-helpers.md).
 
 ## Requests
 
@@ -121,7 +121,7 @@ echo $uri->getHost();
 echo $uri->getQuery();
 ```
 
-For URI-specific helper methods, see [URI Helpers](uri.md).
+For URI-specific helper methods, see [URI Helpers](uri-helpers.md).
 
 ## Headers
 
@@ -220,7 +220,7 @@ $body->seek(0);
 echo $body->getContents();
 ```
 
-For more stream creation and decorator examples, see [Streams and Decorators](streams.md).
+For more stream creation and decorator examples, see [Streams and Decorators](streams-and-decorators.md).
 
 ## Uploaded Files
 
@@ -395,6 +395,8 @@ echo $response->getProtocolVersion();
 
 ## Related
 
-- [Streams and Decorators](streams.md)
-- [URI Helpers](uri.md)
-- [Static API Helpers and PSR-17 Factories](static-api-helpers-and-psr-17-factories.md)
+- [Streams and Decorators](streams-and-decorators.md)
+- [URI Helpers](uri-helpers.md)
+- [Message Helpers](message-helpers.md)
+- [Header and Query Helpers](header-and-query-helpers.md)
+- [PSR-17 Factories](psr-17-factories.md)

@@ -242,5 +242,6 @@ equivalence or difference of relative references does not mean anything.
 ## Related
 
 - [PSR-7 Messages](psr-7-messages.md)
-- [Streams and Decorators](streams.md)
-- [Static API Helpers and PSR-17 Factories](static-api-helpers-and-psr-17-factories.md)
+- [Streams and Decorators](streams-and-decorators.md)
+- [URI and MIME Helpers](uri-and-mime-helpers.md)
+- [Header and Query Helpers](header-and-query-helpers.md)

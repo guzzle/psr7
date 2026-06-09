@@ -380,5 +380,6 @@ echo fread($resource, 6); // outputs hello!
 ## Related
 
 - [PSR-7 Messages](psr-7-messages.md)
-- [Static API Helpers and PSR-17 Factories](static-api-helpers-and-psr-17-factories.md)
-- [URI Helpers](uri.md)
+- [Stream Helpers](stream-helpers.md)
+- [PSR-17 Factories](psr-17-factories.md)
+- [URI Helpers](uri-helpers.md)
