@@ -10,6 +10,14 @@ Use this package directly when you need to create or inspect PSR-7 messages with
 composer require guzzlehttp/psr7
 ```
 
+## Version Guidance
+
+| Version | Status       | PHP Version  |
+|---------|--------------|--------------|
+| 3.x     | Experimental | >=7.4,<8.6   |
+| 2.x     | Latest       | >=7.2.5,<8.6 |
+| 1.x     | End of Life  | >=5.4,<8.2   |
+
 ## Quick Start
 
 ```php
@@ -39,13 +47,6 @@ $request = $request->withHeader('Accept', 'application/json');
 - [Static API helpers](docs/index.md#static-api)
 - [Additional URI methods](docs/index.md#additional-uri-methods)
 - [Upgrade guide](UPGRADING.md)
-
-## Version Guidance
-
-| Version | Status       | PHP Version  |
-|---------|--------------|--------------|
-| 3.x     | Experimental | >=7.4,<8.6   |
-| 2.x     | Latest       | >=7.2.5,<8.6 |
 
 ## Security
 

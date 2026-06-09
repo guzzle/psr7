@@ -26,6 +26,7 @@ composer require guzzlehttp/psr7
 |---------|--------------|--------------|
 | 3.x     | Experimental | >=7.4,<8.6   |
 | 2.x     | Latest       | >=7.2.5,<8.6 |
+| 1.x     | End of Life  | >=5.4,<8.2   |
 
 See [UPGRADING.md](../UPGRADING.md) for package upgrade notes.
 
