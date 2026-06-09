@@ -13,6 +13,7 @@ use Psr\Http\Message\StreamInterface;
 final class LazyOpenStream implements StreamInterface
 {
     use StreamDecoratorTrait;
+    use NonSerializableStreamTrait;
 
     private string $filename;
 
@@ -32,6 +33,13 @@ final class LazyOpenStream implements StreamInterface
         // unsetting the property forces the first access to go through
         // __get().
         unset($this->stream);
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->stream = new BufferStream();
+
+        throw new \LogicException('LazyOpenStream should never be unserialized');
     }
 
     /**

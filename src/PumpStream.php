@@ -22,6 +22,8 @@ use Psr\Http\Message\StreamInterface;
  */
 final class PumpStream implements StreamInterface
 {
+    use NonSerializableStreamTrait;
+
     /** @var callable|null */
     private $source;
 
@@ -52,6 +54,17 @@ final class PumpStream implements StreamInterface
         $this->size = Integers::assertOptionalNonNegativeSize($options['size'] ?? null, 'Stream size');
         $this->metadata = $options['metadata'] ?? [];
         $this->buffer = new BufferStream();
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->source = null;
+        $this->size = null;
+        $this->tellPos = 0;
+        $this->metadata = [];
+        $this->buffer = new BufferStream();
+
+        throw new \LogicException('PumpStream should never be unserialized');
     }
 
     public function __toString(): string

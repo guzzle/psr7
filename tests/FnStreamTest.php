@@ -355,11 +355,28 @@ class FnStreamTest extends TestCase
 
     public function testDoNotAllowUnserialization(): void
     {
-        $a = new FnStream([]);
-        $b = serialize($a);
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('FnStream should never be unserialized');
-        unserialize($b);
+        unserialize(self::serializedObject(FnStream::class));
+    }
+
+    public function testUnserializationCannotInvokeToStringCallbackFromDestructor(): void
+    {
+        FnStreamUnserializeMarker::$calls = 0;
+        $payload = self::serializedObjectWithProperties(FnStreamUnserializeStringCastOnDestruct::class, [
+            'stream' => self::serializedObjectWithProperties(FnStream::class, [
+                '_fn___toString' => serialize([FnStreamUnserializeMarker::class, 'mark']),
+            ]),
+        ]);
+
+        try {
+            unserialize($payload);
+            self::fail('Expected unserialization to fail.');
+        } catch (\LogicException $e) {
+            self::assertSame('FnStream should never be unserialized', $e->getMessage());
+        }
+
+        self::assertSame(0, FnStreamUnserializeMarker::$calls);
     }
 
     public function testThatConvertingStreamToStringWillThrowException(): void
@@ -428,6 +445,24 @@ class FnStreamTest extends TestCase
         }
 
         self::fail('Expected stream to be detached');
+    }
+
+    private static function serializedObject(string $class): string
+    {
+        return sprintf('O:%d:"%s":0:{}', strlen($class), $class);
+    }
+
+    /**
+     * @param array<string, string> $properties Serialized property values indexed by property name.
+     */
+    private static function serializedObjectWithProperties(string $class, array $properties): string
+    {
+        $body = '';
+        foreach ($properties as $name => $serializedValue) {
+            $body .= serialize($name).$serializedValue;
+        }
+
+        return sprintf('O:%d:"%s":%d:{%s}', strlen($class), $class, count($properties), $body);
     }
 
     /**
@@ -507,5 +542,31 @@ class FnStreamTest extends TestCase
                 return $key === null ? ['foo' => 'bar'] : 'bar';
             },
         ]);
+    }
+}
+
+final class FnStreamUnserializeStringCastOnDestruct
+{
+    /** @var mixed */
+    public $stream;
+
+    public function __destruct()
+    {
+        try {
+            (string) $this->stream;
+        } catch (\Throwable $e) {
+        }
+    }
+}
+
+final class FnStreamUnserializeMarker
+{
+    public static int $calls = 0;
+
+    public static function mark(): string
+    {
+        ++self::$calls;
+
+        return 'marked';
     }
 }

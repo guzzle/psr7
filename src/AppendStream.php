@@ -13,6 +13,8 @@ use Psr\Http\Message\StreamInterface;
  */
 final class AppendStream implements StreamInterface
 {
+    use NonSerializableStreamTrait;
+
     /** @var StreamInterface[] Streams being decorated */
     private array $streams = [];
 

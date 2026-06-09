@@ -13,6 +13,7 @@ use Psr\Http\Message\StreamInterface;
 final class MultipartStream implements StreamInterface
 {
     use StreamDecoratorTrait;
+    use NonSerializableStreamTrait;
 
     private string $boundary;
 

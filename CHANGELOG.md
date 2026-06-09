@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Require `psr/http-message:^2.0` and add native parameter and return types
 - Require `psr/http-factory:^1.1`
+- Reject native PHP serialization of stream implementations
 - Preserve request method casing, except `ServerRequest::fromGlobals()` still uppercases
 - Reject empty arrays and non-string values as header values
 - Reject invalid uploaded file trees and invalid parsed body values

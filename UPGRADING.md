@@ -540,6 +540,12 @@ Static utility and constant classes such as `Header`, `Message`, `MimeType`,
 `Query`, `Rfc7230`, and `Utils` now have private constructors. Replace any
 accidental instantiation with static method calls or constant access.
 
+#### Native PHP Serialization of Streams
+
+Guzzle PSR-7 stream implementations no longer support native PHP `serialize()`
+or `unserialize()`. Persist stream contents explicitly and recreate streams with
+`Utils::streamFor()` when needed.
+
 1.x to 2.0
 ----------
 

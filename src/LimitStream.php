@@ -12,6 +12,7 @@ use Psr\Http\Message\StreamInterface;
 final class LimitStream implements StreamInterface
 {
     use StreamDecoratorTrait;
+    use NonSerializableStreamTrait;
 
     /** @var int Offset to start reading from */
     private int $offset;

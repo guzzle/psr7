@@ -21,6 +21,7 @@ use Psr\Http\Message\StreamInterface;
 final class InflateStream implements StreamInterface
 {
     use StreamDecoratorTrait;
+    use NonSerializableStreamTrait;
 
     private StreamInterface $stream;
 
