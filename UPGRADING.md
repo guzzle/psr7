@@ -624,9 +624,9 @@ $stream = Utils::streamFor('body');
 | `get_message_body_summary` | `Message::bodySummary` |
 | `_caseless_remove` | `Utils::caselessRemove` |
 
-`Header::normalize()` remained the direct 2.0 replacement for
-`normalize_header()`. In newer 2.x versions and in 3.0, prefer
-`Header::splitList()` for new code.
+`Header::normalize()` remains the direct 2.0 replacement for
+`normalize_header()`. In newer 2.x versions, prefer `Header::splitList()` for
+new code.
 
 #### Deprecated URI Methods Removed
 
