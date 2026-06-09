@@ -27,7 +27,7 @@ class StreamWrapperTest extends TestCase
         self::assertSame('', fread($handle, 1));
         self::assertTrue(feof($handle));
 
-        $stBlksize = defined('PHP_WINDOWS_VERSION_BUILD') ? -1 : 0;
+        $stBlksize = \PHP_OS_FAMILY === 'Windows' ? -1 : 0;
 
         self::assertEquals([
             'dev' => 0,
@@ -250,7 +250,7 @@ class StreamWrapperTest extends TestCase
     {
         StreamWrapper::register();
 
-        $stBlksize = defined('PHP_WINDOWS_VERSION_BUILD') ? -1 : 0;
+        $stBlksize = \PHP_OS_FAMILY === 'Windows' ? -1 : 0;
 
         self::assertEquals(
             [
