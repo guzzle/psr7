@@ -386,6 +386,12 @@ class Uri implements UriInterface, \JsonSerializable
     private static function stringifyQueryValue($value): string
     {
         if (is_float($value) && !is_finite($value)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.12',
+                'Passing a non-finite float to Uri::withQueryValues() is deprecated; guzzlehttp/psr7 3.0 rejects non-finite floats.'
+            );
+
             return is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
         }
 

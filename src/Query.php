@@ -127,6 +127,12 @@ final class Query
     private static function normalizeNonFiniteFloat($value)
     {
         if (is_float($value) && !is_finite($value)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.12',
+                'Passing a non-finite float to Query::build() is deprecated; guzzlehttp/psr7 3.0 rejects non-finite floats.'
+            );
+
             return is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
         }
 
