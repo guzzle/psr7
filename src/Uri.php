@@ -371,10 +371,25 @@ class Uri implements UriInterface, \JsonSerializable
         $result = self::getFilteredQueryString($uri, array_keys($keyValueArray));
 
         foreach ($keyValueArray as $key => $value) {
-            $result[] = self::generateQueryString((string) $key, $value !== null ? (string) $value : null);
+            $result[] = self::generateQueryString((string) $key, $value !== null ? self::stringifyQueryValue($value) : null);
         }
 
         return $uri->withQuery(implode('&', $result));
+    }
+
+    /**
+     * Converts non-finite floats to the strings PHP coerces them to, as
+     * implicit coercion of NAN emits a warning on PHP 8.5.
+     *
+     * @param mixed $value
+     */
+    private static function stringifyQueryValue($value): string
+    {
+        if (is_float($value) && !is_finite($value)) {
+            return is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
+        }
+
+        return (string) $value;
     }
 
     /**

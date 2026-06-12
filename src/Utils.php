@@ -470,6 +470,12 @@ final class Utils
     public static function streamFor($resource = '', array $options = []): StreamInterface
     {
         if (is_scalar($resource)) {
+            // Convert non-finite floats explicitly, as implicit coercion of
+            // NAN emits a warning on PHP 8.5.
+            if (is_float($resource) && !is_finite($resource)) {
+                $resource = is_nan($resource) ? 'NAN' : ($resource > 0 ? 'INF' : '-INF');
+            }
+
             $stream = self::tryFopen('php://temp', 'r+');
             if ($resource !== '') {
                 fwrite($stream, (string) $resource);

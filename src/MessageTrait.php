@@ -273,6 +273,12 @@ trait MessageTrait
                 ));
             }
 
+            // Convert non-finite floats explicitly, as implicit coercion of
+            // NAN emits a warning on PHP 8.5.
+            if (is_float($value) && !is_finite($value)) {
+                $value = is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
+            }
+
             $trimmed = trim((string) $value, " \t");
             $this->assertValue($trimmed);
 
