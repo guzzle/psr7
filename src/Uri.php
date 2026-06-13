@@ -378,21 +378,26 @@ class Uri implements UriInterface, \JsonSerializable
     }
 
     /**
-     * Converts non-finite floats to the strings PHP coerces them to, as
-     * implicit coercion of NAN emits a warning on PHP 8.5.
+     * Stringifies a non-null query value, deprecating non-string values that
+     * guzzlehttp/psr7 3.0 will reject. Non-finite floats are normalized to the
+     * strings PHP coerces them to, as implicit coercion of NAN emits a warning
+     * on PHP 8.5.
      *
      * @param mixed $value
      */
     private static function stringifyQueryValue($value): string
     {
-        if (is_float($value) && !is_finite($value)) {
+        if (!is_string($value)) {
             \trigger_deprecation(
                 'guzzlehttp/psr7',
                 '2.12',
-                'Passing a non-finite float to Uri::withQueryValues() is deprecated; guzzlehttp/psr7 3.0 rejects non-finite floats.'
+                'Passing %s to Uri::withQueryValues() is deprecated; cast it to a string. guzzlehttp/psr7 3.0 will only accept string or null query values.',
+                \gettype($value)
             );
 
-            return is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
+            if (is_float($value) && !is_finite($value)) {
+                return is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
+            }
         }
 
         return (string) $value;
