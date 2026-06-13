@@ -18,12 +18,12 @@ final class ServerRequestGlobalsFactory
     }
 
     /**
-     * @param array<array-key, mixed> $server         Typically the $_SERVER superglobal
-     * @param array<array-key, mixed> $query          Typically the $_GET superglobal
-     * @param array<array-key, mixed> $post           Typically the $_POST superglobal
-     * @param array<array-key, mixed> $cookies        Typically the $_COOKIE superglobal
-     * @param array<array-key, mixed> $files          Typically the $_FILES superglobal
-     * @param callable():mixed|null   $headerProvider
+     * @param array<array-key, mixed>  $server         Typically the $_SERVER superglobal
+     * @param array<array-key, mixed>  $query          Typically the $_GET superglobal
+     * @param array<array-key, mixed>  $post           Typically the $_POST superglobal
+     * @param array<array-key, mixed>  $cookies        Typically the $_COOKIE superglobal
+     * @param array<array-key, mixed>  $files          Typically the $_FILES superglobal
+     * @param (callable(): mixed)|null $headerProvider
      */
     public static function fromArrays(
         array $server,
@@ -62,8 +62,8 @@ final class ServerRequestGlobalsFactory
     }
 
     /**
-     * @param array<array-key, mixed> $server
-     * @param callable():mixed|null   $headerProvider
+     * @param array<array-key, mixed>  $server
+     * @param (callable(): mixed)|null $headerProvider
      *
      * @return array<array-key, string>
      */
