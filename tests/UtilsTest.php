@@ -802,6 +802,24 @@ class UtilsTest extends TestCase
         yield 'float' => [10.0];
     }
 
+    /**
+     * @dataProvider nonFiniteFloats
+     */
+    public function testStreamForRejectsNonFiniteFloat(float $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot create a stream from a non-finite float.');
+
+        Psr7\Utils::streamFor($value);
+    }
+
+    public static function nonFiniteFloats(): iterable
+    {
+        yield 'NAN' => [\NAN];
+        yield 'INF' => [\INF];
+        yield '-INF' => [-\INF];
+    }
+
     public function testCanCreateIteratorBasedStream(): void
     {
         $a = new \ArrayIterator(['foo', 'bar', '123']);
