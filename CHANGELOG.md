@@ -69,7 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-- Deprecated non-finite float values that guzzlehttp/psr7 3.0 will reject
+- Deprecated non-finite float values in `Query::build()` that guzzlehttp/psr7 3.0 rejects
+- Deprecated non-finite float multipart contents that guzzlehttp/psr7 3.0 rejects
+- Deprecated non-string scalar bodies in `Utils::streamFor()`; cast them to a string for 3.0
+- Deprecated non-string `Uri::withQueryValues()` values; cast them to a string for 3.0
 
 ## 2.11.1 - 2026-06-12
 

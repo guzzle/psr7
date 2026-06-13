@@ -383,8 +383,17 @@ class Uri implements UriInterface, \JsonSerializable
      */
     private static function assertFiniteQueryValue($value): void
     {
-        if (is_float($value) && !is_finite($value)) {
-            throw new \InvalidArgumentException('Query string values must be finite; non-finite floats are not supported.');
+        if (!is_string($value)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.12',
+                'Passing %s to Uri::withQueryValues() is deprecated; cast it to a string. guzzlehttp/psr7 3.0 will only accept string or null query values.',
+                \gettype($value)
+            );
+
+            if (is_float($value) && !is_finite($value)) {
+                throw new \InvalidArgumentException('Query string values must be finite; non-finite floats are not supported.');
+            }
         }
     }
 
