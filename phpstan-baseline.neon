@@ -199,6 +199,12 @@ parameters:
 			path: src/UriResolver.php
 
 		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Utils.php
+
+		-
 			message: '#^Method GuzzleHttp\\Psr7\\Utils\:\:tryGetContents\(\) should return string but returns string\|false\.$#'
 			identifier: return.type
 			count: 1
