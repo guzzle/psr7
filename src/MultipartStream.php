@@ -128,18 +128,10 @@ final class MultipartStream implements StreamInterface
         if (is_scalar($contents) && !is_string($contents)) {
             // Multipart field values are byte strings on the wire, so finite
             // numeric and boolean field values are cast to string here rather
-            // than tripping streamFor()'s non-string-scalar deprecation. Non-finite
-            // floats are deprecated and normalized here too, so the deprecation is
-            // reported against MultipartStream instead of transitively through
-            // streamFor().
+            // than rejected by streamFor(). Non-finite floats cannot be
+            // represented and are rejected.
             if (is_float($contents) && !is_finite($contents)) {
-                \trigger_deprecation(
-                    'guzzlehttp/psr7',
-                    '2.12',
-                    'Passing a non-finite float as multipart contents is deprecated; guzzlehttp/psr7 3.0 rejects non-finite floats.'
-                );
-
-                $contents = is_nan($contents) ? 'NAN' : ($contents > 0 ? 'INF' : '-INF');
+                throw new \InvalidArgumentException('Cannot create a stream from a non-finite float.');
             }
 
             $contents = (string) $contents;

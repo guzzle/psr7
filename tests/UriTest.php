@@ -620,19 +620,6 @@ class UriTest extends TestCase
         self::assertSame('', $uri->getQuery());
     }
 
-    public function testScalarQueryValues(): void
-    {
-        $uri = new Uri();
-        $uri = Uri::withQueryValues($uri, [
-            2 => 2,
-            1 => true,
-            'false' => false,
-            'float' => 3.1,
-        ]);
-
-        self::assertSame('2=2&1=1&false=&float=3.1', $uri->getQuery());
-    }
-
     public function testWithQueryValues(): void
     {
         $uri = new Uri();
@@ -644,23 +631,34 @@ class UriTest extends TestCase
         self::assertSame('key1=value1&key2=value2', $uri->getQuery());
     }
 
+    public function testWithQueryValuesAcceptsNull(): void
+    {
+        $uri = Uri::withQueryValues(new Uri(), ['key1' => 'value1', 'key2' => null]);
+
+        self::assertSame('key1=value1&key2', $uri->getQuery());
+    }
+
     /**
-     * @dataProvider nonFiniteFloatProvider
+     * @dataProvider nonStringQueryValueProvider
+     *
+     * @param mixed $value
      */
-    public function testWithQueryValuesRejectsNonFiniteFloat(float $value): void
+    public function testWithQueryValuesRejectsNonStringValue($value): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Query string values must be finite; non-finite floats are not supported.');
+        $this->expectExceptionMessage('Query string values must be a string or null');
 
         Uri::withQueryValues(new Uri(), ['key' => $value]);
     }
 
-    public static function nonFiniteFloatProvider(): array
+    public static function nonStringQueryValueProvider(): array
     {
         return [
+            'int' => [2],
+            'bool' => [true],
+            'float' => [3.1],
             'NAN' => [\NAN],
             'INF' => [\INF],
-            '-INF' => [-\INF],
         ];
     }
 

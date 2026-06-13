@@ -121,7 +121,7 @@ Recognized change values must use the documented types:
 - `uri`: `UriInterface`
 - `query`: `string`
 - `version`: `string`
-- `body`: `resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable`
+- `body`: `resource|string|StreamInterface|callable|\Iterator|\Stringable`
 - `set_headers`: `array<array-key, string|non-empty-array<array-key, string>>`
 - `remove_headers`: `array<array-key, string|int>`
 
@@ -330,6 +330,9 @@ Flat arrays are still supported for repeated query parameters:
 Query::build(['tag' => ['a', 'b']]);
 // tag=a&tag=b
 ```
+
+`Uri::withQueryValues()` is stricter than `Query::build()` and requires `string`
+or `null` values; cast numeric and boolean query values to string.
 
 #### PumpStream Source Callables
 

@@ -198,9 +198,9 @@ final class Utils
      * - remove_headers: (array) Remove the given headers. Values may be
      *   strings or integers.
      * - body: (mixed) Sets the given body. Present non-null values are converted
-     *   with self::streamFor(), including scalar values, resources, streams,
-     *   iterators, callable arrays, closures, invokable objects, and stringable
-     *   objects. String inputs remain literal bodies.
+     *   with self::streamFor(), including resources, streams, iterators, callable
+     *   arrays, closures, invokable objects, and stringable objects. String inputs
+     *   remain literal bodies.
      * - uri: (UriInterface) Set the URI.
      * - query: (string) Set the query string value of the URI.
      * - version: (string) Set the protocol version.
@@ -210,7 +210,7 @@ final class Utils
      *     method?: string,
      *     set_headers?: array<array-key, string|non-empty-array<array-key, string>>,
      *     remove_headers?: array<array-key, string|int>,
-     *     body?: resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable,
+     *     body?: resource|string|StreamInterface|callable|\Iterator|\Stringable,
      *     uri?: UriInterface,
      *     query?: string,
      *     version?: string
@@ -351,7 +351,7 @@ final class Utils
         }
 
         if (\array_key_exists('body', $changes) && $changes['body'] === null) {
-            self::assertValidModifyRequestChange('body', 'resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable', $changes['body']);
+            self::assertValidModifyRequestChange('body', 'resource|string|StreamInterface|callable|\Iterator|\Stringable', $changes['body']);
         }
 
         if (\array_key_exists('set_headers', $changes)) {
@@ -481,11 +481,8 @@ final class Utils
      *   inputs are always treated as string bodies, even when they name callable
      *   functions.
      *
-     * Passing a non-string scalar (`int`, `float`, or `bool`) is deprecated; cast
-     * it to a string instead. guzzlehttp/psr7 3.0 will reject non-string scalars.
-     *
-     * @param resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable|null $resource Entity body data
-     * @param array{size?: int, metadata?: array}                                                $options  Additional options
+     * @param resource|string|StreamInterface|callable|\Iterator|\Stringable|null $resource Entity body data
+     * @param array{size?: int, metadata?: array}                                 $options  Additional options
      *
      * @throws \InvalidArgumentException if the $resource arg is not valid.
      */
@@ -493,21 +490,15 @@ final class Utils
     {
         if (is_scalar($resource)) {
             if (!is_string($resource)) {
-                \trigger_deprecation(
-                    'guzzlehttp/psr7',
-                    '2.12',
-                    'Passing %s to Utils::streamFor() is deprecated; cast it to a string. guzzlehttp/psr7 3.0 will only accept string, resource, StreamInterface, Stringable, Iterator, callable, or null.',
-                    \gettype($resource)
-                );
-
-                if (is_float($resource) && !is_finite($resource)) {
-                    throw new \InvalidArgumentException('Cannot create a stream from a non-finite float.');
-                }
+                throw new \InvalidArgumentException(\sprintf(
+                    'Cannot create a stream from %s; pass a string, resource, StreamInterface, Stringable, Iterator, callable, or null.',
+                    \get_debug_type($resource)
+                ));
             }
 
             $stream = self::tryFopen('php://temp', 'r+');
             if ($resource !== '') {
-                fwrite($stream, (string) $resource);
+                fwrite($stream, $resource);
                 fseek($stream, 0);
             }
 

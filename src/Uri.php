@@ -371,7 +371,7 @@ class Uri implements UriInterface, \JsonSerializable
         $result = self::getFilteredQueryString($uri, array_keys($keyValueArray));
 
         foreach ($keyValueArray as $key => $value) {
-            self::assertFiniteQueryValue($value);
+            self::assertStringOrNullQueryValue($value);
             $result[] = self::generateQueryString((string) $key, $value !== null ? (string) $value : null);
         }
 
@@ -381,19 +381,13 @@ class Uri implements UriInterface, \JsonSerializable
     /**
      * @param mixed $value
      */
-    private static function assertFiniteQueryValue($value): void
+    private static function assertStringOrNullQueryValue($value): void
     {
-        if (!is_string($value)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.12',
-                'Passing %s to Uri::withQueryValues() is deprecated; cast it to a string. guzzlehttp/psr7 3.0 will only accept string or null query values.',
-                \gettype($value)
-            );
-
-            if (is_float($value) && !is_finite($value)) {
-                throw new \InvalidArgumentException('Query string values must be finite; non-finite floats are not supported.');
-            }
+        if ($value !== null && !is_string($value)) {
+            throw new \InvalidArgumentException(\sprintf(
+                'Query string values must be a string or null, %s given.',
+                \get_debug_type($value)
+            ));
         }
     }
 

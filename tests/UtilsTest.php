@@ -803,18 +803,23 @@ class UtilsTest extends TestCase
     }
 
     /**
-     * @dataProvider nonFiniteFloats
+     * @dataProvider nonStringScalars
+     *
+     * @param mixed $value
      */
-    public function testStreamForRejectsNonFiniteFloat(float $value): void
+    public function testStreamForRejectsNonStringScalar($value): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot create a stream from a non-finite float.');
+        $this->expectExceptionMessage('Cannot create a stream from');
 
         Psr7\Utils::streamFor($value);
     }
 
-    public static function nonFiniteFloats(): iterable
+    public static function nonStringScalars(): iterable
     {
+        yield 'int' => [1];
+        yield 'float' => [1.5];
+        yield 'bool' => [true];
         yield 'NAN' => [\NAN];
         yield 'INF' => [\INF];
         yield '-INF' => [-\INF];
@@ -1544,7 +1549,7 @@ class UtilsTest extends TestCase
             ],
             'body null' => [
                 ['body' => null],
-                'Utils::modifyRequest() change "body" must be resource|string|int|float|bool|StreamInterface|callable|\Iterator|\Stringable; null provided.',
+                'Utils::modifyRequest() change "body" must be resource|string|StreamInterface|callable|\Iterator|\Stringable; null provided.',
             ],
             'set_headers null' => [
                 ['set_headers' => null],
