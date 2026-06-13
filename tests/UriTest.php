@@ -644,6 +644,26 @@ class UriTest extends TestCase
         self::assertSame('key1=value1&key2=value2', $uri->getQuery());
     }
 
+    /**
+     * @dataProvider nonFiniteFloatProvider
+     */
+    public function testWithQueryValuesRejectsNonFiniteFloat(float $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query string values must be finite; non-finite floats are not supported.');
+
+        Uri::withQueryValues(new Uri(), ['key' => $value]);
+    }
+
+    public static function nonFiniteFloatProvider(): array
+    {
+        return [
+            'NAN' => [\NAN],
+            'INF' => [\INF],
+            '-INF' => [-\INF],
+        ];
+    }
+
     public function testWithQueryValuesReplacesSameKeys(): void
     {
         $uri = new Uri();

@@ -371,31 +371,21 @@ class Uri implements UriInterface, \JsonSerializable
         $result = self::getFilteredQueryString($uri, array_keys($keyValueArray));
 
         foreach ($keyValueArray as $key => $value) {
-            $result[] = self::generateQueryString((string) $key, $value !== null ? self::stringifyQueryValue($value) : null);
+            self::assertFiniteQueryValue($value);
+            $result[] = self::generateQueryString((string) $key, $value !== null ? (string) $value : null);
         }
 
         return $uri->withQuery(implode('&', $result));
     }
 
     /**
-     * Converts non-finite floats to the strings PHP coerces them to, as
-     * implicit coercion of NAN emits a warning on PHP 8.5.
-     *
      * @param mixed $value
      */
-    private static function stringifyQueryValue($value): string
+    private static function assertFiniteQueryValue($value): void
     {
         if (is_float($value) && !is_finite($value)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.12',
-                'Passing a non-finite float to Uri::withQueryValues() is deprecated; guzzlehttp/psr7 3.0 rejects non-finite floats.'
-            );
-
-            return is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
+            throw new \InvalidArgumentException('Query string values must be finite; non-finite floats are not supported.');
         }
-
-        return (string) $value;
     }
 
     /**

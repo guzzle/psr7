@@ -489,16 +489,8 @@ final class Utils
     public static function streamFor($resource = '', array $options = []): StreamInterface
     {
         if (is_scalar($resource)) {
-            // Convert non-finite floats explicitly, as implicit coercion of
-            // NAN emits a warning on PHP 8.5.
             if (is_float($resource) && !is_finite($resource)) {
-                \trigger_deprecation(
-                    'guzzlehttp/psr7',
-                    '2.12',
-                    'Passing a non-finite float to Utils::streamFor() is deprecated; guzzlehttp/psr7 3.0 rejects non-finite floats.'
-                );
-
-                $resource = is_nan($resource) ? 'NAN' : ($resource > 0 ? 'INF' : '-INF');
+                throw new \InvalidArgumentException('Cannot create a stream from a non-finite float.');
             }
 
             $stream = self::tryFopen('php://temp', 'r+');

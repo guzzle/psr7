@@ -106,7 +106,7 @@ final class Query
             $k = $encoder((string) $k);
             if (!is_array($v)) {
                 $qs .= $k;
-                $v = is_bool($v) ? $castBool($v) : self::normalizeNonFiniteFloat($v);
+                $v = self::normalizeValue($v, $treatBoolsAsInts);
                 if ($v !== null) {
                     $qs .= '='.$encoder($v);
                 }
@@ -114,7 +114,7 @@ final class Query
             } else {
                 foreach ($v as $vv) {
                     $qs .= $k;
-                    $vv = is_bool($vv) ? $castBool($vv) : self::normalizeNonFiniteFloat($vv);
+                    $vv = self::normalizeValue($vv, $treatBoolsAsInts);
                     if ($vv !== null) {
                         $qs .= '='.$encoder($vv);
                     }
@@ -127,25 +127,30 @@ final class Query
     }
 
     /**
-     * Converts non-finite floats to the strings PHP coerces them to, as
-     * implicit coercion of NAN emits a warning on PHP 8.5.
-     *
      * @param mixed $value
-     *
-     * @return mixed
      */
-    private static function normalizeNonFiniteFloat($value)
+    private static function normalizeValue($value, bool $treatBoolsAsInts): ?string
     {
-        if (is_float($value) && !is_finite($value)) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '2.12',
-                'Passing a non-finite float to Query::build() is deprecated; guzzlehttp/psr7 3.0 rejects non-finite floats.'
-            );
-
-            return is_nan($value) ? 'NAN' : ($value > 0 ? 'INF' : '-INF');
+        if ($value === null) {
+            return null;
         }
 
-        return $value;
+        if (is_bool($value)) {
+            return $treatBoolsAsInts ? (string) (int) $value : ($value ? 'true' : 'false');
+        }
+
+        if (is_float($value) && !is_finite($value)) {
+            throw new \InvalidArgumentException('Query string values must be finite; non-finite floats are not supported.');
+        }
+
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+
+        if (is_object($value) && method_exists($value, '__toString')) {
+            return $value->__toString();
+        }
+
+        throw new \InvalidArgumentException('Query string values must be scalar, null, or stringable objects');
     }
 }

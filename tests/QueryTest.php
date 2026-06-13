@@ -177,4 +177,35 @@ class QueryTest extends TestCase
 
         Psr7\Query::build(['foo' => ['bar', new \stdClass()]]);
     }
+
+    /**
+     * @dataProvider nonFiniteFloatProvider
+     */
+    public function testBuildRejectsNonFiniteFloatValue(float $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query string values must be finite; non-finite floats are not supported.');
+
+        Psr7\Query::build(['foo' => $value]);
+    }
+
+    /**
+     * @dataProvider nonFiniteFloatProvider
+     */
+    public function testBuildRejectsNonFiniteFloatValueInArray(float $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query string values must be finite; non-finite floats are not supported.');
+
+        Psr7\Query::build(['foo' => [$value]]);
+    }
+
+    public static function nonFiniteFloatProvider(): array
+    {
+        return [
+            'NAN' => [\NAN],
+            'INF' => [\INF],
+            '-INF' => [-\INF],
+        ];
+    }
 }
