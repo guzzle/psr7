@@ -64,6 +64,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `ralouphie/getallheaders` dependency
 - Removed deprecated `Header::normalize()` method
 
+## 2.12.0 - Upcoming
+
+### Deprecated
+
+- Deprecated non-finite float values that guzzlehttp/psr7 3.0 will reject
+
+## 2.11.1 - 2026-06-12
+
+### Fixed
+
+- Fixed non-finite float values emitting coercion warnings on PHP 8.5
+
 ## 2.11.0 - 2026-06-02
 
 ### Changed
