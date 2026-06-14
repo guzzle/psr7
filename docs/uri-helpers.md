@@ -53,6 +53,41 @@ Whether the URI is a same-document reference. A same-document reference refers t
 fragment component, identical to the base URI. When no base URI is given, only an empty URI reference
 (apart from its fragment) is considered a same-document reference.
 
+## URI Syntax Validation
+
+`GuzzleHttp\Psr7\Rfc3986` provides static methods for validating individual URI components against the
+grammar defined by [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986). They operate on raw
+component strings rather than on `Psr\Http\Message\UriInterface` instances.
+
+### `GuzzleHttp\Psr7\Rfc3986::isValidScheme`
+
+`public static function isValidScheme(string $scheme): bool`
+
+Whether the string is a valid URI scheme. Per
+[RFC 3986 Section 3.1](https://datatracker.ietf.org/doc/html/rfc3986#section-3.1), a scheme must start
+with a letter, followed by any number of letters, digits, `+`, `-`, or `.`. The empty string is also
+accepted, since a URI reference may omit the scheme.
+
+### `GuzzleHttp\Psr7\Rfc3986::isValidHost`
+
+`public static function isValidHost(string $host): bool`
+
+Whether the string is a valid URI host. Per
+[RFC 3986 Section 3.2.2](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2), the host is an
+IP-literal, IPv4 address, or registered name. An empty host is accepted, since the authority — and thus
+the host — may be empty. Bracketed values are validated as IPv6 or IPvFuture literals; any other value is
+rejected if it contains control characters, whitespace, an authority or path delimiter (`/`, `?`, `#`,
+`@`, `\`), or an embedded colon denoting a port.
+
+### `GuzzleHttp\Psr7\Rfc3986::isValidPort`
+
+`public static function isValidPort(string $port): bool`
+
+Whether the string is a valid port number. RFC 3986 defines the port as `*DIGIT`, which also permits an
+empty port and has no upper bound; this applies the stricter policy used throughout the library instead,
+accepting a non-empty run of digits (leading zeros are accepted and normalized) that resolves to a value
+in the range 0-65535.
+
 ## URI Components
 
 Additional methods to work with URI components.
