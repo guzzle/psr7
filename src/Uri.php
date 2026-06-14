@@ -17,10 +17,9 @@ use Psr\Http\Message\UriInterface;
 class Uri implements UriInterface, \JsonSerializable
 {
     /**
-     * Absolute http and https URIs require a host per RFC 7230 Section 2.7
-     * but in generic URIs the host can be empty. So for http(s) URIs
-     * we apply this default host when no host is given yet to form a
-     * valid URI.
+     * Absolute http and https URIs require a host per RFC 9110 Section 4.2.1
+     * but in generic URIs the host can be empty. So for http(s) URIs we apply
+     * this default host when no host is given yet to form a valid URI.
      */
     private const HTTP_DEFAULT_HOST = 'localhost';
 

@@ -7,7 +7,7 @@ namespace GuzzleHttp\Psr7;
 /**
  * @internal
  */
-final class Rfc7230
+final class Rfc9112
 {
     private function __construct()
     {

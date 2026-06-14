@@ -540,8 +540,8 @@ lists.
 #### Non-instantiable Utility Classes
 
 Static utility and constant classes such as `Header`, `Message`, `MimeType`,
-`Query`, `Rfc7230`, and `Utils` now have private constructors. Replace any
-accidental instantiation with static method calls or constant access.
+`Query`, and `Utils` now have private constructors. Replace any accidental
+instantiation with static method calls or constant access.
 
 #### Native PHP Serialization of Streams
 
