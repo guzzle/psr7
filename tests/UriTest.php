@@ -279,6 +279,55 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider zeroStringPortProvider
+     */
+    public function testFromPartsAcceptsZeroStringPort(string $port): void
+    {
+        $uri = Uri::fromParts([
+            'scheme' => 'http',
+            'host' => 'example.com',
+            'port' => $port,
+        ]);
+
+        self::assertSame(0, $uri->getPort());
+    }
+
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function zeroStringPortProvider(): iterable
+    {
+        yield 'zero' => ['0'];
+        yield 'zeros' => ['00'];
+        yield 'leading zeros' => ['0000'];
+    }
+
+    public function testZeroPortAppearsInAuthorityAndString(): void
+    {
+        $uri = Uri::fromParts([
+            'scheme' => 'http',
+            'host' => 'example.com',
+            'port' => '0',
+        ]);
+
+        self::assertSame(0, $uri->getPort());
+        self::assertSame('example.com:0', $uri->getAuthority());
+        self::assertSame('http://example.com:0', (string) $uri);
+    }
+
+    public function testLeadingZeroDefaultPortIsNormalizedAway(): void
+    {
+        $uri = Uri::fromParts([
+            'scheme' => 'http',
+            'host' => 'example.com',
+            'port' => '0080',
+        ]);
+
+        self::assertNull($uri->getPort());
+        self::assertSame('example.com', $uri->getAuthority());
+    }
+
+    /**
      * @dataProvider invalidFromPartsPorts
      *
      * @param mixed $port
@@ -298,6 +347,8 @@ class UriTest extends TestCase
     public static function invalidFromPartsPorts(): iterable
     {
         yield 'string with trailing text' => ['8080abc'];
+        yield 'out of range' => ['65536'];
+        yield 'leading zero, out of range after trimming' => ['065536'];
         yield 'decimal float' => [1.9];
         yield 'true' => [true];
         yield 'false' => [false];

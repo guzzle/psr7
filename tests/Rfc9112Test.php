@@ -93,13 +93,16 @@ class Rfc9112Test extends TestCase
         yield 'maximum' => ['65535', 65535];
         yield 'leading zero' => ['080', 80];
         yield 'multiple leading zeros' => ['0080', 80];
+        yield 'leading zero, in range after trimming' => ['065535', 65535];
         yield 'zero' => ['0', null];
         yield 'zeros' => ['00', null];
+        yield 'padded zeros' => ['000000', null];
         yield 'empty' => ['', null];
         yield 'non-numeric' => ['abc', null];
         yield 'numeric suffix' => ['80x', null];
         yield 'plus sign' => ['+80', null];
         yield 'out of range' => ['65536', null];
+        yield 'leading zero, out of range after trimming' => ['065536', null];
         yield 'too many digits' => ['999999', null];
     }
 }

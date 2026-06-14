@@ -87,19 +87,14 @@ final class Rfc9112
 
     public static function parsePort(string $port): ?int
     {
-        if ($port === '' || !ctype_digit($port)) {
+        if (!Rfc3986::isValidPort($port)) {
             return null;
         }
 
-        $normalized = ltrim($port, '0');
-        if ($normalized === '') {
-            return null;
-        }
+        // A zero port is valid per RFC 3986 but meaningless for an HTTP
+        // authority, so reject it on top of the generic syntax check.
+        $parsed = (int) ltrim($port, '0');
 
-        if (strlen($normalized) > 5 || (int) $normalized > 0xFFFF) {
-            return null;
-        }
-
-        return (int) $normalized;
+        return $parsed === 0 ? null : $parsed;
     }
 }
