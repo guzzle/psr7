@@ -691,26 +691,23 @@ class Uri implements UriInterface, \JsonSerializable
             return $this->filterPort($port);
         }
 
-        if (!\is_string($port) || $port === '' || !\ctype_digit($port)) {
+        if (\is_string($port) && \ctype_digit($port)) {
+            // A zero port is accepted here; only Rfc9112::parsePort() rejects
+            // it for HTTP Host/authority parsing.
+            if (Rfc3986::isValidPort($port)) {
+                return (int) \ltrim($port, '0');
+            }
+
             throw new \InvalidArgumentException(sprintf(
                 'Invalid port: %s. Must be between 0 and 65535',
-                self::describeInvalidPort($port)
+                \ltrim($port, '0')
             ));
         }
 
-        $normalized = \ltrim($port, '0');
-        if ($normalized === '') {
-            return 0;
-        }
-
-        if (\strlen($normalized) > 5 || (int) $normalized > 0xFFFF) {
-            throw new \InvalidArgumentException(sprintf(
-                'Invalid port: %s. Must be between 0 and 65535',
-                $normalized
-            ));
-        }
-
-        return (int) $normalized;
+        throw new \InvalidArgumentException(sprintf(
+            'Invalid port: %s. Must be between 0 and 65535',
+            self::describeInvalidPort($port)
+        ));
     }
 
     /**
