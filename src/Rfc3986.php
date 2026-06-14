@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GuzzleHttp\Psr7;
 
 /**
- * @internal
+ * Syntax predicates for the URI grammar defined by RFC 3986.
  */
 final class Rfc3986
 {
@@ -17,6 +17,8 @@ final class Rfc3986
      * Sub-delims for use in a regex.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
+     *
+     * @internal
      */
     public const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
 
@@ -24,6 +26,8 @@ final class Rfc3986
      * Unreserved characters for use in a regex.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
+     *
+     * @internal
      */
     public const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
 
@@ -31,6 +35,8 @@ final class Rfc3986
      * The two hex digits of a percent-encoded octet (the "3A" in "%3A"), for use in a regex.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
+     *
+     * @internal
      */
     public const HEX_OCTET = '[A-Fa-f0-9]{2}';
 

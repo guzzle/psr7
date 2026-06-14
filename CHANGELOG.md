@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add `GuzzleHttp\Psr7\Exception\TimeoutException` for timed-out stream operations
+- Promote `GuzzleHttp\Psr7\Rfc3986` to public API with `isValidScheme()`, `isValidHost()`, and `isValidPort()`
 
 ### Changed
 
