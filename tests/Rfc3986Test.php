@@ -88,7 +88,7 @@ class Rfc3986Test extends TestCase
      */
     public static function hostProvider(): iterable
     {
-        // Accepted reg-names (RFC 3986 section 3.2.2).
+        // Accepted non-bracketed hosts: reg-names and bare IPv4 addresses (RFC 3986 section 3.2.2).
         yield 'empty host' => ['', true];
         yield 'simple reg-name' => ['example.com', true];
         yield 'plain IPv4 address' => ['192.168.0.1', true];
@@ -155,9 +155,8 @@ class Rfc3986Test extends TestCase
         yield 'IPvFuture mixed-case hex version' => ['[vAbC.foo]', true];
         yield 'IPvFuture with colon in suffix' => ['[v1.a:b]', true];
         yield 'IPvFuture with extra dot in suffix' => ['[v1..]', true];
-        // The /i modifier accepts an uppercase "V"; RFC 3986 IPvFuture uses a literal
-        // lowercase "v". Characterization of lenient divergence (not a behavior change).
-        yield 'IPvFuture uppercase V (lenient)' => ['[V1.foo]', true];
+        // "v" is a case-insensitive ABNF literal (RFC 2234 section 2.3), so "V" is also valid.
+        yield 'IPvFuture uppercase V' => ['[V1.foo]', true];
         yield 'IPvFuture missing hex digits' => ['[v.foo]', false];
         yield 'IPvFuture missing dot/suffix' => ['[vF]', false];
         yield 'IPvFuture empty after dot' => ['[vF.]', false];
@@ -180,7 +179,7 @@ class Rfc3986Test extends TestCase
      */
     public static function portProvider(): iterable
     {
-        yield 'minimum' => ['1', true];
+        yield 'minimum non-zero' => ['1', true];
         yield 'http' => ['80', true];
         yield 'https' => ['443', true];
         yield 'maximum' => ['65535', true];
