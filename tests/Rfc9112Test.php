@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace GuzzleHttp\Tests\Psr7;
 
-use GuzzleHttp\Psr7\Rfc7230;
+use GuzzleHttp\Psr7\Rfc9112;
 use PHPUnit\Framework\TestCase;
 
-class Rfc7230Test extends TestCase
+class Rfc9112Test extends TestCase
 {
     /**
      * @dataProvider absoluteFormProvider
      */
     public function testIsAbsoluteFormRequestTarget(string $target, bool $expected): void
     {
-        self::assertSame($expected, Rfc7230::isAbsoluteFormRequestTarget($target));
+        self::assertSame($expected, Rfc9112::isAbsoluteFormRequestTarget($target));
     }
 
     /**
@@ -39,7 +39,7 @@ class Rfc7230Test extends TestCase
      */
     public function testIsAsteriskFormRequestTarget(string $method, string $target, bool $expected): void
     {
-        self::assertSame($expected, Rfc7230::isAsteriskFormRequestTarget($method, $target));
+        self::assertSame($expected, Rfc9112::isAsteriskFormRequestTarget($method, $target));
     }
 
     /**
@@ -58,7 +58,7 @@ class Rfc7230Test extends TestCase
      */
     public function testIsConnectAuthorityFormRequestTarget(string $method, string $target, bool $expected): void
     {
-        self::assertSame($expected, Rfc7230::isConnectAuthorityFormRequestTarget($method, $target));
+        self::assertSame($expected, Rfc9112::isConnectAuthorityFormRequestTarget($method, $target));
     }
 
     /**
@@ -79,7 +79,7 @@ class Rfc7230Test extends TestCase
      */
     public function testParsePort(string $port, ?int $expected): void
     {
-        self::assertSame($expected, Rfc7230::parsePort($port));
+        self::assertSame($expected, Rfc9112::parsePort($port));
     }
 
     /**

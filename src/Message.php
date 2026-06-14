@@ -225,16 +225,16 @@ final class Message
 
         if (preg_match("/(?:^HTTP\/|^[A-Z]+ \S+ HTTP\/)(\d+(?:\.\d+)?)/i", $startLine, $matches) && $matches[1] === '1.0') {
             // Header folding is deprecated for HTTP/1.1, but allowed in HTTP/1.0
-            $rawHeaders = preg_replace(Rfc7230::HEADER_FOLD_REGEX, ' ', $rawHeaders);
+            $rawHeaders = preg_replace(Rfc9112::HEADER_FOLD_REGEX, ' ', $rawHeaders);
         }
 
         /** @var array[] $headerLines */
-        $count = preg_match_all(Rfc7230::HEADER_REGEX, $rawHeaders, $headerLines, PREG_SET_ORDER);
+        $count = preg_match_all(Rfc9112::HEADER_REGEX, $rawHeaders, $headerLines, PREG_SET_ORDER);
 
         // If these aren't the same, then one line didn't match and there's an invalid header.
         if ($count !== substr_count($rawHeaders, "\n")) {
-            // Folding is deprecated, see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.4
-            if (preg_match(Rfc7230::HEADER_FOLD_REGEX, $rawHeaders)) {
+            // Folding is deprecated, see https://datatracker.ietf.org/doc/html/rfc9112#section-5.2
+            if (preg_match(Rfc9112::HEADER_FOLD_REGEX, $rawHeaders)) {
                 throw new \InvalidArgumentException('Invalid header syntax: Obsolete line folding');
             }
 
@@ -280,7 +280,7 @@ final class Message
      */
     private static function parseHostHeaderAuthority(string $authority): array
     {
-        $parsed = Rfc7230::parseHostHeader($authority);
+        $parsed = Rfc9112::parseHostHeader($authority);
         if ($parsed === null) {
             throw new \InvalidArgumentException('Invalid request string');
         }
@@ -381,7 +381,7 @@ final class Message
             );
         }
 
-        if (Rfc7230::isAbsoluteFormRequestTarget($matches['target'])) {
+        if (Rfc9112::isAbsoluteFormRequestTarget($matches['target'])) {
             return (new Request(
                 $matches['method'],
                 $matches['target'],
@@ -391,7 +391,7 @@ final class Message
             ))->withRequestTarget($matches['target']);
         }
 
-        if (Rfc7230::isAsteriskFormRequestTarget($matches['method'], $matches['target'])) {
+        if (Rfc9112::isAsteriskFormRequestTarget($matches['method'], $matches['target'])) {
             return (new Request(
                 $matches['method'],
                 self::parseRequestAuthorityUri($data['headers']),
@@ -417,11 +417,11 @@ final class Message
 
     private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?Uri
     {
-        if (!Rfc7230::isConnectAuthorityFormRequestTarget($method, $target)) {
+        if (!Rfc9112::isConnectAuthorityFormRequestTarget($method, $target)) {
             return null;
         }
 
-        $parsed = Rfc7230::parseHostHeader($target);
+        $parsed = Rfc9112::parseHostHeader($target);
         if ($parsed === null) {
             return null;
         }
@@ -446,7 +446,7 @@ final class Message
     public static function parseResponse(string $message): ResponseInterface
     {
         $data = self::parseMessage($message);
-        // According to https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.2
+        // According to https://datatracker.ietf.org/doc/html/rfc9112#section-4
         // the space between status-code and reason-phrase is required. But
         // browsers accept responses without space and reason as well.
         if (!preg_match('/^HTTP\/(?P<version>\d+(?:\.\d+)?) (?P<status>[1-5][0-9]{2})(?: (?P<reason>[\x09\x20-\x7E\x80-\xFF]*))?$/D', $data['start-line'], $matches)) {

@@ -206,12 +206,12 @@ final class ServerRequestGlobalsFactory
      */
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        return Rfc7230::parseHostHeader($authority) ?? [null, null];
+        return Rfc9112::parseHostHeader($authority) ?? [null, null];
     }
 
     private static function parseServerPort(string $port): int
     {
-        $parsed = Rfc7230::parsePort($port);
+        $parsed = Rfc9112::parsePort($port);
         if ($parsed === null) {
             throw new InvalidArgumentException('Invalid SERVER_PORT; expected an integer between 1 and 65535.');
         }
@@ -328,7 +328,7 @@ final class ServerRequestGlobalsFactory
             return [$uri, null];
         }
 
-        if (Rfc7230::isAsteriskFormRequestTarget($method, $requestUri)) {
+        if (Rfc9112::isAsteriskFormRequestTarget($method, $requestUri)) {
             return [$uri->withPath('')->withQuery(''), '*'];
         }
 
@@ -349,7 +349,7 @@ final class ServerRequestGlobalsFactory
      */
     private static function getAbsoluteFormUriAndRequestTarget(string $requestUri, ?string $queryString): ?array
     {
-        if (!Rfc7230::isAbsoluteFormRequestTarget($requestUri)) {
+        if (!Rfc9112::isAbsoluteFormRequestTarget($requestUri)) {
             return null;
         }
 
@@ -445,7 +445,7 @@ final class ServerRequestGlobalsFactory
      */
     private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?array
     {
-        if (!Rfc7230::isConnectAuthorityFormRequestTarget($method, $target)) {
+        if (!Rfc9112::isConnectAuthorityFormRequestTarget($method, $target)) {
             return null;
         }
 
