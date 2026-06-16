@@ -88,7 +88,7 @@ class Uri implements UriInterface, \JsonSerializable
      *
      * @see https://bugs.php.net/bug.php?id=52923
      * @see https://www.php.net/manual/en/function.parse-url.php#114817
-     * @see https://curl.haxx.se/libcurl/c/CURLOPT_URL.html#ENCODING
+     * @see https://curl.se/libcurl/c/CURLOPT_URL.html#ENCODING
      *
      * @return array|false
      */
