@@ -139,26 +139,41 @@ class RequestTest extends TestCase
     {
         yield 'empty' => [''];
         yield 'space' => ['GET POST'];
+        yield 'line feed' => ["GET\nX-Injected: yes"];
+        yield 'carriage return' => ["GET\rX-Injected: yes"];
         yield 'newline' => ["GET\r\nX-Injected: yes"];
         yield 'slash' => ['GET/'];
         yield 'colon' => ['GET:'];
         yield 'nul' => ["GET\0"];
     }
 
-    public function testConstructorRejectsInvalidProtocolVersion(): void
+    /**
+     * @dataProvider protocolVersionWithLineSeparatorsProvider
+     */
+    public function testConstructorRejectsInvalidProtocolVersion(string $version): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        new Request('GET', '/', [], null, "1.1\r\nX-Injected: yes");
+        new Request('GET', '/', [], null, $version);
     }
 
-    public function testWithProtocolVersionRejectsInvalidProtocolVersion(): void
+    /**
+     * @dataProvider protocolVersionWithLineSeparatorsProvider
+     */
+    public function testWithProtocolVersionRejectsInvalidProtocolVersion(string $version): void
     {
         $request = new Request('GET', '/');
 
         $this->expectException(\InvalidArgumentException::class);
 
-        $request->withProtocolVersion("1.1\r\nX-Injected: yes");
+        $request->withProtocolVersion($version);
+    }
+
+    public static function protocolVersionWithLineSeparatorsProvider(): iterable
+    {
+        yield 'line feed' => ["1.1\nX-Injected: yes"];
+        yield 'carriage return' => ["1.1\rX-Injected: yes"];
+        yield 'CRLF' => ["1.1\r\nX-Injected: yes"];
     }
 
     public function testWithUri(): void
