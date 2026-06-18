@@ -68,6 +68,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `ralouphie/getallheaders` dependency
 - Removed deprecated `Header::normalize()` method
 
+## 2.12.1 - Upcoming
+
+### Security
+
+- Reject CR/LF in HTTP method, protocol version, and reason phrase (GHSA-vm85-hxw5-5432)
+
 ## 2.12.0 - 2026-06-16
 
 ### Deprecated
