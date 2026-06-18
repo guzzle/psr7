@@ -184,6 +184,8 @@ class ResponseTest extends TestCase
         yield 'with prefix' => ['HTTP/1.1'];
         yield 'trailing space' => ['1.1 '];
         yield 'text suffix' => ['1.1foo'];
+        yield 'line feed' => ["1.1\nX-Injected: yes"];
+        yield 'carriage return' => ["1.1\rX-Injected: yes"];
         yield 'newline' => ["1.1\r\nX-Injected: yes"];
         yield 'missing minor' => ['1.'];
         yield 'missing major' => ['.1'];

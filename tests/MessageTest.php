@@ -527,6 +527,7 @@ class MessageTest extends TestCase
         yield 'connect query' => ['CONNECT up.example:443?x=1 HTTP/1.1'];
         yield 'invalid protocol text' => ['GET / HTTP/foo'];
         yield 'invalid protocol segments' => ['GET / HTTP/1.1.1'];
+        yield 'bare carriage return after version' => ["GET / HTTP/1.1\rX-Injected: yes"];
         yield 'missing version' => ['GET /'];
     }
 
@@ -644,6 +645,7 @@ class MessageTest extends TestCase
         yield 'status 999' => ['HTTP/1.1 999 OK'];
         yield 'non-numeric status' => ['HTTP/1.1 20x OK'];
         yield 'tab before reason' => ["HTTP/1.1 200\tOK"];
+        yield 'bare carriage return in reason' => ["HTTP/1.1 200 OK\rX-Injected: yes"];
         yield 'reason nul' => ["HTTP/1.1 200 OK\0"];
         yield 'reason delete' => ["HTTP/1.1 200 OK\x7F"];
     }
