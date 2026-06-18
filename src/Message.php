@@ -278,6 +278,10 @@ final class Message
     public static function parseRequest(string $message): RequestInterface
     {
         $data = self::parseMessage($message);
+        if (strpbrk($data['start-line'], "\r\n") !== false) {
+            throw new \InvalidArgumentException('Invalid request string');
+        }
+
         $matches = [];
         if (!preg_match('/^[\S]+\s+([a-zA-Z]+:\/\/|\/).*/', $data['start-line'], $matches)) {
             throw new \InvalidArgumentException('Invalid request string');
@@ -304,6 +308,10 @@ final class Message
     public static function parseResponse(string $message): ResponseInterface
     {
         $data = self::parseMessage($message);
+        if (strpbrk($data['start-line'], "\r\n") !== false) {
+            throw new \InvalidArgumentException('Invalid response string');
+        }
+
         // According to https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.2
         // the space between status-code and reason-phrase is required. But
         // browsers accept responses without space and reason as well.

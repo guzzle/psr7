@@ -125,6 +125,57 @@ class RequestTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testConstructWithLineSeparatorsInMethod(string $lineSeparator): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request('GET'.$lineSeparator.'X-Injected: yes', '/');
+    }
+
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testWithMethodRejectsLineSeparators(string $lineSeparator): void
+    {
+        $r = new Request('GET', '/');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $r->withMethod('GET'.$lineSeparator.'X-Injected: yes');
+    }
+
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testConstructWithLineSeparatorsInProtocolVersion(string $lineSeparator): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request('GET', '/', [], null, '1.1'.$lineSeparator.'X-Injected: yes');
+    }
+
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testWithProtocolVersionRejectsLineSeparators(string $lineSeparator): void
+    {
+        $r = new Request('GET', '/');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $r->withProtocolVersion('1.1'.$lineSeparator.'X-Injected: yes');
+    }
+
+    public static function startLineSeparatorProvider(): iterable
+    {
+        yield 'line feed' => ["\n"];
+        yield 'carriage return' => ["\r"];
+        yield 'CRLF' => ["\r\n"];
+    }
+
     public function testSameInstanceWhenSameUri(): void
     {
         $r1 = new Request('GET', 'http://foo.com');

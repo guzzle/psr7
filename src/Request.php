@@ -40,6 +40,8 @@ class Request implements RequestInterface
         string $version = '1.1'
     ) {
         $this->assertMethod($method);
+        $this->assertProtocolVersion($version);
+
         if (!$uri instanceof UriInterface) {
             $uri = new Uri($uri);
         }
@@ -170,6 +172,8 @@ class Request implements RequestInterface
         if (!is_string($method) || $method === '') {
             throw new InvalidArgumentException('Method must be a non-empty string.');
         }
+
+        $this->assertNoLineSeparators($method, 'Method');
     }
 
     private static function warnOnMethodCasingChange(string $method): void

@@ -231,6 +231,13 @@ class MessageTest extends TestCase
         Psr7\Message::parseRequest("HTTP/1.1 200 OK\r\n\r\n");
     }
 
+    public function testParseRequestRejectsStartLineWithBareCarriageReturn(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequest("GET / HTTP/1.1\rX-Injected: yes\nHost: foo.com\n\n");
+    }
+
     public function testParsesResponseMessages(): void
     {
         $res = "HTTP/1.0 200 OK\r\nFoo: Bar\r\nBaz: Bam\r\nBaz: Qux\r\n\r\nTest";
@@ -307,6 +314,13 @@ class MessageTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         Psr7\Message::parseResponse("GET / HTTP/1.1\r\n\r\n");
+    }
+
+    public function testParseResponseRejectsStartLineWithBareCarriageReturn(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseResponse("HTTP/1.1 200 OK\rX-Injected: yes\n\n");
     }
 
     public function testMessageBodySummaryWithSmallBody(): void
