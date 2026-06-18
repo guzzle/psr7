@@ -127,6 +127,57 @@ class ResponseTest extends TestCase
         self::assertSame('1000', $r->getProtocolVersion());
     }
 
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testConstructWithLineSeparatorsInProtocolVersion(string $lineSeparator): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Response(200, [], null, '1.1'.$lineSeparator.'X-Injected: yes');
+    }
+
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testWithProtocolVersionRejectsLineSeparators(string $lineSeparator): void
+    {
+        $r = new Response();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $r->withProtocolVersion('1.1'.$lineSeparator.'X-Injected: yes');
+    }
+
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testConstructWithLineSeparatorsInReasonPhrase(string $lineSeparator): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Response(200, [], null, '1.1', 'OK'.$lineSeparator.'X-Injected: yes');
+    }
+
+    /**
+     * @dataProvider startLineSeparatorProvider
+     */
+    public function testWithStatusRejectsLineSeparatorsInReasonPhrase(string $lineSeparator): void
+    {
+        $r = new Response();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $r->withStatus(200, 'OK'.$lineSeparator.'X-Injected: yes');
+    }
+
+    public static function startLineSeparatorProvider(): iterable
+    {
+        yield 'line feed' => ["\n"];
+        yield 'carriage return' => ["\r"];
+        yield 'CRLF' => ["\r\n"];
+    }
+
     public function testSameInstanceWhenSameProtocol(): void
     {
         $r = new Response();

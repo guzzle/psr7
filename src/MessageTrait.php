@@ -43,6 +43,8 @@ trait MessageTrait
             );
         }
 
+        $this->assertProtocolVersion($version);
+
         if ($this->protocol === $version) {
             return $this;
         }
@@ -304,6 +306,23 @@ trait MessageTrait
             throw new \InvalidArgumentException(
                 sprintf('"%s" is not valid header name.', $header)
             );
+        }
+    }
+
+    /**
+     * @param mixed $version
+     */
+    private function assertProtocolVersion($version): void
+    {
+        if (is_string($version)) {
+            $this->assertNoLineSeparators($version, 'Protocol version');
+        }
+    }
+
+    private function assertNoLineSeparators(string $value, string $field): void
+    {
+        if (strpbrk($value, "\r\n") !== false) {
+            throw new \InvalidArgumentException($field.' must not contain CR or LF characters.');
         }
     }
 
