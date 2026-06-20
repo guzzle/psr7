@@ -565,24 +565,6 @@ parameters:
 			path: src/Uri.php
 
 		-
-			message: '#^Method GuzzleHttp\\Psr7\\Uri\:\:filterPath\(\) should return string but returns string\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Uri.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\Uri\:\:filterQueryAndFragment\(\) should return string but returns string\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Uri.php
-
-		-
-			message: '#^Method GuzzleHttp\\Psr7\\Uri\:\:filterUserInfoComponent\(\) should return string but returns string\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Uri.php
-
-		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(int\<0, 65535\>\|string\)\: mixed\)\|null, ''urldecode'' given\.$#'
 			identifier: argument.type
 			count: 1
@@ -593,12 +575,6 @@ parameters:
 			identifier: booleanAnd.alwaysFalse
 			count: 1
 			path: src/Uri.php
-
-		-
-			message: '#^Parameter \#1 \$path of method Psr\\Http\\Message\\UriInterface\:\:withPath\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/UriNormalizer.php
 
 		-
 			message: '#^Strict comparison using \=\=\= between '''' and non\-falsy\-string will always evaluate to false\.$#'
