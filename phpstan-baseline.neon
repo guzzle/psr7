@@ -151,7 +151,7 @@ parameters:
 			path: src/Uri.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between '''' and non\-falsy\-string will always evaluate to false\.$#'
+			message: '#^Strict comparison using \=\=\= between non\-falsy\-string and '''' will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
 			count: 1
 			path: src/UriResolver.php
