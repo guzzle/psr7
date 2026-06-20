@@ -295,24 +295,6 @@ parameters:
 			path: src/Message.php
 
 		-
-			message: '#^Parameter \#1 \$haystack of function substr_count expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#2 \$subject of function preg_match expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Parameter \#2 \$subject of function preg_match_all expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Message.php
-
-		-
 			message: '#^Variable \$headerLines in PHPDoc tag @var does not match assigned variable \$count\.$#'
 			identifier: varTag.differentVariable
 			count: 1
