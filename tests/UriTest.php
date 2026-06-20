@@ -192,6 +192,25 @@ class UriTest extends TestCase
         self::assertSame('relative/%C3', (string) $uri);
     }
 
+    public function testRejectsIpv6UriWithTrailingNewline(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri("http://[::1]\n");
+    }
+
+    public function testRejectsIpv6UriWithInvalidSuffix(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri('http://[::1]x');
+    }
+
+    public function testEncodesNewlineAfterIpv6LiteralPathSeparator(): void
+    {
+        self::assertSame('http://[::1]/x%0A', (string) new Uri("http://[::1]/x\n"));
+    }
+
     /**
      * @dataProvider getPathNoSchemeReferencesWithColonInLaterSegment
      */
