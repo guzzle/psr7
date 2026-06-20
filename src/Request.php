@@ -192,7 +192,13 @@ class Request implements RequestInterface
 
     private static function assertRequestTarget(string $requestTarget): void
     {
-        if ($requestTarget === '' || preg_match('/[\x00-\x20\x7F]/', $requestTarget)) {
+        $hasInvalidChars = preg_match('/[\x00-\x20\x7F]/', $requestTarget);
+
+        if ($hasInvalidChars === false) {
+            throw new \RuntimeException('Unable to validate request target: '.preg_last_error_msg());
+        }
+
+        if ($requestTarget === '' || $hasInvalidChars === 1) {
             throw new InvalidArgumentException(
                 'Invalid request target provided; cannot be empty or contain whitespace or control characters'
             );
