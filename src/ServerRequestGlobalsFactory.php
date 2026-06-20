@@ -377,7 +377,13 @@ final class ServerRequestGlobalsFactory
 
         // Preserve the received absolute-form target unless it cannot be used as
         // a PSR-7 request target without normalization.
-        $normalizeRequestTarget = preg_match('/[\x00-\x20\x7F]/', $requestTarget) === 1
+        $hasInvalidTargetChars = preg_match('/[\x00-\x20\x7F]/', $requestTarget);
+
+        if ($hasInvalidTargetChars === false) {
+            throw new \RuntimeException('Unable to inspect request target: '.preg_last_error_msg());
+        }
+
+        $normalizeRequestTarget = $hasInvalidTargetChars === 1
             || self::hasEmptyPortInAbsoluteFormRequestTarget($requestTarget);
 
         return [$targetUri, $normalizeRequestTarget ? (string) $targetUri : $requestTarget];

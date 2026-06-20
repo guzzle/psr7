@@ -72,7 +72,13 @@ final class Rfc3986
             return true;
         }
 
-        if (preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host)) {
+        $invalidHost = preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host);
+
+        if ($invalidHost === false) {
+            return false;
+        }
+
+        if ($invalidHost === 1) {
             return false;
         }
 
