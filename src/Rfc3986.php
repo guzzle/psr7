@@ -82,11 +82,11 @@ final class Rfc3986
             return false;
         }
 
-        if (strpos($host, '[') !== false || strpos($host, ']') !== false) {
+        if (str_contains($host, '[') || str_contains($host, ']')) {
             return self::isValidIpLiteralHost($host);
         }
 
-        return strpos($host, ':') === false;
+        return !str_contains($host, ':');
     }
 
     /**
@@ -115,7 +115,7 @@ final class Rfc3986
 
     private static function isValidIpLiteralHost(string $host): bool
     {
-        if ($host[0] !== '[' || substr($host, -1) !== ']') {
+        if (!str_starts_with($host, '[') || !str_ends_with($host, ']')) {
             return false;
         }
 

@@ -207,7 +207,7 @@ class Request implements RequestInterface
 
     private static function normalizePathForOriginForm(string $path): string
     {
-        if (isset($path[1]) && $path[0] === '/' && $path[1] === '/') {
+        if (str_starts_with($path, '//')) {
             return '/'.ltrim($path, '/');
         }
 

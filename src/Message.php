@@ -405,7 +405,7 @@ final class Message
 
         self::getHostFromHeaders($data['headers']);
 
-        if ($matches['target'][0] === '/') {
+        if (str_starts_with($matches['target'], '/')) {
             return new Request(
                 $matches['method'],
                 self::parseRequestUri($matches['target'], $data['headers']),
