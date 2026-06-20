@@ -448,7 +448,13 @@ class Uri implements UriInterface, \JsonSerializable
             return;
         }
 
-        if (preg_match('/[\x00-\x20\x7F]/', $host)) {
+        $invalidHost = preg_match('/[\x00-\x20\x7F]/', $host);
+
+        if ($invalidHost === false) {
+            throw new \RuntimeException('Unable to validate URI host: '.preg_last_error_msg());
+        }
+
+        if ($invalidHost === 1) {
             throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
         }
     }

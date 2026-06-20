@@ -80,7 +80,13 @@ class Request implements RequestInterface
 
     public function withRequestTarget($requestTarget): RequestInterface
     {
-        if (preg_match('#\s#', $requestTarget)) {
+        $hasWhitespace = preg_match('#\s#', $requestTarget);
+
+        if ($hasWhitespace === false) {
+            throw new \RuntimeException('Unable to validate request target: '.preg_last_error_msg());
+        }
+
+        if ($hasWhitespace === 1) {
             throw new InvalidArgumentException(
                 'Invalid request target provided; cannot contain whitespace'
             );
