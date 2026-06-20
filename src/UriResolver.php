@@ -38,7 +38,7 @@ final class UriResolver
 
         $newPath = implode('/', $results);
 
-        if ($path[0] === '/' && (!isset($newPath[0]) || $newPath[0] !== '/')) {
+        if (str_starts_with($path, '/') && !str_starts_with($newPath, '/')) {
             // Re-add the leading slash if necessary for cases like "/.."
             $newPath = '/'.$newPath;
         } elseif ($newPath !== '' && ($segment === '.' || $segment === '..')) {
@@ -76,7 +76,7 @@ final class UriResolver
             $targetPath = $base->getPath();
             $targetQuery = $rel->getQuery() != '' ? $rel->getQuery() : $base->getQuery();
         } else {
-            if ($rel->getPath()[0] === '/') {
+            if (str_starts_with($rel->getPath(), '/')) {
                 $targetPath = $rel->getPath();
             } else {
                 if ($base->getAuthority() != '' && $base->getPath() === '') {
@@ -186,9 +186,9 @@ final class UriResolver
         // A reference to am empty last segment or an empty first sub-segment must be prefixed with "./".
         // This also applies to a segment with a colon character (e.g., "file:colon") that cannot be used
         // as the first segment of a relative-path reference, as it would be mistaken for a scheme name.
-        if ('' === $relativePath || false !== strpos(explode('/', $relativePath, 2)[0], ':')) {
+        if ($relativePath === '' || str_contains(explode('/', $relativePath, 2)[0], ':')) {
             $relativePath = "./$relativePath";
-        } elseif ('/' === $relativePath[0]) {
+        } elseif (str_starts_with($relativePath, '/')) {
             if ($base->getAuthority() != '' && $base->getPath() === '') {
                 // In this case an extra slash is added by resolve() automatically. So we must not add one here.
                 $relativePath = ".$relativePath";

@@ -608,7 +608,7 @@ class StreamTest extends TestCase
         }
 
         try {
-            if ($mode[0] === 'x') {
+            if (str_starts_with($mode, 'x')) {
                 if (!unlink($path)) {
                     self::fail('Unable to remove temporary file before exclusive create test');
                 }

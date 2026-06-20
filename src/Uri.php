@@ -142,13 +142,13 @@ class Uri implements UriInterface, \JsonSerializable
 
     private static function isPathNoSchemeReference(string $url): bool
     {
-        if ($url === '' || $url[0] === '/' || $url[0] === '?' || $url[0] === '#') {
+        if ($url === '' || str_starts_with($url, '/') || str_starts_with($url, '?') || str_starts_with($url, '#')) {
             return false;
         }
 
         $firstSegment = substr($url, 0, strcspn($url, '/?#'));
 
-        return strpos($firstSegment, ':') === false;
+        return !str_contains($firstSegment, ':');
     }
 
     /**
@@ -215,7 +215,7 @@ class Uri implements UriInterface, \JsonSerializable
             $uri .= '//'.$authority;
         }
 
-        if ($authority != '' && $path != '' && $path[0] != '/') {
+        if ($authority != '' && $path != '' && !str_starts_with($path, '/')) {
             $path = '/'.$path;
         }
 
@@ -472,7 +472,7 @@ class Uri implements UriInterface, \JsonSerializable
 
     public function getPath(): string
     {
-        if (isset($this->path[1]) && $this->path[0] === '/' && $this->path[1] === '/') {
+        if (str_starts_with($this->path, '//')) {
             return '/'.ltrim($this->path, '/');
         }
 
@@ -853,10 +853,10 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         if ($this->getAuthority() === '') {
-            if (0 === strpos($this->path, '//')) {
+            if (str_starts_with($this->path, '//')) {
                 throw new MalformedUriException('The path of a URI without an authority must not start with two slashes "//"');
             }
-            if ($this->scheme === '' && false !== strpos(explode('/', $this->path, 2)[0], ':')) {
+            if ($this->scheme === '' && str_contains(explode('/', $this->path, 2)[0], ':')) {
                 throw new MalformedUriException('A relative URI must not have a path beginning with a segment containing a colon');
             }
         }

@@ -37,7 +37,7 @@ final class Rfc9112
         $host = $authority;
         $port = null;
 
-        if ($authority[0] === '[') {
+        if (str_starts_with($authority, '[')) {
             $closingBracket = strpos($authority, ']');
             if ($closingBracket === false) {
                 return null;
@@ -46,7 +46,7 @@ final class Rfc9112
             $host = substr($authority, 0, $closingBracket + 1);
             $remainder = substr($authority, $closingBracket + 1);
             if ($remainder !== '') {
-                if ($remainder[0] !== ':') {
+                if (!str_starts_with($remainder, ':')) {
                     return null;
                 }
 

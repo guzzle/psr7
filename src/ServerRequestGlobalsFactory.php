@@ -116,7 +116,7 @@ final class ServerRequestGlobalsFactory
                 continue;
             }
 
-            if (substr($key, 0, 5) === 'HTTP_') {
+            if (str_starts_with($key, 'HTTP_')) {
                 $header = substr($key, 5);
 
                 if (isset($copyServer[$header], $server[$header]) && is_string($server[$header])) {
@@ -198,7 +198,7 @@ final class ServerRequestGlobalsFactory
             return '1.1';
         }
 
-        return strpos($serverProtocol, 'HTTP/') === 0 ? substr($serverProtocol, 5) : $serverProtocol;
+        return str_starts_with($serverProtocol, 'HTTP/') ? substr($serverProtocol, 5) : $serverProtocol;
     }
 
     /**
@@ -370,7 +370,7 @@ final class ServerRequestGlobalsFactory
             $requestTarget = $requestTargetWithoutUserInfo;
         }
 
-        if (strpos($requestTarget, '?') === false && $queryString !== null && $queryString !== '') {
+        if (!str_contains($requestTarget, '?') && $queryString !== null && $queryString !== '') {
             $targetUri = $targetUri->withQuery($queryString);
             $requestTarget .= '?'.$queryString;
         }
@@ -437,13 +437,13 @@ final class ServerRequestGlobalsFactory
             return false;
         }
 
-        if ($authority[0] === '[') {
+        if (str_starts_with($authority, '[')) {
             $closingBracket = strpos($authority, ']');
 
             return $closingBracket !== false && substr($authority, $closingBracket + 1) === ':';
         }
 
-        return substr($authority, -1) === ':';
+        return str_ends_with($authority, ':');
     }
 
     /**
@@ -480,7 +480,7 @@ final class ServerRequestGlobalsFactory
 
     private static function normalizeOriginFormPathFromServer(string $path): string
     {
-        if ($path === '' || $path[0] === '/') {
+        if ($path === '' || str_starts_with($path, '/')) {
             return $path;
         }
 

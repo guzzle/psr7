@@ -306,7 +306,7 @@ class Stream implements StreamInterface
      */
     private static function isReadableMode(string $mode): bool
     {
-        return strpos($mode, 'r') === 0 || strpos($mode, '+') !== false;
+        return str_starts_with($mode, 'r') || str_contains($mode, '+');
     }
 
     /**
@@ -315,11 +315,11 @@ class Stream implements StreamInterface
      */
     private static function isWritableMode(string $mode): bool
     {
-        return strpos($mode, 'a') === 0
-            || strpos($mode, 'w') === 0
-            || strpos($mode, 'x') === 0
-            || strpos($mode, 'c') === 0
-            || strpos($mode, '+') !== false;
+        return str_starts_with($mode, 'a')
+            || str_starts_with($mode, 'w')
+            || str_starts_with($mode, 'x')
+            || str_starts_with($mode, 'c')
+            || str_contains($mode, '+');
     }
 
     private function timedOut(): bool
