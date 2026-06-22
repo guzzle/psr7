@@ -208,6 +208,11 @@ therefore are not guaranteed to match `withHost()` acceptance. For example,
 `withHost('[v1.fe80::a+en1]')` is accepted, while parsing
 `http://[v1.fe80::a+en1]/` is rejected.
 
+Percent-encoded octets in the URI host are now normalized to uppercase hex, so
+hosts such as `%2fhost` and `a%c3%a9b` are represented as `%2Fhost` and
+`a%C3%A9b`. Malformed percent sequences in registered-name hosts are still
+accepted unchanged.
+
 `Uri::fromParts()` accepts integer and decimal digit string ports, but floats and
 other port values are no longer cast.
 
