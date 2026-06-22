@@ -124,6 +124,8 @@ final class Rfc3986
             return true;
         }
 
+        // RFC 6874 IPv6 zone identifiers are intentionally not supported here.
+        // Bracketed hosts are validated as IPv6 or IPvFuture only.
         return preg_match('/^v[0-9a-f]+\.['.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.':]+$/iD', $address) === 1;
     }
 }
