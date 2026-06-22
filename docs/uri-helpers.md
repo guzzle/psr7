@@ -77,7 +77,8 @@ Whether the string is a valid URI host. Per
 IP-literal, IPv4 address, or registered name. An empty host is accepted, since the authority — and thus
 the host — may be empty. Bracketed values are validated as IPv6 or IPvFuture literals; any other value is
 rejected if it contains control characters, whitespace, an authority or path delimiter (`/`, `?`, `#`,
-`@`, `\`), or an embedded colon denoting a port.
+`@`, `\`), or an embedded colon denoting a port. RFC 6874 IPv6 zone identifiers (for example
+`[fe80::1%25eth0]`) are not supported.
 
 ### `GuzzleHttp\Psr7\Rfc3986::isValidPort`
 
