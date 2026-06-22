@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Escape multipart `Content-Disposition` parameters and reject unsafe boundaries and part headers
 - Preserve trailing whitespace in custom `MultipartStream` part header values
 - Made static utility classes non-instantiable
+- Validate bracketed IP-literal hosts consistently between parsing and `withHost()`, including userinfo forms
 
 ### Removed
 

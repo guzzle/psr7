@@ -98,9 +98,10 @@ class Uri implements UriInterface, \JsonSerializable
             return self::parsePathNoSchemeReference($url);
         }
 
-        // Preserve bracketed IPv6 literals before encoding, including dotted IPv4 tails.
+        // Preserve bracketed IP-literals (IPv6 or IPvFuture) in scheme, userinfo,
+        // and network-path authorities before encoding.
         $prefix = '';
-        $ipv6Prefix = preg_match('%\A([0-9A-Za-z+.-]+://\[[0-9:.a-fA-F]+\])(.*)\z%s', $url, $matches);
+        $ipv6Prefix = preg_match('%\A((?:[0-9A-Za-z+.-]+:)?//(?:[^/?#@]*@)?\[[^\]\x00-\x20/?#@]+\])(.*)\z%s', $url, $matches);
 
         if ($ipv6Prefix === false) {
             return false;

@@ -848,6 +848,106 @@ class UriTest extends TestCase
         self::assertSame('http://[v1.fe80]/', (string) $uri);
     }
 
+    /**
+     * @dataProvider getBracketedHostsForParseWithHostParity
+     */
+    public function testParseAndWithHostAcceptSameBracketedHosts(string $host, string $expectedHost): void
+    {
+        $parsed = new Uri('http://'.$host.'/');
+        $withHost = (new Uri())->withHost($host);
+
+        self::assertSame($expectedHost, $parsed->getHost());
+        self::assertSame($expectedHost, $withHost->getHost());
+        self::assertSame('http://'.$expectedHost.'/', (string) $parsed);
+    }
+
+    public static function getBracketedHostsForParseWithHostParity(): iterable
+    {
+        yield 'ipv6 loopback' => ['[::1]', '[::1]'];
+        yield 'ipvfuture with colon' => ['[v7.a:b]', '[v7.a:b]'];
+        yield 'ipv6 documentation address' => ['[2001:db8::1]', '[2001:db8::1]'];
+        yield 'ipvfuture with sub-delims' => ['[v1.a!$&()*,;=:]', '[v1.a!$&()*,;=:]'];
+    }
+
+    public function testParseAcceptsBracketedIpLiteralsWithUserinfoAndNetworkPath(): void
+    {
+        $uri = new Uri('http://user@[::1]/');
+        self::assertSame('[::1]', $uri->getHost());
+        self::assertSame('user', $uri->getUserInfo());
+
+        $uri = new Uri('//[::1]/');
+        self::assertSame('[::1]', $uri->getHost());
+
+        $uri = new Uri('//[::1]');
+        self::assertSame('[::1]', $uri->getHost());
+
+        $uri = new Uri('http://user:pw@[::1]:8080/admin');
+        self::assertSame('[::1]', $uri->getHost());
+        self::assertSame('user:pw', $uri->getUserInfo());
+        self::assertSame(8080, $uri->getPort());
+    }
+
+    /**
+     * @dataProvider getBracketedHostsWithDelimiters
+     */
+    public function testParseRejectsBracketedHostsWithDelimiters(string $uri): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri($uri);
+    }
+
+    public static function getBracketedHostsWithDelimiters(): iterable
+    {
+        yield 'userinfo delimiter' => ['http://[a@b]/'];
+        yield 'path delimiter' => ['http://[v1.a/b]/'];
+    }
+
+    /**
+     * @dataProvider getInvalidDelimiterFreeBracketedHosts
+     */
+    public function testParseRejectsInvalidBracketedHostsWithIntactHostMessage(string $uri): void
+    {
+        try {
+            new Uri($uri);
+            self::fail('Expected malformed URI exception.');
+        } catch (MalformedUriException $e) {
+            self::assertStringContainsString('[gggg::1]', $e->getMessage());
+        }
+    }
+
+    public static function getInvalidDelimiterFreeBracketedHosts(): iterable
+    {
+        yield 'scheme authority' => ['http://[gggg::1]/'];
+        yield 'network path' => ['//[gggg::1]/'];
+        yield 'userinfo authority' => ['http://user@[gggg::1]/'];
+    }
+
+    public function testWithHostRejectsInvalidBracketedHostWithPlainInvalidArgumentException(): void
+    {
+        try {
+            (new Uri())->withHost('[gggg::1]');
+            self::fail('Expected invalid argument exception.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertNotInstanceOf(MalformedUriException::class, $e);
+            self::assertStringContainsString('[gggg::1]', $e->getMessage());
+        }
+    }
+
+    public function testPlusBearingIpvFutureRemainsParseWithHostDivergence(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri('http://[v1.fe80::a+en1]/');
+    }
+
+    public function testWithHostAcceptsPlusBearingIpvFuture(): void
+    {
+        $uri = (new Uri())->withHost('[v1.fe80::a+en1]');
+
+        self::assertSame('[v1.fe80::a+en1]', $uri->getHost());
+    }
+
     public function testPortIsNullIfStandardPortForScheme(): void
     {
         // HTTPS standard port
