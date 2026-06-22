@@ -194,6 +194,20 @@ Normal URI strings with ports are still supported:
 $uri = new Uri('https://example.com:8080/path');
 ```
 
+URI parsing now accepts bracketed IPv6 and IPvFuture hosts consistently with
+`withHost()` for userinfo and network-path authorities such as
+`http://user@[::1]/`, `//[::1]`, and `http://[v7.a:b]/`. Invalid
+delimiter-free bracketed literals, such as `[gggg::1]`, are also reported with
+the intact host. Bracketed literals containing authority/path delimiters, such
+as `[a@b]` or `[v1.a/b]`, still reject after fallback parsing and may report the
+mangled parsed host.
+
+Parsing still URL-decodes hosts before validation. Bracketed hosts containing
+bytes that change under URL decoding, such as `+` or percent-encoded octets,
+therefore are not guaranteed to match `withHost()` acceptance. For example,
+`withHost('[v1.fe80::a+en1]')` is accepted, while parsing
+`http://[v1.fe80::a+en1]/` is rejected.
+
 `Uri::fromParts()` accepts integer and decimal digit string ports, but floats and
 other port values are no longer cast.
 
