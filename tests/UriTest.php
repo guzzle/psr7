@@ -833,6 +833,28 @@ class UriTest extends TestCase
         self::assertSame('//example.com', (string) $uri);
     }
 
+    public function testHostPercentEncodingIsNormalizedToUppercaseHex(): void
+    {
+        $uri = new Uri('http://%2fhost/');
+        self::assertSame('%2Fhost', $uri->getHost());
+        self::assertSame('http://%2Fhost/', (string) $uri);
+
+        $uri = (new Uri())->withHost('EX%2fAMPLE');
+        self::assertSame('ex%2Fample', $uri->getHost());
+
+        $uri = (new Uri())->withHost('a%c3%a9b');
+        self::assertSame('a%C3%A9b', $uri->getHost());
+    }
+
+    public function testMalformedPercentEncodingInHostStaysAccepted(): void
+    {
+        $uri = (new Uri())->withHost('ex%zz');
+        self::assertSame('ex%zz', $uri->getHost());
+
+        $uri = new Uri('http://ex%zz/');
+        self::assertSame('ex%zz', $uri->getHost());
+    }
+
     public function testCommonNonDnsHostsStayValid(): void
     {
         $uri = (new Uri())->withHost('foo_bar');

@@ -670,9 +670,15 @@ class Uri implements UriInterface, \JsonSerializable
     private function filterHost(string $host): string
     {
         $host = \strtr($host, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
-        self::assertValidHost($host);
+        $filtered = \preg_replace_callback('/%'.Rfc3986::HEX_OCTET.'/', static function (array $m): string {
+            return \strtoupper($m[0]);
+        }, $host);
+        if ($filtered === null) {
+            throw new \RuntimeException('Unable to normalize URI host percent-encoding: '.\preg_last_error_msg());
+        }
+        self::assertValidHost($filtered);
 
-        return $host;
+        return $filtered;
     }
 
     /**
