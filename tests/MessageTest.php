@@ -175,6 +175,13 @@ class MessageTest extends TestCase
         self::assertSame('https://www.google.com/search?q=foobar', (string) $request->getUri());
     }
 
+    public function testParseRequestRejectsAbsoluteFormTargetWithUnbalancedBracketHost(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::parseRequest("GET http://[::1/ HTTP/1.1\r\n\r\n");
+    }
+
     public function testParsesRequestMessagesWithCustomMethod(): void
     {
         $req = "GET_DATA / HTTP/1.1\r\nFoo: Bar\r\nHost: foo.com\r\n\r\n";

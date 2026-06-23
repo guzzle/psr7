@@ -269,6 +269,47 @@ class UriTest extends TestCase
         yield 'ascii 0x7F' => ['example'.chr(0x7F).'com'];
     }
 
+    /**
+     * @dataProvider invalidHostViaWithHostProvider
+     */
+    public function testWithHostRejectsInvalidHost(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new Uri())->withHost($host);
+    }
+
+    public static function invalidHostViaWithHostProvider(): iterable
+    {
+        yield ['evil.com/path'];
+        yield ['user@evil.com'];
+        yield ['a?b'];
+        yield ['a#b'];
+        yield ['example.com:8080'];
+        yield ['a\\b'];
+        yield ['[::1'];
+        yield ['::1]'];
+        yield ["a\x01b"];
+    }
+
+    /**
+     * @dataProvider invalidHostViaParseProvider
+     */
+    public function testParseRejectsInvalidHost(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Uri("http://$host/");
+    }
+
+    public static function invalidHostViaParseProvider(): iterable
+    {
+        yield ['[::1'];
+        yield ['::1]'];
+        yield ['a\\b'];
+        yield ["a\x01b"];
+    }
+
     public function testParseUriRejectsHostWithControlCharacter(): void
     {
         $this->expectException(MalformedUriException::class);
@@ -927,6 +968,68 @@ class UriTest extends TestCase
             '[::ffff:192.0.2.128]',
             null,
         ];
+    }
+
+    /**
+     * @dataProvider unparseableIpv6AuthorityFormsNowRejectedProvider
+     */
+    public function testUnparseableIpv6AuthorityFormFailsClosed(string $url): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Uri($url);
+    }
+
+    public static function unparseableIpv6AuthorityFormsNowRejectedProvider(): iterable
+    {
+        yield ['http://user@[::1]/'];
+        yield ['//[::1]/'];
+        yield ['//[::1]'];
+        yield ['//[gggg::1]/'];
+        yield ['http://user@[gggg::1]/'];
+    }
+
+    public function testParsePreservesFramedBracketHostAndAgreesWithAuthority(): void
+    {
+        $u = new Uri('http://[gggg::1]/');
+
+        self::assertSame('[gggg::1]', $u->getHost());
+        self::assertSame('[gggg::1]', $u->getAuthority());
+        self::assertSame('http://[gggg::1]/', (string) $u);
+    }
+
+    /**
+     * @dataProvider acceptedBracketHostProvider
+     */
+    public function testParseAndWithHostAgreeOnBracketHost(string $host, string $expected): void
+    {
+        self::assertSame($expected, (new Uri("http://$host/"))->getHost());
+        self::assertSame($expected, (new Uri())->withHost($host)->getHost());
+    }
+
+    public static function acceptedBracketHostProvider(): iterable
+    {
+        yield ['[2A00:F48::10]', '[2a00:f48::10]'];
+        yield ['[gggg::1]', '[gggg::1]'];
+        yield ['[2001:db8::1]', '[2001:db8::1]'];
+    }
+
+    public function testValidHostsStillAccepted(): void
+    {
+        self::assertSame('', (new Uri())->withHost('')->getHost());
+        self::assertSame('example.com', (new Uri())->withHost('example.com')->getHost());
+        self::assertSame('[::1]', (new Uri())->withHost('[::1]')->getHost());
+        self::assertSame('127.0.0.1', (new Uri())->withHost('127.0.0.1')->getHost());
+        self::assertSame('[a:b]', (new Uri())->withHost('[a:b]')->getHost());
+        self::assertSame('[a]b]', (new Uri())->withHost('[a]b]')->getHost());
+        self::assertSame('[]', (new Uri())->withHost('[]')->getHost());
+        self::assertSame('яндекс.рф', (new Uri())->withHost('яндекс.рф')->getHost());
+    }
+
+    public function testParseZoneIdResidualIsCharacterized(): void
+    {
+        self::assertSame('[fe80::1%eth0]', (new Uri('http://[fe80::1%25eth0]/'))->getHost());
+        self::assertSame('[fe80::1%25eth0]', (new Uri())->withHost('[fe80::1%25eth0]')->getHost());
     }
 
     public function testJsonSerializable(): void

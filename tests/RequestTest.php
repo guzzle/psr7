@@ -369,6 +369,29 @@ class RequestTest extends TestCase
         new Request('GET', $uri);
     }
 
+    /**
+     * @dataProvider newlyRejectedRequestHostProvider
+     */
+    public function testGeneratedHostHeaderRejectsNewlyInvalidUriHost(string $host): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getHost')->willReturn($host);
+        $uri->method('getPort')->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Request('GET', $uri);
+    }
+
+    public static function newlyRejectedRequestHostProvider(): iterable
+    {
+        yield ['good.com@evil.com'];
+        yield ['example.com/path'];
+        yield ['example.com:8080'];
+        yield ['[::1'];
+        yield ['::1]'];
+    }
+
     public function testGeneratedHostHeaderValidatesAssembledHostWithPort(): void
     {
         $uri = $this->createMock(UriInterface::class);
