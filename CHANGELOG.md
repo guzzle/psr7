@@ -70,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `ralouphie/getallheaders` dependency
 - Removed deprecated `Header::normalize()` method
 
-## 2.12.2 - Upcoming
+## 2.12.2 - 2026-06-23
 
 ### Fixed
 
