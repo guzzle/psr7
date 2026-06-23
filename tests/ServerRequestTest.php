@@ -443,6 +443,15 @@ class ServerRequestTest extends TestCase
         self::assertEquals(new Uri($expected), ServerRequest::getUriFromGlobals());
     }
 
+    public function testGetUriFromGlobalsRejectsMalformedServerName(): void
+    {
+        $_SERVER = ['HTTP_HOST' => null, 'SERVER_NAME' => 'good.com@evil.com'];
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        ServerRequest::getUriFromGlobals();
+    }
+
     public function testFromGlobals(): void
     {
         $_SERVER = [

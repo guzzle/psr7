@@ -101,7 +101,7 @@ class Uri implements UriInterface, \JsonSerializable
 
         // Preserve bracketed IPv6 literals before encoding, including dotted IPv4 tails.
         $prefix = '';
-        $ipv6Prefix = preg_match('%\A([0-9A-Za-z+.-]+://\[[0-9:.a-fA-F]+\])(.*)\z%s', $url, $matches);
+        $ipv6Prefix = preg_match('%\A([0-9A-Za-z+.-]+://\[[^\]\x00-\x20/?#@]+\])(.*)\z%s', $url, $matches);
 
         if ($ipv6Prefix === false) {
             return false;
@@ -448,13 +448,27 @@ class Uri implements UriInterface, \JsonSerializable
             return;
         }
 
-        $invalidHost = preg_match('/[\x00-\x20\x7F]/', $host);
+        // Reject control characters and URI authority delimiters so getHost()
+        // cannot disagree with the on-wire authority.
+        $invalidHost = preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host);
 
         if ($invalidHost === false) {
             throw new \RuntimeException('Unable to validate URI host: '.preg_last_error_msg());
         }
 
         if ($invalidHost === 1) {
+            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
+        }
+
+        if (strpos($host, '[') !== false || strpos($host, ']') !== false) {
+            if ($host[0] !== '[' || substr($host, -1) !== ']') {
+                throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
+            }
+
+            return;
+        }
+
+        if (strpos($host, ':') !== false) {
             throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
         }
     }
