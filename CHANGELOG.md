@@ -70,6 +70,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `ralouphie/getallheaders` dependency
 - Removed deprecated `Header::normalize()` method
 
+## 2.12.3 - 2026-06-23
+
+### Security
+
+- Validate the URI host so `getHost()` matches the URI authority (GHSA-c2w2-prh8-qm98)
+
 ## 2.12.2 - 2026-06-23
 
 ### Fixed
