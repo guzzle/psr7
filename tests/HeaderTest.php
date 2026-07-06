@@ -194,6 +194,11 @@ class HeaderTest extends TestCase
                 "<https://example.gitlab.com>; rel=\"first\",\n<https://example.gitlab.com>; rel=\"next\",\n<https://example.gitlab.com>; rel=\"prev\",\n<https://example.gitlab.com>; rel=\"last\",",
                 ['<https://example.gitlab.com>; rel="first"', '<https://example.gitlab.com>; rel="next"', '<https://example.gitlab.com>; rel="prev"', '<https://example.gitlab.com>; rel="last"'],
             ],
+            // NUL and vertical tab are not header whitespace and must survive splitting
+            [
+                "foo\x0B, \x00bar",
+                ["foo\x0B", "\x00bar"],
+            ],
         ];
     }
 
