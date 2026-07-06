@@ -126,7 +126,7 @@ final class Header
                 }
 
                 if (!$isQuoted && $value[$i] === ',') {
-                    $v = \trim($v);
+                    $v = \trim($v, " \t\n\r");
                     if ($v !== '') {
                         $result[] = $v;
                     }
@@ -151,7 +151,7 @@ final class Header
                 $v .= $value[$i];
             }
 
-            $v = \trim($v);
+            $v = \trim($v, " \t\n\r");
             if ($v !== '') {
                 $result[] = $v;
             }

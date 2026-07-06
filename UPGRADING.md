@@ -556,6 +556,11 @@ The deprecated `Header::normalize()` method was removed. Use
 `Header::splitList()` to split HTTP headers that are defined as comma-separated
 lists.
 
+`Header::splitList()` now trims list elements with spaces, horizontal tabs,
+carriage returns, and line feeds. 2.x also trimmed null bytes and vertical
+tabs. Validated header values cannot contain those bytes, so this only affects
+strings passed to `Header::splitList()` directly.
+
 #### Non-instantiable Utility Classes
 
 Static utility and constant classes such as `Header`, `Message`, `MimeType`,
