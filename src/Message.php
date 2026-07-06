@@ -349,7 +349,7 @@ final class Message
         // According to https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.2
         // the space between status-code and reason-phrase is required. But
         // browsers accept responses without space and reason as well.
-        $responseStartLineMatch = preg_match('/^HTTP\/.* [0-9]{3}( .*|$)/', $data['start-line']);
+        $responseStartLineMatch = preg_match('/^HTTP\/.* [0-9]{3}( .*|$)/D', $data['start-line']);
 
         if ($responseStartLineMatch === false) {
             throw new \RuntimeException('Unable to parse response start line: '.preg_last_error_msg());

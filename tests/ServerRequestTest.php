@@ -402,6 +402,10 @@ class ServerRequestTest extends TestCase
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['SERVER_PORT' => 'not-a-port']),
             ],
+            'SERVER_PORT with a trailing newline is ignored' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['SERVER_PORT' => "8324\n"]),
+            ],
             'Non-string SERVER_PORT is ignored' => [
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['SERVER_PORT' => ['443']]),

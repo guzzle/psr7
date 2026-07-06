@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pass explicit trim characters ahead of the PHP 8.6 trim default change
 
+### Fixed
+
+- Anchor server port and response start-line patterns to the true end of input
+
 ## 2.12.3 - 2026-06-23
 
 ### Security
