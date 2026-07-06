@@ -19,7 +19,7 @@ final class Message
     {
         if ($message instanceof RequestInterface) {
             $msg = trim($message->getMethod().' '
-                    .$message->getRequestTarget())
+                    .$message->getRequestTarget(), " \n\r\t\0\x0B")
                 .' HTTP/'.$message->getProtocolVersion();
             if (!$message->hasHeader('host')) {
                 $msg .= "\r\nHost: ".$message->getUri()->getHost();
