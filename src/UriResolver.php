@@ -69,7 +69,9 @@ final class UriResolver
      * A URI without an authority cannot hold a path beginning with "//" (RFC 3986
      * Section 3.3), but removeDotSegments() can produce one. The "/." prefix
      * serializes such a path unambiguously, the same way the WHATWG URL Standard
-     * does, and resolves back to the same path.
+     * does, and resolves back to the same path. Hostless http and https Uri
+     * instances gain the default localhost host when the path is written, so the
+     * path cannot be mistaken for an authority and the prefix is not added.
      *
      * @see https://url.spec.whatwg.org/#url-serializing
      *
@@ -77,11 +79,15 @@ final class UriResolver
      */
     public static function guardedPath(UriInterface $uri, string $path): string
     {
-        if (str_starts_with($path, '//') && $uri->getAuthority() === '') {
-            return '/.'.$path;
+        if (!str_starts_with($path, '//') || $uri->getAuthority() !== '') {
+            return $path;
         }
 
-        return $path;
+        if ($uri instanceof Uri && ($uri->getScheme() === 'http' || $uri->getScheme() === 'https')) {
+            return $path;
+        }
+
+        return '/.'.$path;
     }
 
     /**

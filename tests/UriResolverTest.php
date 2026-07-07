@@ -170,6 +170,13 @@ class UriResolverTest extends TestCase
         self::assertSame((string) $targetUri, (string) UriResolver::resolve($baseUri, $relativeUri));
     }
 
+    public function testResolveDoesNotGuardPathsOfHostlessHttpUris(): void
+    {
+        $targetUri = UriResolver::resolve(new Uri('http:/x'), new Uri('/..//b'));
+
+        self::assertSame('http://localhost//b', (string) $targetUri);
+    }
+
     public static function getRemoveDotSegmentsTestCases(): iterable
     {
         return [
