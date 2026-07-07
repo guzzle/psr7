@@ -472,6 +472,13 @@ class UriTest extends TestCase
         self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org'), $baseUri));
 
         self::assertFalse(Uri::isSameDocumentReference(new Uri('urn:/path'), new Uri('urn://example.com/path')));
+
+        $multiSlashBaseUri = new Uri('http://example.org//path?foo=bar');
+
+        self::assertTrue(Uri::isSameDocumentReference(new Uri('#fragment'), $multiSlashBaseUri));
+        self::assertTrue(Uri::isSameDocumentReference(new Uri('http://example.org//path?foo=bar#fragment'), $multiSlashBaseUri));
+        self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org/path?foo=bar'), $multiSlashBaseUri));
+        self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org//path?foo=bar'), $baseUri));
     }
 
     public function testAddAndRemoveQueryValues(): void
