@@ -570,4 +570,18 @@ class CachingStreamTest extends TestCase
         $this->expectExceptionMessage('Invalid whence');
         $this->body->seek(10, -123456);
     }
+
+    public function testEnsuresSeekCurTargetIsNonNegative(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Stream offset must be non-negative');
+        $this->body->seek(-1, SEEK_CUR);
+    }
+
+    public function testEnsuresSeekEndTargetIsNonNegative(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Stream offset must be non-negative');
+        $this->body->seek(-100, SEEK_END);
+    }
 }

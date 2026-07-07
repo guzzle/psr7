@@ -209,6 +209,13 @@ class StreamWrapperTest extends TestCase
         self::assertSame(-1, fseek($resource, 0));
     }
 
+    public function testSeekToNegativeTargetReturnsMinusOne(): void
+    {
+        $resource = StreamWrapper::getResource(new Psr7\CachingStream(Utils::streamFor('foo')));
+
+        self::assertSame(-1, fseek($resource, -100, SEEK_END));
+    }
+
     public function testEofFailureReturnsTrue(): void
     {
         $stream = $this->createMock(StreamInterface::class);

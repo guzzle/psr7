@@ -38,7 +38,9 @@ final class Integers
 
         $value = $base + $delta;
         if ($value < 0) {
-            throw new \InvalidArgumentException('Stream offset must be non-negative');
+            // A negative computed offset is a seek failure at runtime, so throw
+            // RuntimeException per PSR-7, unlike the precondition check above.
+            throw new \RuntimeException('Stream offset must be non-negative');
         }
 
         return $value;
