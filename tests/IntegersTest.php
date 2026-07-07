@@ -56,7 +56,7 @@ class IntegersTest extends TestCase
 
     public function testAddSignedRejectsNegativeResult(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Stream offset must be non-negative');
 
         Integers::addSigned(0, -1);

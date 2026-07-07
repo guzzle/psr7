@@ -75,9 +75,22 @@ final class CachingStream implements StreamInterface
         } elseif ($whence === SEEK_END) {
             $size = $this->remoteStream->getSize();
             if ($size === null) {
+                // Discovering the size reads the remote stream to EOF and
+                // moves the cursor, so restore the cursor if the computed
+                // target is rejected to keep a failed seek side-effect free.
+                $position = $this->tell();
                 $size = $this->cacheEntireStream();
+
+                try {
+                    $byte = Integers::addSigned($size, $offset);
+                } catch (\Throwable $e) {
+                    $this->stream->seek($position);
+
+                    throw $e;
+                }
+            } else {
+                $byte = Integers::addSigned($size, $offset);
             }
-            $byte = Integers::addSigned($size, $offset);
         } else {
             throw new \InvalidArgumentException('Invalid whence');
         }
