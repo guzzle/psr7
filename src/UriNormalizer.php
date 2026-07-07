@@ -146,11 +146,11 @@ final class UriNormalizer
         }
 
         if ($flags & self::REMOVE_DOT_SEGMENTS && !Uri::isRelativePathReference($uri)) {
-            $uri = $uri->withPath(UriResolver::removeDotSegments($uri->getPath()));
+            $uri = $uri->withPath(UriResolver::removeDotSegments(Uri::rawPath($uri)));
         }
 
         if ($flags & self::REMOVE_DUPLICATE_SLASHES) {
-            $path = preg_replace('#//++#', '/', $uri->getPath());
+            $path = preg_replace('#//++#', '/', Uri::rawPath($uri));
 
             if ($path === null) {
                 throw new \RuntimeException('Unable to remove duplicate slashes from URI path: '.preg_last_error_msg());
@@ -196,7 +196,7 @@ final class UriNormalizer
         };
 
         return $uri
-            ->withPath(self::normalizePercentEncodingInComponent($uri->getPath(), $regex, $callback))
+            ->withPath(self::normalizePercentEncodingInComponent(Uri::rawPath($uri), $regex, $callback))
             ->withQuery(self::normalizePercentEncodingInComponent($uri->getQuery(), $regex, $callback))
             ->withFragment(self::normalizePercentEncodingInComponent($uri->getFragment(), $regex, $callback));
     }
@@ -210,7 +210,7 @@ final class UriNormalizer
         };
 
         return $uri
-            ->withPath(self::normalizePercentEncodingInComponent($uri->getPath(), $regex, $callback))
+            ->withPath(self::normalizePercentEncodingInComponent(Uri::rawPath($uri), $regex, $callback))
             ->withQuery(self::normalizePercentEncodingInComponent($uri->getQuery(), $regex, $callback))
             ->withFragment(self::normalizePercentEncodingInComponent($uri->getFragment(), $regex, $callback));
     }

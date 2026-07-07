@@ -325,7 +325,7 @@ class Uri implements UriInterface, \JsonSerializable
 
             return ($uri->getScheme() === $base->getScheme())
                 && ($uri->getAuthority() === $base->getAuthority())
-                && ($uri->getPath() === $base->getPath())
+                && (self::rawPath($uri) === self::rawPath($base))
                 && ($uri->getQuery() === $base->getQuery());
         }
 
@@ -478,6 +478,30 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return $this->path;
+    }
+
+    /**
+     * Returns the path of a URI as used within its string form.
+     *
+     * getPath() collapses multiple leading slashes so that a path used in
+     * isolation cannot be mistaken for a protocol-relative URL. Whole-URI
+     * operations like reference resolution and normalization (RFC 3986
+     * Sections 5 and 6) are defined on the URI string form, where the path
+     * stays verbatim, so they must read the path through this method instead.
+     * For instances of this class the stored path is read directly as that is
+     * the exact path the string form is composed from.
+     *
+     * @throws MalformedUriException If the URI string form cannot be parsed.
+     *
+     * @internal
+     */
+    public static function rawPath(UriInterface $uri): string
+    {
+        if (!$uri instanceof self) {
+            $uri = new self((string) $uri);
+        }
+
+        return $uri->path;
     }
 
     public function getQuery(): string
