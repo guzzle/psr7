@@ -251,10 +251,11 @@ final class Utils
 
                 $changes['set_headers']['Host'] = $host;
 
-                if ($port = $uri->getPort()) {
+                $port = $uri->getPort();
+                if ($port !== null) {
                     $standardPorts = ['http' => 80, 'https' => 443];
                     $scheme = $uri->getScheme();
-                    if (isset($standardPorts[$scheme]) && $port != $standardPorts[$scheme]) {
+                    if (!isset($standardPorts[$scheme]) || $port != $standardPorts[$scheme]) {
                         $changes['set_headers']['Host'] .= ':'.$port;
                     }
                 }

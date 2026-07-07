@@ -125,6 +125,10 @@ Recognized change values must use the documented types:
 - `set_headers`: `array<array-key, string|non-empty-array<array-key, string>>`
 - `remove_headers`: `array<array-key, string|int>`
 
+When a `uri` change contains a host, the synthesized `Host` header now
+includes any non-default URI port, matching the `Request` constructor. 2.x
+omitted port zero and every port on schemes other than HTTP and HTTPS.
+
 #### Uploaded Files
 
 `ServerRequestInterface::withUploadedFiles()` now rejects invalid nested upload

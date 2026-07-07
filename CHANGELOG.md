@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject duplicate `Host` headers and validate present values for all request-target forms
 - Synchronize the `Host` header in `Request::withUri()` when the URI changes or Host is empty
 - Include the URI port in `Host` headers synthesized by `Message::toString()`
+- Include non-default URI ports in `Host` headers set by `Utils::modifyRequest()` URI changes
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
 - Reject malformed HTTP request/response start-lines
 - Validate iterator chunks passed to `Utils::streamFor()`
