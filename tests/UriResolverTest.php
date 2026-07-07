@@ -396,6 +396,18 @@ class UriResolverTest extends TestCase
             // nothing is inherited when the target has its own fragment or a different query
             ['urn://h#bf',      'urn://h#f',    '#f'],
             ['urn://h#bf',      'urn://h?q',    '?q'],
+            // a base fragment is not inherited into an equal-path target; a non-empty
+            // reference is returned instead of the empty reference
+            ['http://h/p#old',  'http://h/p',   'p'],
+            ['http://h/#old',   'http://h/',    './'],
+            ['http://h/p#old',  'http://h/p#f', '#f'],
+            ['http://h/p?q#old', 'http://h/p?q', '?q'],
+            // a single-segment reference containing a colon would be mistaken for a scheme
+            // name and is prefixed with "./", like in references to different paths
+            ['http://h/a:b#old', 'http://h/a:b', './a:b'],
+            ['http://h/a:b?bq',  'http://h/a:b', './a:b'],
+            // a colon-free segment needs no "./" prefix
+            ['http://h/p?bq',   'http://h/p',   'p'],
             // an empty base path needs no network-path reference when nothing would be inherited
             ['urn://h',         'urn://h',      ''],
             ['urn://h',         'urn://h#f',    '#f'],

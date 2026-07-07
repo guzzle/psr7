@@ -355,6 +355,15 @@ empty relative reference would otherwise inherit. When the base URI has an
 empty path as well and nothing would be inherited, shorter references such
 as the empty reference, `#fragment` or `?query` are still returned.
 
+`relativize()` also no longer returns the empty reference when the target
+path equals the base path but the base has a fragment the target lacks, as
+the empty reference would reintroduce that fragment. A relative-path
+reference, or a query reference when the target has a query, is returned
+instead. When the relative-path reference would be a single path segment
+containing a colon, which would be mistaken for a scheme name, it is
+prefixed with `./` (for example `./a:b`); 2.x threw a `MalformedUriException`
+for such targets when the base had a query the target lacked.
+
 #### HTTP Start-line Parsing
 
 `Message::parseRequest()` and `Message::parseResponse()` now validate HTTP
