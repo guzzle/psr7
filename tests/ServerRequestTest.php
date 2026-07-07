@@ -1996,6 +1996,59 @@ PHP
         self::assertSame($files, $request2->getUploadedFiles());
     }
 
+    /**
+     * @dataProvider validUploadedFilesProvider
+     */
+    public function testWithUploadedFilesAcceptsValidTrees(array $files): void
+    {
+        $request = new ServerRequest('GET', '/');
+
+        $new = $request->withUploadedFiles($files);
+
+        self::assertNotSame($request, $new);
+        self::assertSame([], $request->getUploadedFiles());
+        self::assertSame($files, $new->getUploadedFiles());
+    }
+
+    public static function validUploadedFilesProvider(): iterable
+    {
+        $file = new UploadedFile('test', 123, UPLOAD_ERR_OK);
+
+        yield 'empty tree' => [[]];
+        yield 'flat list' => [[$file, $file]];
+        yield 'nested named tree' => [['files' => ['a' => $file, 'b' => [$file, $file]]]];
+    }
+
+    /**
+     * @dataProvider invalidUploadedFilesProvider
+     */
+    public function testWithUploadedFilesRejectsInvalidTrees(array $files, string $expectedType): void
+    {
+        $original = ['file' => new UploadedFile('test', 123, UPLOAD_ERR_OK)];
+        $request = (new ServerRequest('GET', '/'))->withUploadedFiles($original);
+
+        try {
+            $request->withUploadedFiles($files);
+            self::fail('Uploaded file tree should have been rejected.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame(
+                sprintf('Invalid uploaded file tree; expected UploadedFileInterface instances but %s provided.', $expectedType),
+                $e->getMessage()
+            );
+            self::assertSame($original, $request->getUploadedFiles());
+        }
+    }
+
+    public static function invalidUploadedFilesProvider(): iterable
+    {
+        yield 'string leaf' => [['file' => 'not-a-file'], 'string'];
+        yield 'integer leaf' => [['file' => 1], 'int'];
+        yield 'null leaf' => [['file' => null], 'null'];
+        yield 'object leaf' => [['file' => new \stdClass()], 'stdClass'];
+        yield 'deeply nested invalid leaf' => [['files' => ['nested' => ['deep' => 'not-a-file']]], 'string'];
+        yield 'valid then invalid' => [['a' => new UploadedFile('test', 123, UPLOAD_ERR_OK), 'b' => 'not-a-file'], 'string'];
+    }
+
     public function testServerParams(): void
     {
         $params = ['name' => 'value'];
