@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make `FnStream` close and detach terminal, calling close callbacks at most once
 - Suppress exceptions from `FnStream` close callbacks during destructor cleanup
 - Make `CachingStream::close()` idempotent, preserving remote cleanup after detach
+- Do not move the `CachingStream` cursor when a `SEEK_END` target on an unknown-size stream is rejected
 - Normalize multiple leading slashes in `Uri::getPath()` and origin-form request targets
 - Serialize authority-less `file` URIs with rootless paths without the `//` separator
 - Serialize authority-less `file` URIs with empty paths as `file:` instead of the unparseable `file://`

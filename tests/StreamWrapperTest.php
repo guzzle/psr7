@@ -216,6 +216,19 @@ class StreamWrapperTest extends TestCase
         self::assertSame(-1, fseek($resource, -100, SEEK_END));
     }
 
+    public function testSeekToNegativeTargetWithUnknownSizeDoesNotMoveCursor(): void
+    {
+        $stream = Psr7\FnStream::decorate(Utils::streamFor('foo'), [
+            'getSize' => function () {
+                return null;
+            },
+        ]);
+        $resource = StreamWrapper::getResource(new Psr7\CachingStream($stream));
+
+        self::assertSame(-1, fseek($resource, -100, SEEK_END));
+        self::assertSame('foo', fread($resource, 3));
+    }
+
     public function testEofFailureReturnsTrue(): void
     {
         $stream = $this->createMock(StreamInterface::class);

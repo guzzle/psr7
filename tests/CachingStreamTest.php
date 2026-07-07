@@ -584,4 +584,26 @@ class CachingStreamTest extends TestCase
         $this->expectExceptionMessage('Stream offset must be non-negative');
         $this->body->seek(-100, SEEK_END);
     }
+
+    public function testRejectedSeekEndWithUnknownSizeDoesNotMoveCursor(): void
+    {
+        $baseStream = Psr7\Utils::streamFor('testing');
+        $decorated = Psr7\FnStream::decorate($baseStream, [
+            'getSize' => function () {
+                return null;
+            },
+        ]);
+        $cached = new CachingStream($decorated);
+        self::assertSame('te', $cached->read(2));
+
+        try {
+            $cached->seek(-100, SEEK_END);
+            self::fail('Expected seek to fail');
+        } catch (\RuntimeException $e) {
+            self::assertSame('Stream offset must be non-negative', $e->getMessage());
+        }
+
+        self::assertSame(2, $cached->tell());
+        self::assertSame('sting', $cached->read(5));
+    }
 }
