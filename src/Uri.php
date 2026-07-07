@@ -325,7 +325,7 @@ class Uri implements UriInterface, \JsonSerializable
 
             return ($uri->getScheme() === $base->getScheme())
                 && ($uri->getAuthority() === $base->getAuthority())
-                && ($uri->getPath() === $base->getPath())
+                && (self::rawPath($uri) === self::rawPath($base))
                 && ($uri->getQuery() === $base->getQuery());
         }
 
@@ -478,6 +478,45 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return $this->path;
+    }
+
+    /**
+     * Returns the path as it appears within a URI's string form.
+     *
+     * getPath() collapses multiple leading slashes so that a path used in
+     * isolation cannot be mistaken for a protocol-relative URL. Whole-URI
+     * operations like reference resolution and normalization (RFC 3986
+     * Sections 5 and 6) are defined on the URI string form, where the path
+     * stays verbatim, so they must read the path through this method instead.
+     * For direct instances of this class the path is derived from the stored
+     * components, including the leading slash the string form adds to a
+     * rootless path when an authority is present; for subclasses and other
+     * implementations the path is split from the string form per RFC 3986
+     * Appendix B, without validating or decoding any other component.
+     *
+     * @throws \RuntimeException If the path cannot be split from the string form.
+     *
+     * @internal
+     */
+    public static function rawPath(UriInterface $uri): string
+    {
+        if (get_class($uri) === self::class) {
+            if ($uri->path !== '' && !str_starts_with($uri->path, '/') && $uri->getAuthority() !== '') {
+                // composeComponents() prepends a slash to a rootless path when
+                // an authority is present, so the string form uses this path.
+                return '/'.$uri->path;
+            }
+
+            return $uri->path;
+        }
+
+        $count = preg_match('%^(?:[^:/?#]+:)?(?://[^/?#]*)?([^?#]*)%', (string) $uri, $matches);
+
+        if ($count === false) {
+            throw new \RuntimeException('Unable to read the URI path: '.preg_last_error_msg());
+        }
+
+        return $matches[1] ?? '';
     }
 
     public function getQuery(): string

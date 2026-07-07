@@ -140,6 +140,24 @@ class UriNormalizerTest extends TestCase
         self::assertSame('http://example.org/foo/bar/bam.html', (string) $normalizedUri);
     }
 
+    public function testRemoveDotSegmentsRetainsDuplicateSlashes(): void
+    {
+        $uri = new Uri('http://example.org//a/b/../c/./d.html');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DOT_SEGMENTS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://example.org//a/c/d.html', (string) $normalizedUri);
+    }
+
+    public function testPreservingNormalizationsRetainDuplicateSlashes(): void
+    {
+        $uri = new Uri('http://example.org//a%c2%b1b/./p%61th');
+        $normalizedUri = UriNormalizer::normalize($uri);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://example.org//a%C2%B1b/path', (string) $normalizedUri);
+    }
+
     public function testSortQueryParameters(): void
     {
         $uri = new Uri('?lang=en&article=fred');
@@ -183,5 +201,14 @@ class UriNormalizerTest extends TestCase
             ['file:/myfile', 'file:///myfile', true],
             ['file:///myfile', 'file://localhost/myfile', true],
         ];
+    }
+
+    public function testIsEquivalentWithRemoveDuplicateSlashes(): void
+    {
+        $uri1 = new Uri('http://example.org//foo');
+        $uri2 = new Uri('http://example.org/foo');
+
+        self::assertFalse(UriNormalizer::isEquivalent($uri1, $uri2));
+        self::assertTrue(UriNormalizer::isEquivalent($uri1, $uri2, UriNormalizer::PRESERVING_NORMALIZATIONS | UriNormalizer::REMOVE_DUPLICATE_SLASHES));
     }
 }

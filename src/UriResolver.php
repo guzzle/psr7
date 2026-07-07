@@ -63,40 +63,45 @@ final class UriResolver
         }
 
         if ($rel->getScheme() != '') {
-            return $rel->withPath(self::removeDotSegments($rel->getPath()));
+            return $rel->withPath(self::removeDotSegments(Uri::rawPath($rel)));
         }
 
         if ($rel->getAuthority() != '') {
             return $rel
                 ->withScheme($base->getScheme())
-                ->withPath(self::removeDotSegments($rel->getPath()));
+                ->withPath(self::removeDotSegments(Uri::rawPath($rel)));
         }
 
-        if ($rel->getPath() === '') {
-            $targetPath = $base->getPath();
-            $targetQuery = $rel->getQuery() != '' ? $rel->getQuery() : $base->getQuery();
+        $relPath = Uri::rawPath($rel);
+
+        if ($relPath === '') {
+            // the base path is used as-is per RFC 3986 Section 5.2.2, so it must not be
+            // rewritten through a getPath()/withPath() round-trip
+            return $base
+                ->withQuery($rel->getQuery() != '' ? $rel->getQuery() : $base->getQuery())
+                ->withFragment($rel->getFragment());
+        }
+
+        if (str_starts_with($relPath, '/')) {
+            $targetPath = $relPath;
         } else {
-            if (str_starts_with($rel->getPath(), '/')) {
-                $targetPath = $rel->getPath();
+            $basePath = Uri::rawPath($base);
+            if ($base->getAuthority() != '' && $basePath === '') {
+                $targetPath = '/'.$relPath;
             } else {
-                if ($base->getAuthority() != '' && $base->getPath() === '') {
-                    $targetPath = '/'.$rel->getPath();
+                $lastSlashPos = strrpos($basePath, '/');
+                if ($lastSlashPos === false) {
+                    $targetPath = $relPath;
                 } else {
-                    $lastSlashPos = strrpos($base->getPath(), '/');
-                    if ($lastSlashPos === false) {
-                        $targetPath = $rel->getPath();
-                    } else {
-                        $targetPath = substr($base->getPath(), 0, $lastSlashPos + 1).$rel->getPath();
-                    }
+                    $targetPath = substr($basePath, 0, $lastSlashPos + 1).$relPath;
                 }
             }
-            $targetPath = self::removeDotSegments($targetPath);
-            $targetQuery = $rel->getQuery();
         }
+        $targetPath = self::removeDotSegments($targetPath);
 
         return $base
             ->withPath($targetPath)
-            ->withQuery($targetQuery)
+            ->withQuery($rel->getQuery())
             ->withFragment($rel->getFragment());
     }
 
@@ -145,7 +150,7 @@ final class UriResolver
         // invalid.
         $emptyPathUri = $target->withScheme('')->withPath('')->withUserInfo('')->withPort(null)->withHost('');
 
-        if ($base->getPath() !== $target->getPath()) {
+        if (Uri::rawPath($base) !== Uri::rawPath($target)) {
             return $emptyPathUri->withPath(self::getRelativePath($base, $target));
         }
 
@@ -157,7 +162,7 @@ final class UriResolver
         // If the base URI has a query but the target has none, we cannot return an empty path reference as it would
         // inherit the base query component when resolving.
         if ($target->getQuery() === '') {
-            $segments = explode('/', $target->getPath());
+            $segments = explode('/', Uri::rawPath($target));
             /** @var string $lastSegment */
             $lastSegment = end($segments);
 
@@ -169,8 +174,8 @@ final class UriResolver
 
     private static function getRelativePath(UriInterface $base, UriInterface $target): string
     {
-        $sourceSegments = explode('/', $base->getPath());
-        $targetSegments = explode('/', $target->getPath());
+        $sourceSegments = explode('/', Uri::rawPath($base));
+        $targetSegments = explode('/', Uri::rawPath($target));
         array_pop($sourceSegments);
         $targetLastSegment = array_pop($targetSegments);
         foreach ($sourceSegments as $i => $segment) {
@@ -189,7 +194,7 @@ final class UriResolver
         if ($relativePath === '' || str_contains(explode('/', $relativePath, 2)[0], ':')) {
             $relativePath = "./$relativePath";
         } elseif (str_starts_with($relativePath, '/')) {
-            if ($base->getAuthority() != '' && $base->getPath() === '') {
+            if ($base->getAuthority() != '' && Uri::rawPath($base) === '') {
                 // In this case an extra slash is added by resolve() automatically. So we must not add one here.
                 $relativePath = ".$relativePath";
             } else {

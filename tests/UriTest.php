@@ -672,6 +672,47 @@ class UriTest extends TestCase
         self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org'), $baseUri));
 
         self::assertFalse(Uri::isSameDocumentReference(new Uri('urn:/path'), new Uri('urn://example.com/path')));
+
+        $multiSlashBaseUri = new Uri('http://example.org//path?foo=bar');
+
+        self::assertTrue(Uri::isSameDocumentReference(new Uri('#fragment'), $multiSlashBaseUri));
+        self::assertTrue(Uri::isSameDocumentReference(new Uri('http://example.org//path?foo=bar#fragment'), $multiSlashBaseUri));
+        self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org/path?foo=bar'), $multiSlashBaseUri));
+        self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org//path?foo=bar'), $baseUri));
+
+        $rootlessBaseUri = (new Uri('http://example.org?foo=bar'))->withPath('path');
+
+        self::assertTrue(Uri::isSameDocumentReference(new Uri('http://example.org/path?foo=bar'), $rootlessBaseUri));
+    }
+
+    public function testRawPathIsDerivedFromUriStringForm(): void
+    {
+        self::assertSame('//stored/path', Uri::rawPath(new Uri('http://example.org//stored/path')));
+
+        $extendedUri = new class('http://example.org/stored/path') extends Uri {
+            public function __toString(): string
+            {
+                return 'http://example.org//custom/form';
+            }
+        };
+
+        self::assertSame('//custom/form', Uri::rawPath($extendedUri));
+
+        // The split must not validate unrelated components: this host is
+        // accepted by the withers but rejected by the parser.
+        $plainSubclassUri = (new class extends Uri {
+        })->withScheme('http')->withHost('[v1.fe80::a+en1]')->withPath('/');
+
+        self::assertSame('/', Uri::rawPath($plainSubclassUri));
+
+        // A rootless path gains a leading slash in the string form when an
+        // authority is present; identical string forms must yield identical
+        // paths regardless of how the instance was constructed.
+        $rootlessUri = (new Uri())->withHost('example.com')->withPath('foo');
+
+        self::assertSame('//example.com/foo', (string) $rootlessUri);
+        self::assertSame('/foo', Uri::rawPath($rootlessUri));
+        self::assertSame(Uri::rawPath(new Uri('//example.com/foo')), Uri::rawPath($rootlessUri));
     }
 
     public function testAddAndRemoveQueryValues(): void

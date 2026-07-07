@@ -303,6 +303,10 @@ $uri->getPath(); // /valid///path
 `Request::getRequestTarget()` applies the same normalization for URI-derived
 origin-form request targets.
 
+Reference resolution and normalization (`UriResolver`, `UriNormalizer`, and
+`Uri::isSameDocumentReference()`) operate on the raw path from the URI string
+form and are therefore unaffected by this normalization.
+
 #### HTTP Start-line Parsing
 
 `Message::parseRequest()` and `Message::parseResponse()` now validate HTTP
