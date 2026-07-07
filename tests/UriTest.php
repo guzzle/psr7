@@ -679,6 +679,10 @@ class UriTest extends TestCase
         self::assertTrue(Uri::isSameDocumentReference(new Uri('http://example.org//path?foo=bar#fragment'), $multiSlashBaseUri));
         self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org/path?foo=bar'), $multiSlashBaseUri));
         self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org//path?foo=bar'), $baseUri));
+
+        $rootlessBaseUri = (new Uri('http://example.org?foo=bar'))->withPath('path');
+
+        self::assertTrue(Uri::isSameDocumentReference(new Uri('http://example.org/path?foo=bar'), $rootlessBaseUri));
     }
 
     public function testRawPathIsDerivedFromUriStringForm(): void
@@ -700,6 +704,15 @@ class UriTest extends TestCase
         })->withScheme('http')->withHost('[v1.fe80::a+en1]')->withPath('/');
 
         self::assertSame('/', Uri::rawPath($plainSubclassUri));
+
+        // A rootless path gains a leading slash in the string form when an
+        // authority is present; identical string forms must yield identical
+        // paths regardless of how the instance was constructed.
+        $rootlessUri = (new Uri())->withHost('example.com')->withPath('foo');
+
+        self::assertSame('//example.com/foo', (string) $rootlessUri);
+        self::assertSame('/foo', Uri::rawPath($rootlessUri));
+        self::assertSame(Uri::rawPath(new Uri('//example.com/foo')), Uri::rawPath($rootlessUri));
     }
 
     public function testAddAndRemoveQueryValues(): void
