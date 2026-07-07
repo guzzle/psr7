@@ -182,6 +182,7 @@ class MessageTest extends TestCase
         yield 'authority-like target with query' => ['//evil.example/x?q=1', '/evil.example/x?q=1'];
         yield 'double slash only' => ['//', '/'];
         yield 'triple slash' => ['///x', '/x'];
+        yield 'internal double slash preserved' => ['//evil.example//x', '/evil.example//x'];
     }
 
     public function testParseRequestCollapsesMultiSlashTargetWithHostHeader(): void
@@ -210,6 +211,15 @@ class MessageTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         Psr7\Message::parseRequest("GET http://[::1/ HTTP/1.1\r\n\r\n");
+    }
+
+    public function testParseRequestKeepsAbsoluteFormTargetWithMultiSlashPath(): void
+    {
+        $request = Psr7\Message::parseRequest("GET https://up.example//admin HTTP/1.1\r\n\r\n");
+
+        self::assertSame('https://up.example//admin', $request->getRequestTarget());
+        self::assertSame('up.example', $request->getUri()->getHost());
+        self::assertSame('https://up.example//admin', (string) $request->getUri());
     }
 
     public function testParsesRequestMessagesWithCustomMethod(): void
