@@ -12,7 +12,7 @@ Streams expose their capabilities using `isReadable()`, `isWritable()`, and `isS
 
 Use `GuzzleHttp\Psr7\Utils::streamFor()` to create streams from common PHP values. It accepts strings, resources returned from `fopen()`, objects that implement `__toString()`, iterators, callable arrays, closures, invokable objects, and existing `Psr\Http\Message\StreamInterface` instances.
 
-Scalar values and `null` are stored in `php://temp` streams. PHP keeps `php://temp` data in memory until the stream exceeds 2 MB, then spills to a temporary file on disk.
+Strings and `null` are stored in `php://temp` streams. PHP keeps `php://temp` data in memory until the stream exceeds 2 MB, then spills to a temporary file on disk. Non-string scalars such as integers, floats, and booleans are rejected; cast them to strings first.
 
 Callable sources receive a suggested read length, may return fewer or more bytes, and end the stream by returning `false` or `null`. Strings remain literal body contents, even when they name a callable.
 
@@ -195,6 +195,8 @@ Uses PHP's zlib.inflate filter to inflate zlib (HTTP deflate, RFC1950) or gzippe
 
 This stream decorator converts the provided stream to a PHP stream resource,
 appends the zlib.inflate filter, and wraps the filtered resource as a stream.
+
+Closing an `InflateStream` also closes the compressed source stream it decorates; `detach()` leaves the source stream open.
 
 
 ## LazyOpenStream

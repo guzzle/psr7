@@ -40,7 +40,7 @@ Throws `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout metad
 
 ## `GuzzleHttp\Psr7\Utils::streamFor`
 
-`public static function streamFor(resource|string|null|int|float|bool|StreamInterface|callable|\Iterator|\Stringable $resource = '', array $options = []): StreamInterface`
+`public static function streamFor(resource|string|null|StreamInterface|callable|\Iterator|\Stringable $resource = '', array $options = []): StreamInterface`
 
 Create a new stream based on the input type.
 
