@@ -119,6 +119,20 @@ class HeaderTest extends TestCase
         self::assertSame([$expected], Psr7\Header::parse(\implode('; ', $parameters)));
     }
 
+    public function testParseReportsPcreFailures(): void
+    {
+        $limit = \ini_set('pcre.backtrack_limit', '1');
+
+        try {
+            $this->expectException(\RuntimeException::class);
+            $this->expectExceptionMessage('Unable to parse header parameters: ');
+
+            Psr7\Header::parse('rel=front');
+        } finally {
+            \ini_set('pcre.backtrack_limit', $limit);
+        }
+    }
+
     public static function normalizeProvider(): array
     {
         return [

@@ -27,7 +27,13 @@ final class Header
             foreach (self::splitList($value) as $val) {
                 $part = [];
                 foreach (self::splitParameters($val) as $kvp) {
-                    if (preg_match_all('/<[^>]+>|[^=]+/', $kvp, $matches)) {
+                    $count = preg_match_all('/<[^>]+>|[^=]+/', $kvp, $matches);
+
+                    if ($count === false) {
+                        throw new \RuntimeException('Unable to parse header parameters: '.preg_last_error_msg());
+                    }
+
+                    if ($count !== 0) {
                         $m = $matches[0];
                         if (isset($m[1])) {
                             $part[trim($m[0], $trimmed)] = trim($m[1], $trimmed);

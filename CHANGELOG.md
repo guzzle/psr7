@@ -71,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate bracketed IP-literal hosts consistently between parsing and `withHost()`, including userinfo forms
 - Normalize percent-encoded octets in the URI host to uppercase hex
 - Trim header list elements with only spaces, horizontal tabs, and line terminators in `Header::splitList()`
+- Report header parameter PCRE failures explicitly in `Header::parse()`
 
 ### Removed
 
