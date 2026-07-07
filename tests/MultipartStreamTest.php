@@ -483,6 +483,45 @@ class MultipartStreamTest extends TestCase
         self::assertSame($expected, (string) $b);
     }
 
+    /**
+     * @dataProvider nonFiniteFloatContentsProvider
+     */
+    public function testRejectsNonFiniteFloatContents(float $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot create a stream from a non-finite float.');
+
+        new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => $value,
+            ],
+        ]);
+    }
+
+    /**
+     * @dataProvider nonFiniteFloatContentsProvider
+     */
+    public function testRejectsNonFiniteFloatInArrayContents(float $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot create a stream from a non-finite float.');
+
+        new MultipartStream([
+            [
+                'name' => 'field',
+                'contents' => ['nested' => $value],
+            ],
+        ]);
+    }
+
+    public static function nonFiniteFloatContentsProvider(): iterable
+    {
+        yield 'NAN' => [\NAN];
+        yield 'INF' => [\INF];
+        yield '-INF' => [-\INF];
+    }
+
     public function testExpandsArrayContentsWithNumericStringKeys(): void
     {
         $b = new MultipartStream([
