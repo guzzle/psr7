@@ -201,19 +201,25 @@ final class UriResolver
             return $emptyPathUri->withPath(self::getRelativePath($base, $target));
         }
 
-        if ($base->getQuery() === $target->getQuery()) {
+        if ($base->getQuery() === $target->getQuery() && ($target->getFragment() !== '' || $base->getFragment() === '')) {
             // Only the target fragment is left. And it must be returned even if base and target fragment are the same.
             return $emptyPathUri->withQuery('');
         }
 
-        // If the base URI has a query but the target has none, we cannot return an empty path reference as it would
-        // inherit the base query component when resolving.
+        // If the base URI has a query or fragment that the target lacks, we cannot return an empty path
+        // reference as it would inherit that base component when resolving.
         if ($target->getQuery() === '') {
             $segments = explode('/', Uri::rawPath($target));
             /** @var string $lastSegment */
             $lastSegment = end($segments);
 
-            return $emptyPathUri->withPath($lastSegment === '' ? './' : $lastSegment);
+            // A reference to an empty last segment must be prefixed with "./". The same applies
+            // to a segment with a colon character, which would be mistaken for a scheme name.
+            if ($lastSegment === '' || str_contains($lastSegment, ':')) {
+                $lastSegment = "./$lastSegment";
+            }
+
+            return $emptyPathUri->withPath($lastSegment);
         }
 
         return $emptyPathUri;

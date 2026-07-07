@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Serialize authority-less `file` URIs with empty paths as `file:` instead of the unparseable `file://`
 - Remove dot segments above the root per RFC 3986, prefixing authority-less `//` paths with `/.`
 - Return a network-path reference from `UriResolver::relativize()` when an empty-path target requires one
+- Stop returning an empty reference from `UriResolver::relativize()` when it would inherit the base fragment
+- Stop throwing from `UriResolver::relativize()` when an equal-path target's last path segment contains a colon
 - Harden URI host validation (delimiters, backslashes, IPv6, embedded ports); require schemes to start with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
 - Rebuild server request URIs from `$_SERVER` by `REQUEST_METHOD`, using target authority before `SERVER_PORT`
