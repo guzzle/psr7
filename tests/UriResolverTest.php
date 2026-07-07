@@ -152,6 +152,16 @@ class UriResolverTest extends TestCase
         self::assertSame((string) UriResolver::resolve($baseUri, $targetUri), (string) UriResolver::resolve($baseUri, $relativeUri));
     }
 
+    public function testRelativizeAndResolveWithMultiSlashBasePathRoundTrips(): void
+    {
+        $baseUri = new Uri('http://example.com//a/b');
+        $targetUri = new Uri('http://example.com//a/x');
+        $relativeUri = UriResolver::relativize($baseUri, $targetUri);
+
+        self::assertSame('x', (string) $relativeUri);
+        self::assertSame((string) $targetUri, (string) UriResolver::resolve($baseUri, $relativeUri));
+    }
+
     public static function getResolveTestCases(): iterable
     {
         return [
@@ -252,6 +262,12 @@ class UriResolverTest extends TestCase
             ['//example.com//two-slashes', './',  '//example.com//'],
             ['//example.com',    './/',           '//example.com//'],
             ['//example.com/',   './/',           '//example.com//'],
+            // multiple leading slashes in paths are preserved during resolution
+            ['http://a//b/c',    '#s',            'http://a//b/c#s'],
+            ['http://a//b/c',    '?q',            'http://a//b/c?q'],
+            ['http://a//b/c',    'x',             'http://a//b/x'],
+            ['http://a/b/c',     'http://x//y/z', 'http://x//y/z'],
+            ['http://a/b/c',     '//x//y/z',      'http://x//y/z'],
             // base URI has less components than relative URI
             ['/',                '//a/b?q#h',     '//a/b?q#h'],
             ['/',                'urn:/',         'urn:/'],
