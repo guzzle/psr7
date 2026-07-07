@@ -266,6 +266,12 @@ final class Message
 
         // If no host is found, then a full URI cannot be constructed.
         if ($host === null) {
+            // Collapse leading slashes so an origin-form target cannot be
+            // parsed as a network-path reference with its own authority.
+            if (0 === strpos($path, '//')) {
+                return '/'.ltrim($path, '/');
+            }
+
             return $path;
         }
 

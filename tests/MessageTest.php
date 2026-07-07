@@ -163,6 +163,36 @@ class MessageTest extends TestCase
         self::assertSame('/abc', (string) $request->getUri());
     }
 
+    /**
+     * @dataProvider hostlessMultiSlashTargetProvider
+     */
+    public function testParseRequestTreatsHostlessMultiSlashTargetAsPath(string $target, string $expected): void
+    {
+        $request = Psr7\Message::parseRequest("GET {$target} HTTP/1.1\r\nFoo: bar\r\n\r\n");
+
+        self::assertSame($expected, (string) $request->getUri());
+        self::assertSame('', $request->getUri()->getHost());
+        self::assertFalse($request->hasHeader('Host'));
+        self::assertSame($expected, $request->getRequestTarget());
+    }
+
+    public static function hostlessMultiSlashTargetProvider(): iterable
+    {
+        yield 'authority-like target' => ['//evil.example/x', '/evil.example/x'];
+        yield 'authority-like target with query' => ['//evil.example/x?q=1', '/evil.example/x?q=1'];
+        yield 'double slash only' => ['//', '/'];
+        yield 'triple slash' => ['///x', '/x'];
+    }
+
+    public function testParseRequestCollapsesMultiSlashTargetWithHostHeader(): void
+    {
+        $request = Psr7\Message::parseRequest("GET //evil.example/x HTTP/1.1\r\nHost: good.example\r\n\r\n");
+
+        self::assertSame('http://good.example/evil.example/x', (string) $request->getUri());
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+        self::assertSame('/evil.example/x', $request->getRequestTarget());
+    }
+
     public function testParsesRequestMessagesWithFullUri(): void
     {
         $req = "GET https://www.google.com:443/search?q=foobar HTTP/1.1\r\nHost: www.google.com\r\n\r\n";
