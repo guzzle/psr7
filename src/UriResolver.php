@@ -18,6 +18,12 @@ final class UriResolver
     /**
      * Removes dot segments from a path and returns the new path.
      *
+     * Excess ".." segments above the root of an absolute path are dropped without
+     * consuming the root, so the result can begin with "//" (e.g. "/..//a" becomes
+     * "//a"). Such a path is not valid for a URI without an authority (RFC 3986
+     * Section 3.3); resolve() and UriNormalizer::normalize() serialize it with a
+     * "/." prefix in that case, like the WHATWG URL Standard.
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.4
      */
     public static function removeDotSegments(string $path): string
@@ -28,9 +34,15 @@ final class UriResolver
 
         $results = [];
         $segments = explode('/', $path);
+        // The first segment of an absolute path is the empty root marker producing the
+        // leading slash. RFC 3986 Section 5.2.4 (2C) drops ".." segments in excess of
+        // the path hierarchy without consuming the root, so it must never be popped.
+        $floor = $segments[0] === '' ? 1 : 0;
         foreach ($segments as $segment) {
             if ($segment === '..') {
-                array_pop($results);
+                if (count($results) > $floor) {
+                    array_pop($results);
+                }
             } elseif ($segment !== '.') {
                 $results[] = $segment;
             }
@@ -51,6 +63,28 @@ final class UriResolver
     }
 
     /**
+     * Returns the path, prefixed with "/." when it would otherwise start the URI's
+     * string form with an authority-like "//".
+     *
+     * A URI without an authority cannot hold a path beginning with "//" (RFC 3986
+     * Section 3.3), but removeDotSegments() can produce one. The "/." prefix
+     * serializes such a path unambiguously, the same way the WHATWG URL Standard
+     * does, and resolves back to the same path.
+     *
+     * @see https://url.spec.whatwg.org/#url-serializing
+     *
+     * @internal
+     */
+    public static function guardedPath(UriInterface $uri, string $path): string
+    {
+        if (str_starts_with($path, '//') && $uri->getAuthority() === '') {
+            return '/.'.$path;
+        }
+
+        return $path;
+    }
+
+    /**
      * Converts the relative URI into a new URI that is resolved against the base URI.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2
@@ -63,7 +97,7 @@ final class UriResolver
         }
 
         if ($rel->getScheme() != '') {
-            return $rel->withPath(self::removeDotSegments(Uri::rawPath($rel)));
+            return $rel->withPath(self::guardedPath($rel, self::removeDotSegments(Uri::rawPath($rel))));
         }
 
         if ($rel->getAuthority() != '') {
@@ -100,7 +134,7 @@ final class UriResolver
         $targetPath = self::removeDotSegments($targetPath);
 
         return $base
-            ->withPath($targetPath)
+            ->withPath(self::guardedPath($base, $targetPath))
             ->withQuery($rel->getQuery())
             ->withFragment($rel->getFragment());
     }

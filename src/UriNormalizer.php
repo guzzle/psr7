@@ -145,18 +145,24 @@ final class UriNormalizer
             $uri = $uri->withPort(null);
         }
 
-        if ($flags & self::REMOVE_DOT_SEGMENTS && !Uri::isRelativePathReference($uri)) {
-            $uri = $uri->withPath(UriResolver::removeDotSegments(Uri::rawPath($uri)));
-        }
+        $removeDotSegments = ($flags & self::REMOVE_DOT_SEGMENTS) && !Uri::isRelativePathReference($uri);
 
-        if ($flags & self::REMOVE_DUPLICATE_SLASHES) {
-            $path = preg_replace('#//++#', '/', Uri::rawPath($uri));
+        if ($removeDotSegments || $flags & self::REMOVE_DUPLICATE_SLASHES) {
+            $path = Uri::rawPath($uri);
 
-            if ($path === null) {
-                throw new \RuntimeException('Unable to remove duplicate slashes from URI path: '.preg_last_error_msg());
+            if ($removeDotSegments) {
+                $path = UriResolver::removeDotSegments($path);
             }
 
-            $uri = $uri->withPath($path);
+            if ($flags & self::REMOVE_DUPLICATE_SLASHES) {
+                $path = preg_replace('#//++#', '/', $path);
+
+                if ($path === null) {
+                    throw new \RuntimeException('Unable to remove duplicate slashes from URI path: '.preg_last_error_msg());
+                }
+            }
+
+            $uri = $uri->withPath(UriResolver::guardedPath($uri, $path));
         }
 
         if ($flags & self::SORT_QUERY_PARAMETERS && $uri->getQuery() !== '') {
