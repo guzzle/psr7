@@ -149,6 +149,46 @@ class UriNormalizerTest extends TestCase
         self::assertSame('http://example.org//a/c/d.html', (string) $normalizedUri);
     }
 
+    public function testRemoveDotSegmentsAboveRootRetainsDuplicateSlashes(): void
+    {
+        $uri = new Uri('http://example.org/..//a/../..//b.html');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DOT_SEGMENTS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://example.org//b.html', (string) $normalizedUri);
+    }
+
+    public function testRemoveDotSegmentsGuardsPathOfAuthorityLessUri(): void
+    {
+        $uri = new Uri('urn:/..//x');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DOT_SEGMENTS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('urn:/.//x', (string) $normalizedUri);
+        // the "/." prefix is stable under repeated normalization
+        self::assertSame('urn:/.//x', (string) UriNormalizer::normalize($normalizedUri, UriNormalizer::REMOVE_DOT_SEGMENTS));
+    }
+
+    public function testRemoveDotSegmentsDoesNotGuardPathOfHostlessHttpUri(): void
+    {
+        $uri = new Uri('http:/a/..//b');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DOT_SEGMENTS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://localhost//b', (string) $normalizedUri);
+        // the default host makes the path unambiguous, keeping normalization idempotent
+        self::assertSame('http://localhost//b', (string) UriNormalizer::normalize($normalizedUri, UriNormalizer::REMOVE_DOT_SEGMENTS));
+    }
+
+    public function testRemoveDotSegmentsAndDuplicateSlashesOnAuthorityLessUri(): void
+    {
+        $uri = new Uri('urn:/..//x');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DOT_SEGMENTS | UriNormalizer::REMOVE_DUPLICATE_SLASHES);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('urn:/x', (string) $normalizedUri);
+    }
+
     public function testPreservingNormalizationsRetainDuplicateSlashes(): void
     {
         $uri = new Uri('http://example.org//a%c2%b1b/./p%61th');
@@ -156,6 +196,15 @@ class UriNormalizerTest extends TestCase
 
         self::assertInstanceOf(UriInterface::class, $normalizedUri);
         self::assertSame('http://example.org//a%C2%B1b/path', (string) $normalizedUri);
+    }
+
+    public function testPreservingNormalizationsGuardPathOfAuthorityLessUri(): void
+    {
+        $uri = new Uri('urn:a/..///x');
+        $normalizedUri = UriNormalizer::normalize($uri);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('urn:/.//x', (string) $normalizedUri);
     }
 
     public function testNormalizePreservesRootlessFileUriFromExtendedInstances(): void
@@ -205,6 +254,10 @@ class UriNormalizerTest extends TestCase
             ['http://example.org/path?#', 'http://example.org/path', true],
             ['http://example.org:80', 'http://example.org/', true],
             ['http://example.org/../a/.././p%61th?%7a=%5e', 'http://example.org/path?z=%5E', true],
+            ['http://example.org/..//a', 'http://example.org//a', true],
+            ['http://example.org/..//a', 'http://example.org/a', false],
+            ['urn:/..//x', 'urn:/.//x', true],
+            ['http:/a/..//b', 'http:/%61/..//b', true],
             ['http://example.org/path#fr%61g%c2%b1', 'http://example.org/path#frag%C2%B1', true],
             ['https://example.org/', 'http://example.org/', false],
             ['https://example.org/', '//example.org/', false],

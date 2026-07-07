@@ -17,6 +17,14 @@ class UriResolverTest extends TestCase
     private const RFC3986_BASE = 'http://a/b/c/d;p?q';
 
     /**
+     * @dataProvider getRemoveDotSegmentsTestCases
+     */
+    public function testRemoveDotSegments(string $path, string $expectedPath): void
+    {
+        self::assertSame($expectedPath, UriResolver::removeDotSegments($path));
+    }
+
+    /**
      * @dataProvider getResolveTestCases
      */
     public function testResolveUri(string $base, string $rel, string $expectedTarget): void
@@ -162,6 +170,39 @@ class UriResolverTest extends TestCase
         self::assertSame((string) $targetUri, (string) UriResolver::resolve($baseUri, $relativeUri));
     }
 
+    public function testResolveDoesNotGuardPathsOfHostlessHttpUris(): void
+    {
+        $targetUri = UriResolver::resolve(new Uri('http:/x'), new Uri('/..//b'));
+
+        self::assertSame('http://localhost//b', (string) $targetUri);
+    }
+
+    public static function getRemoveDotSegmentsTestCases(): iterable
+    {
+        return [
+            ['', ''],
+            ['/', '/'],
+            // RFC 3986 Section 5.2.4 examples
+            ['/a/b/c/./../../g', '/a/g'],
+            ['mid/content=5/../6', 'mid/6'],
+            // ".." segments above the root of an absolute path are dropped without
+            // consuming the root, so a following empty segment is preserved
+            ['/..//a', '//a'],
+            ['/..//..//b', '//b'],
+            ['/a/../..//b', '//b'],
+            ['/..//', '//'],
+            ['/..', '/'],
+            ['/../..', '/'],
+            ['/a/..//b', '//b'],
+            ['//a', '//a'],
+            // rootless paths keep their historic behavior where excess ".." segments
+            // may consume the first segment entirely
+            ['a/../', ''],
+            ['..//..', ''],
+            ['a/..//a/b', '/a/b'],
+        ];
+    }
+
     public static function getResolveTestCases(): iterable
     {
         return [
@@ -268,6 +309,19 @@ class UriResolverTest extends TestCase
             ['http://a//b/c',    'x',             'http://a//b/x'],
             ['http://a/b/c',     'http://x//y/z', 'http://x//y/z'],
             ['http://a/b/c',     '//x//y/z',      'http://x//y/z'],
+            // ".." segments above the root do not consume the root, so a following
+            // empty segment is preserved (RFC 3986 Section 5.2.4)
+            [self::RFC3986_BASE, '/..//g',        'http://a//g'],
+            [self::RFC3986_BASE, '/..//..//g',    'http://a//g'],
+            ['http://a/b',       '..//g',         'http://a//g'],
+            ['http://a/b',       'http://x/..//y', 'http://x//y'],
+            ['http://a/b/c',     '//h/..//z',     'http://h//z'],
+            // paths starting with "//" on a URI without an authority are serialized
+            // with a "/." prefix like the WHATWG URL Standard
+            ['mailto:base',      '/..//e/x',      'mailto:/.//e/x'],
+            ['mailto:base',      'b/..///x',      'mailto:/.//x'],
+            ['urn:base/x',       'urn:a/..///x',  'urn:/.//x'],
+            ['/',                '/..//g',        '/.//g'],
             // base URI has less components than relative URI
             ['/',                '//a/b?q#h',     '//a/b?q#h'],
             ['/',                'urn:/',         'urn:/'],
