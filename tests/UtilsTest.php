@@ -469,6 +469,26 @@ class UtilsTest extends TestCase
         self::assertSame('www.foo.com:8000', (string) $r2->getHeaderLine('host'));
     }
 
+    public function testCanModifyRequestWithUriAndZeroPort(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Utils::modifyRequest($r1, [
+            'uri' => new Psr7\Uri('http://www.foo.com:0'),
+        ]);
+        self::assertSame('http://www.foo.com:0', (string) $r2->getUri());
+        self::assertSame('www.foo.com:0', (string) $r2->getHeaderLine('host'));
+    }
+
+    public function testCanModifyRequestWithUriAndNonHttpSchemePort(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Utils::modifyRequest($r1, [
+            'uri' => new Psr7\Uri('ws://www.foo.com:8080'),
+        ]);
+        self::assertSame('ws://www.foo.com:8080', (string) $r2->getUri());
+        self::assertSame('www.foo.com:8080', (string) $r2->getHeaderLine('host'));
+    }
+
     public function testCanModifyRequestWithFalseyUriHost(): void
     {
         $r1 = new Psr7\Request('GET', 'http://foo.com');

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Anchor server port and response start-line patterns to the true end of input
 - Treat host-less origin-form request targets starting with `//` as paths in `Message::parseRequest()`
+- Include non-default URI ports in `Host` headers set by `Utils::modifyRequest()` URI changes
 
 ## 2.12.3 - 2026-06-23
 

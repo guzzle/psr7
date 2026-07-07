@@ -187,7 +187,10 @@ final class Utils
      *   with self::streamFor(), including scalar values, resources, streams,
      *   iterators, callable arrays, closures, invokable objects, and objects
      *   with __toString(). String inputs remain literal bodies.
-     * - uri: (UriInterface) Set the URI.
+     * - uri: (UriInterface) Set the URI. When the URI contains a host, the
+     *   Host header is updated from it, and combining this with an explicit
+     *   Host entry in set_headers throws an InvalidArgumentException. Apply
+     *   an intentional Host override separately with withHeader() afterwards.
      * - query: (string) Set the query string value of the URI.
      * - version: (string) Set the protocol version.
      *
@@ -222,10 +225,11 @@ final class Utils
 
                 $changes['set_headers']['Host'] = $host;
 
-                if ($port = $changes['uri']->getPort()) {
+                $port = $changes['uri']->getPort();
+                if ($port !== null) {
                     $standardPorts = ['http' => 80, 'https' => 443];
                     $scheme = $changes['uri']->getScheme();
-                    if (isset($standardPorts[$scheme]) && $port != $standardPorts[$scheme]) {
+                    if (!isset($standardPorts[$scheme]) || $port != $standardPorts[$scheme]) {
                         $changes['set_headers']['Host'] .= ':'.$port;
                     }
                 }
