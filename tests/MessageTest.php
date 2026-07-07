@@ -230,6 +230,11 @@ class MessageTest extends TestCase
         Psr7\Message::parseRequestUri('/', ['Host' => ['one.example', 'two.example']]);
     }
 
+    public function testParseRequestUriCollapsesHostlessMultiSlashPath(): void
+    {
+        self::assertSame('/evil.example/x', Psr7\Message::parseRequestUri('//evil.example/x', []));
+    }
+
     /**
      * @dataProvider invalidHostHeaderProvider
      */
@@ -271,6 +276,36 @@ class MessageTest extends TestCase
         $request = Psr7\Message::parseRequest("GET /abc HTTP/1.1\r\nFoo: bar\r\n\r\n");
 
         self::assertSame('/abc', (string) $request->getUri());
+    }
+
+    /**
+     * @dataProvider hostlessMultiSlashTargetProvider
+     */
+    public function testParseRequestTreatsHostlessMultiSlashTargetAsPath(string $target, string $expected): void
+    {
+        $request = Psr7\Message::parseRequest("GET {$target} HTTP/1.1\r\nFoo: bar\r\n\r\n");
+
+        self::assertSame($expected, (string) $request->getUri());
+        self::assertSame('', $request->getUri()->getHost());
+        self::assertFalse($request->hasHeader('Host'));
+        self::assertSame($expected, $request->getRequestTarget());
+    }
+
+    public static function hostlessMultiSlashTargetProvider(): iterable
+    {
+        yield 'authority-like target' => ['//evil.example/x', '/evil.example/x'];
+        yield 'authority-like target with query' => ['//evil.example/x?q=1', '/evil.example/x?q=1'];
+        yield 'double slash only' => ['//', '/'];
+        yield 'triple slash' => ['///x', '/x'];
+    }
+
+    public function testParseRequestCollapsesMultiSlashTargetWithHostHeader(): void
+    {
+        $request = Psr7\Message::parseRequest("GET //evil.example/x HTTP/1.1\r\nHost: good.example\r\n\r\n");
+
+        self::assertSame('http://good.example/evil.example/x', (string) $request->getUri());
+        self::assertSame('good.example', $request->getHeaderLine('Host'));
+        self::assertSame('/evil.example/x', $request->getRequestTarget());
     }
 
     public function testParsesRequestMessagesWithFullUri(): void
