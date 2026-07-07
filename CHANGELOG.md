@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
 - Rebuild server request URIs from `$_SERVER` by `REQUEST_METHOD`, using target authority before `SERVER_PORT`
 - Reject zero-port `HTTP_HOST` and malformed `SERVER_PORT` in `ServerRequest::getUriFromGlobals()`
+- Reject malformed `REQUEST_METHOD` and `SERVER_PROTOCOL` server values in `ServerRequest::fromGlobals()`
 - Reject zero-port `Host` and normalize leading-zero ports in `Message::parseRequest()`
 - Reject duplicate `Host` headers and validate present values for all request-target forms
 - Synchronize the `Host` header in `Request::withUri()` when the URI changes or Host is empty
@@ -61,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `Utils::copyToStream()` to throw when destination streams cannot make progress
 - Throw `TimeoutException` from `Stream` read/write and `Utils` copy/hash/readLine on stream timeouts
 - Re-throw `TimeoutException` from `InflateStream` when the decoded source stream times out
+- Close the compressed source stream from `InflateStream::close()`
 - Return the number of bytes copied from `Utils::copyToStream()`
 - Throw `OverflowException` when stream byte counts or offsets exceed `PHP_INT_MAX`
 - Translate `StreamWrapper` runtime failures to PHP stream failure values

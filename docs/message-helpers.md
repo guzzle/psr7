@@ -68,8 +68,8 @@ This method is useful for reducing the number of clones needed to mutate a messa
 - method: (string) Changes the HTTP method.
 - set_headers: (array) Sets the given headers. Values must be strings or arrays of strings.
 - remove_headers: (array) Remove the given headers. Values may be strings or integers.
-- body: (mixed) Sets the given body. Present non-null values are converted with `GuzzleHttp\Psr7\Utils::streamFor()`, including scalar values, resources, streams, iterators, callable arrays, closures, invokable objects, and stringable objects. String inputs remain literal bodies.
-- uri: (UriInterface) Set the URI.
+- body: (mixed) Sets the given body. Present non-null values are converted with `GuzzleHttp\Psr7\Utils::streamFor()`, including resources, streams, iterators, callable arrays, closures, invokable objects, and stringable objects. String inputs remain literal bodies.
+- uri: (UriInterface) Set the URI. When the URI contains a host, the Host header is updated from it, and combining this with an explicit Host entry in set_headers throws an InvalidArgumentException. Apply an intentional Host override separately with withHeader() afterwards.
 - query: (string) Set the query string value of the URI.
 - version: (string) Set the protocol version.
 

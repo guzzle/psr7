@@ -387,6 +387,13 @@ Message::parseRequest("GET /foo%20bar HTTP/1.1\r\nHost: example.com\r\n\r\n");
 new Response(200, [], null, '1.1');
 ```
 
+`ServerRequest::fromGlobals()` applies the same validation to the
+`REQUEST_METHOD` and `SERVER_PROTOCOL` server values. Malformed values that 2.x
+hydrated, such as the `SERVER_PROTOCOL` value `INCLUDED` that Apache sets for
+server-side include subrequests, now throw `InvalidArgumentException`. Sanitize
+`$_SERVER` before calling `fromGlobals()` if such environments must be
+tolerated.
+
 #### Query Builder Values
 
 `Query::build()` now rejects unsupported values instead of relying on PHP string
@@ -413,6 +420,19 @@ Query::build(['tag' => ['a', 'b']]);
 
 `Uri::withQueryValues()` is stricter than `Query::build()` and requires `string`
 or `null` values; cast numeric and boolean query values to string.
+
+#### Non-string Scalar Bodies
+
+`Utils::streamFor()` and message bodies no longer accept `int`, `float`, or
+`bool` values. Cast them to strings first.
+
+```php
+// 2.x, no longer accepted in 3.0
+$response = new Response(200, [], 404);
+
+// 3.0
+$response = new Response(200, [], '404');
+```
 
 #### PumpStream Source Callables
 
@@ -447,6 +467,29 @@ $stream = Utils::streamFor(new ArrayIterator([false, 'body']));
 // After: false and null are skipped chunks. End the iterator to signal EOF.
 $stream = Utils::streamFor(new ArrayIterator(['body']));
 ```
+
+#### Stream Behavior Changes
+
+All stream implementations now reject negative `read()` lengths with
+`RuntimeException`. In 2.x, some decorators passed negative lengths through,
+some returned sliced data, and some behavior varied by PHP version.
+
+`LimitStream` now rejects negative offsets and limits below `-1`. For
+non-seekable streams, offsets are tracked by the number of bytes actually
+skipped. Short reads are retried until the offset is reached, EOF is reached, or
+the decorated stream stops making progress.
+
+`StreamWrapper` now translates `RuntimeException` failures from the wrapped
+PSR-7 stream into PHP stream-wrapper failure values. When using a resource from
+`StreamWrapper::getResource()`, functions such as `fread()`, `fwrite()`,
+`fseek()`, `feof()`, and `fstat()` may now return normal PHP failure values
+instead of propagating the PSR-7 stream exception. Call the PSR-7 stream directly
+if you need exception-based failure handling.
+
+The `StreamWrapper::stream_read()` callback no longer declares a native return
+type so read failures can return `false`. The `StreamWrapper::stream_tell()`
+callback no longer declares a native return type so post-seek position lookup
+failures can make `fseek()` fail.
 
 #### Stream Mode Capabilities
 
@@ -514,6 +557,11 @@ suppresses exceptions thrown by destructor-triggered close callbacks. Call
 still closes the remote stream owned by the `CachingStream`, but it no longer
 closes the detached cache resource returned to the caller. Repeated `close()`
 calls are no-ops.
+
+`InflateStream::close()` now also closes the compressed source stream that was
+passed to its constructor. In 2.x, closing an `InflateStream` left the source
+stream open. Call `detach()` instead of `close()` if the compressed source
+stream must stay open; `close()` after `detach()` no longer closes the source.
 
 `PumpStream::close()` and `PumpStream::detach()` now discard internally buffered
 unread bytes. If a callable or iterator source returns more bytes than a read
@@ -816,31 +864,10 @@ of depending on package internals.
 its high-water mark. This keeps the method compatible with the `int` return type
 from `StreamInterface::write()`.
 
-All stream implementations now reject negative `read()` lengths with
-`RuntimeException`. In 2.x, some decorators passed negative lengths through,
-some returned sliced data, and some behavior varied by PHP version.
-
-`LimitStream` now rejects negative offsets and limits below `-1`. For
-non-seekable streams, offsets are tracked by the number of bytes actually
-skipped. Short reads are retried until the offset is reached, EOF is reached, or
-the decorated stream stops making progress.
-
-`StreamWrapper` now translates `RuntimeException` failures from the wrapped
-PSR-7 stream into PHP stream-wrapper failure values. When using a resource from
-`StreamWrapper::getResource()`, functions such as `fread()`, `fwrite()`,
-`fseek()`, `feof()`, and `fstat()` may now return normal PHP failure values
-instead of propagating the PSR-7 stream exception. Call the PSR-7 stream directly
-if you need exception-based failure handling.
-
-The `StreamWrapper::stream_read()` callback no longer declares a native return
-type so read failures can return `false`. The `StreamWrapper::stream_tell()`
-callback no longer declares a native return type so post-seek position lookup
-failures can make `fseek()` fail.
-
-Several stream `__toString()` implementations now allow exceptions thrown during
-stringification to be rethrown. Avoid relying on `(string) $stream` to hide read
-failures; call `getContents()` or `read()` and handle exceptions when failures
-are possible.
+Several stream `__toString()` implementations now catch `Throwable`. On PHP 7.4
+and newer, exceptions thrown during stringification are rethrown. Avoid relying
+on `(string) $stream` to hide read failures; call `getContents()` or `read()` and
+handle exceptions when failures are possible.
 
 #### PSR-17 Factories
 

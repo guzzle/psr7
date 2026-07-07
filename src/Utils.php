@@ -201,7 +201,10 @@ final class Utils
      *   with self::streamFor(), including resources, streams, iterators, callable
      *   arrays, closures, invokable objects, and stringable objects. String inputs
      *   remain literal bodies.
-     * - uri: (UriInterface) Set the URI.
+     * - uri: (UriInterface) Set the URI. When the URI contains a host, the
+     *   Host header is updated from it, and combining this with an explicit
+     *   Host entry in set_headers throws an InvalidArgumentException. Apply
+     *   an intentional Host override separately with withHeader() afterwards.
      * - query: (string) Set the query string value of the URI.
      * - version: (string) Set the protocol version.
      *
