@@ -488,8 +488,10 @@ class Uri implements UriInterface, \JsonSerializable
      * operations like reference resolution and normalization (RFC 3986
      * Sections 5 and 6) are defined on the URI string form, where the path
      * stays verbatim, so they must read the path through this method instead.
-     * For instances of this class the stored path is read directly as that is
-     * the exact path the string form is composed from.
+     * For direct instances of this class the stored path is read directly as
+     * that is the exact path the string form is composed from; subclasses and
+     * other implementations may customize their string form, so their path is
+     * parsed from it.
      *
      * @throws MalformedUriException If the URI string form cannot be parsed.
      *
@@ -497,7 +499,7 @@ class Uri implements UriInterface, \JsonSerializable
      */
     public static function rawPath(UriInterface $uri): string
     {
-        if (!$uri instanceof self) {
+        if (get_class($uri) !== self::class) {
             $uri = new self((string) $uri);
         }
 

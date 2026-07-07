@@ -681,6 +681,20 @@ class UriTest extends TestCase
         self::assertFalse(Uri::isSameDocumentReference(new Uri('http://example.org//path?foo=bar'), $baseUri));
     }
 
+    public function testRawPathIsDerivedFromUriStringForm(): void
+    {
+        self::assertSame('//stored/path', Uri::rawPath(new Uri('http://example.org//stored/path')));
+
+        $extendedUri = new class('http://example.org/stored/path') extends Uri {
+            public function __toString(): string
+            {
+                return 'http://example.org//custom/form';
+            }
+        };
+
+        self::assertSame('//custom/form', Uri::rawPath($extendedUri));
+    }
+
     public function testAddAndRemoveQueryValues(): void
     {
         $uri = new Uri();
