@@ -158,6 +158,17 @@ class UriNormalizerTest extends TestCase
         self::assertSame('http://example.org//a%C2%B1b/path', (string) $normalizedUri);
     }
 
+    public function testNormalizePreservesRootlessFileUriFromExtendedInstances(): void
+    {
+        $uri = new class('file:foo/bar') extends Uri {
+        };
+
+        $normalizedUri = UriNormalizer::normalize($uri);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('file:foo/bar', (string) $normalizedUri);
+    }
+
     public function testSortQueryParameters(): void
     {
         $uri = new Uri('?lang=en&article=fred');
@@ -200,6 +211,8 @@ class UriNormalizerTest extends TestCase
             ['//example.org/', '//example.org/', true],
             ['file:/myfile', 'file:///myfile', true],
             ['file:///myfile', 'file://localhost/myfile', true],
+            ['file:foo', 'file:bar', false],
+            ['file:foo', 'file://foo', false],
         ];
     }
 

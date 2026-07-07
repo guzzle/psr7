@@ -1105,6 +1105,17 @@ class UriTest extends TestCase
         self::assertSame('file:///tmp/filename.ext', (string) $uri);
     }
 
+    public function testFileUriWithoutAuthorityKeepsRootlessPath(): void
+    {
+        $uri = new Uri('file:foo/bar');
+
+        self::assertSame('foo/bar', $uri->getPath());
+        self::assertSame('file:foo/bar', (string) $uri);
+        self::assertSame('file:foo/bar', (string) new Uri((string) $uri));
+        self::assertSame('file:///foo', (string) new Uri('file:/foo'));
+        self::assertSame('file:////tmp', (string) new Uri('file:////tmp'));
+    }
+
     public static function uriComponentsEncodingProvider(): iterable
     {
         $unreserved = 'a-zA-Z0-9.-_~!$&\'()*+,;=:@';

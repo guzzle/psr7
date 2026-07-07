@@ -199,7 +199,8 @@ class Uri implements UriInterface, \JsonSerializable
      * for the "file" scheme. This is because PHP stream functions like `file_get_contents` only work with
      * `file:///myfile` but not with `file:/myfile` although they are equivalent according to RFC 3986. But
      * `file:///` is the more common syntax for the file scheme anyway (Chrome for example redirects to
-     * that format).
+     * that format). The separator is omitted when such a URI has a rootless non-empty path, as adding it
+     * would turn the first path segment into the authority of the composed URI.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.3
      */
@@ -212,7 +213,7 @@ class Uri implements UriInterface, \JsonSerializable
             $uri .= $scheme.':';
         }
 
-        if ($authority != '' || $scheme === 'file') {
+        if ($authority != '' || ($scheme === 'file' && ($path == '' || str_starts_with($path, '/')))) {
             $uri .= '//'.$authority;
         }
 

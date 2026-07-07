@@ -307,6 +307,11 @@ Reference resolution and normalization (`UriResolver`, `UriNormalizer`, and
 `Uri::isSameDocumentReference()`) operate on the raw path from the URI string
 form and are therefore unaffected by this normalization.
 
+Authority-less `file` URIs with rootless paths now serialize without the `//`
+authority separator: `(string) new Uri('file:foo/bar')` returns `file:foo/bar`
+instead of `file://foo/bar`, which reparses with host `foo` and path `/bar`.
+Rooted paths such as `file:///myfile` keep their existing serialization.
+
 #### HTTP Start-line Parsing
 
 `Message::parseRequest()` and `Message::parseResponse()` now validate HTTP
