@@ -160,6 +160,7 @@ final class UriResolver
      *    echo UriResolver::relativize($base, new Uri('http://example.com/a/x/y'));  // prints '../x/y'.
      *    echo UriResolver::relativize($base, new Uri('http://example.com/a/b/?q')); // prints '?q'.
      *    echo UriResolver::relativize($base, new Uri('http://example.org/a/b/'));   // prints '//example.org/a/b/'.
+     *    echo UriResolver::relativize($base, new Uri('http://example.com'));         // prints '//example.com'.
      *
      * This method also accepts a target that is already relative and will try to relativize it further. Only a
      * relative-path reference will be returned as-is.
@@ -182,6 +183,12 @@ final class UriResolver
         }
 
         if ($target->getAuthority() !== '' && $base->getAuthority() !== $target->getAuthority()) {
+            return $target->withScheme('');
+        }
+
+        // A same-authority target with an empty path can only be expressed by a
+        // network-path reference (RFC 3986 Section 5.2.2).
+        if (self::needsNetworkPathReference($base, $target)) {
             return $target->withScheme('');
         }
 
@@ -210,6 +217,25 @@ final class UriResolver
         }
 
         return $emptyPathUri;
+    }
+
+    /**
+     * Whether relativizing to $target requires a network-path reference.
+     *
+     * A same-authority target with an empty path is expressible by a shorter
+     * relative reference unless resolving one would inherit a base component
+     * the target lacks: the base path (kept by any empty-path reference), or
+     * the base query or fragment (inherited by the empty reference).
+     */
+    private static function needsNetworkPathReference(UriInterface $base, UriInterface $target): bool
+    {
+        if ($target->getAuthority() === '' || Uri::rawPath($target) !== '') {
+            return false;
+        }
+
+        return Uri::rawPath($base) !== ''
+            || ($base->getQuery() !== '' && $target->getQuery() === '')
+            || ($base->getFragment() !== '' && $target->getFragment() === '' && $base->getQuery() === $target->getQuery());
     }
 
     private static function getRelativePath(UriInterface $base, UriInterface $target): string

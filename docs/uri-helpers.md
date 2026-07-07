@@ -189,6 +189,7 @@ echo UriResolver::relativize($base, new Uri('http://example.com/a/b/c'));  // pr
 echo UriResolver::relativize($base, new Uri('http://example.com/a/x/y'));  // prints '../x/y'.
 echo UriResolver::relativize($base, new Uri('http://example.com/a/b/?q')); // prints '?q'.
 echo UriResolver::relativize($base, new Uri('http://example.org/a/b/'));   // prints '//example.org/a/b/'.
+echo UriResolver::relativize($base, new Uri('http://example.com'));         // prints '//example.com'.
 ```
 
 ## Normalization and Comparison

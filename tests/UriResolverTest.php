@@ -170,6 +170,16 @@ class UriResolverTest extends TestCase
         self::assertSame((string) $targetUri, (string) UriResolver::resolve($baseUri, $relativeUri));
     }
 
+    public function testRelativizeAndResolveWithSameAuthorityEmptyPathTargetRoundTrips(): void
+    {
+        $baseUri = new Uri('urn://example.com/a/b');
+        $targetUri = new Uri('urn://example.com');
+        $relativeUri = UriResolver::relativize($baseUri, $targetUri);
+
+        self::assertSame('//example.com', (string) $relativeUri);
+        self::assertSame((string) $targetUri, (string) UriResolver::resolve($baseUri, $relativeUri));
+    }
+
     public function testResolveDoesNotGuardPathsOfHostlessHttpUris(): void
     {
         $targetUri = UriResolver::resolve(new Uri('http:/x'), new Uri('/..//b'));
@@ -297,6 +307,11 @@ class UriResolverTest extends TestCase
             ['/',                '..',            '/'],
             ['urn:a/b',          '..//a/b',       'urn:/a/b'],
             // network path references
+            // same-authority target with an empty path
+            ['urn://h/path',     '//h',           'urn://h'],
+            ['urn://h/path',     '//h?q',         'urn://h?q'],
+            ['http://h/',        '//h',           'http://h'],
+            ['urn://h#f',        '//h',           'urn://h'],
             // empty base path and relative-path reference
             ['//example.com',    'a',             '//example.com/a'],
             // path starting with two slashes
@@ -359,6 +374,34 @@ class UriResolverTest extends TestCase
             ['http://a/b/',     '/',            '../'],
             // absolute target URI without authority but base URI has one
             ['urn://a/b/',      'urn:/b/',      'urn:/b/'],
+            // a same-authority target with an empty path can only be a network-path reference,
+            // as any path reference would resolve to a path of at least "/"
+            ['urn://h/path',    'urn://h',      '//h'],
+            ['urn://h/path',    'urn://h#f',    '//h#f'],
+            ['urn://h/path?bq', 'urn://h',      '//h'],
+            ['http://h/a/b/c',  'http://h',     '//h'],
+            // the network-path reference keeps the port and userinfo of the target authority
+            ['http://h:8080/path', 'http://h:8080', '//h:8080'],
+            ['http://u:p@h/path',  'http://u:p@h',  '//u:p@h'],
+            // "http://h" and "http://h/" are distinct strings and must round-trip exactly
+            ['http://h/',       'http://h',     '//h'],
+            ['urn://h/path',    'urn://h/',     './'],
+            // same for an empty-path reference that would inherit the base query
+            ['urn://h?bq',      'urn://h',      '//h'],
+            ['urn://h?bq',      'urn://h?q',    '?q'],
+            // same for an empty-path reference that would inherit the base fragment
+            ['urn://h#bf',      'urn://h',      '//h'],
+            ['urn://h?q#bf',    'urn://h?q',    '//h?q'],
+            ['//h#bf',          '//h',          '//h'],
+            // nothing is inherited when the target has its own fragment or a different query
+            ['urn://h#bf',      'urn://h#f',    '#f'],
+            ['urn://h#bf',      'urn://h?q',    '?q'],
+            // an empty base path needs no network-path reference when nothing would be inherited
+            ['urn://h',         'urn://h',      ''],
+            ['urn://h',         'urn://h#f',    '#f'],
+            ['urn://h',         'urn://h?q',    '?q'],
+            // an empty-path target with a different authority uses a network-path reference as well
+            ['http://h/a/b',    'http://other', '//other'],
         ];
     }
 
