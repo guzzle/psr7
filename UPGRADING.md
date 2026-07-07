@@ -325,10 +325,12 @@ Standard, instead of collapsing the slashes or throwing.
 
 `UriResolver::relativize()` now returns a network-path reference (for example
 `//example.com`) when the target URI has the same authority as the base URI
-but an empty path. No path reference can express such a target, as resolving
-one always produces a path of at least `/`. The returned reference now
-resolves back to the exact target string, restoring the documented round-trip
-guarantee.
+but an empty path that no other relative reference round-trips. No path
+reference can express such a target, as resolving one always produces a path
+of at least `/`, and an empty reference would keep the base path or inherit
+the base query or fragment. The returned reference resolves back to the
+exact target string, restoring the documented round-trip guarantee for these
+targets.
 
 ```php
 $base = new Uri('http://example.com/a');
@@ -342,8 +344,10 @@ $target = new Uri('http://example.com');
 (string) UriResolver::relativize($base, $target); // //example.com
 ```
 
-The same applies when the base URI has a query component that an empty
-relative reference would otherwise inherit.
+The same applies when the base URI has a query or fragment component that an
+empty relative reference would otherwise inherit. When the base URI has an
+empty path as well and nothing would be inherited, shorter references such
+as the empty reference, `#fragment` or `?query` are still returned.
 
 #### HTTP Start-line Parsing
 

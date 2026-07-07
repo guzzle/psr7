@@ -311,6 +311,7 @@ class UriResolverTest extends TestCase
             ['urn://h/path',     '//h',           'urn://h'],
             ['urn://h/path',     '//h?q',         'urn://h?q'],
             ['http://h/',        '//h',           'http://h'],
+            ['urn://h#f',        '//h',           'urn://h'],
             // empty base path and relative-path reference
             ['//example.com',    'a',             '//example.com/a'],
             // path starting with two slashes
@@ -385,6 +386,13 @@ class UriResolverTest extends TestCase
             // same for an empty-path reference that would inherit the base query
             ['urn://h?bq',      'urn://h',      '//h'],
             ['urn://h?bq',      'urn://h?q',    '?q'],
+            // same for an empty-path reference that would inherit the base fragment
+            ['urn://h#bf',      'urn://h',      '//h'],
+            ['urn://h?q#bf',    'urn://h?q',    '//h?q'],
+            ['//h#bf',          '//h',          '//h'],
+            // nothing is inherited when the target has its own fragment or a different query
+            ['urn://h#bf',      'urn://h#f',    '#f'],
+            ['urn://h#bf',      'urn://h?q',    '?q'],
             // an empty base path needs no network-path reference when nothing would be inherited
             ['urn://h',         'urn://h',      ''],
             ['urn://h',         'urn://h#f',    '#f'],

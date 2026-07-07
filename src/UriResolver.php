@@ -188,9 +188,11 @@ final class UriResolver
 
         // A target with the same authority as the base but an empty path can only be expressed by a network-path
         // reference, as resolving a path reference always produces a path of at least "/" and an empty reference
-        // would keep the base path or inherit the base query (RFC 3986 Section 5.2.2).
+        // would keep the base path or inherit the base query or fragment (RFC 3986 Section 5.2.2).
         if ($target->getAuthority() !== '' && Uri::rawPath($target) === ''
-            && (Uri::rawPath($base) !== '' || ($base->getQuery() !== '' && $target->getQuery() === ''))
+            && (Uri::rawPath($base) !== ''
+                || ($base->getQuery() !== '' && $target->getQuery() === '')
+                || ($base->getFragment() !== '' && $target->getFragment() === '' && $base->getQuery() === $target->getQuery()))
         ) {
             return $target->withScheme('');
         }
