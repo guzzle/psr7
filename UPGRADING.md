@@ -312,6 +312,12 @@ authority separator: `(string) new Uri('file:foo/bar')` returns `file:foo/bar`
 instead of `file://foo/bar`, which reparses with host `foo` and path `/bar`.
 Rooted paths such as `file:///myfile` keep their existing serialization.
 
+Authority-less `file` URIs with empty paths now serialize as `file:` instead of
+`file://`, which `new Uri()` itself rejects as unparseable. This affects
+degenerate URIs such as `new Uri('file:')` or
+`Uri::fromParts(['scheme' => 'file'])`; the serialization of every file URI
+with a non-empty path is unchanged.
+
 `UriResolver::removeDotSegments()` now applies RFC 3986 Section 5.2.4 to `..`
 segments above the root of an absolute path: excess `..` segments no longer
 consume the root, so a following empty segment is preserved. Resolving `/..//a`
