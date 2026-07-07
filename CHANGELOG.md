@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Suppress exceptions from `FnStream` close callbacks during destructor cleanup
 - Make `CachingStream::close()` idempotent, preserving remote cleanup after detach
 - Normalize multiple leading slashes in `Uri::getPath()` and origin-form request targets
+- Serialize authority-less `file` URIs with rootless paths without the `//` separator
 - Harden URI host validation (delimiters, backslashes, IPv6, embedded ports); require schemes to start with a letter
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
 - Rebuild server request URIs from `$_SERVER` by `REQUEST_METHOD`, using target authority before `SERVER_PORT`
