@@ -293,14 +293,25 @@ final class Message
         $host = self::getHostFromHeaders($headers);
 
         // If no host is found, then a full URI cannot be constructed.
+        // Collapse leading slashes so an origin-form target cannot be
+        // parsed as a network-path reference with its own authority.
         if ($host === null) {
-            return $path;
+            return self::normalizePathForOriginForm($path);
         }
 
         [$authorityHost, $port] = self::parseHostHeaderAuthority($host);
         $scheme = $port === 443 ? 'https' : 'http';
 
         return $scheme.'://'.self::composeAuthority($authorityHost, $port).'/'.ltrim($path, '/');
+    }
+
+    private static function normalizePathForOriginForm(string $path): string
+    {
+        if (str_starts_with($path, '//')) {
+            return '/'.ltrim($path, '/');
+        }
+
+        return $path;
     }
 
     /**
