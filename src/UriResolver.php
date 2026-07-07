@@ -160,6 +160,7 @@ final class UriResolver
      *    echo UriResolver::relativize($base, new Uri('http://example.com/a/x/y'));  // prints '../x/y'.
      *    echo UriResolver::relativize($base, new Uri('http://example.com/a/b/?q')); // prints '?q'.
      *    echo UriResolver::relativize($base, new Uri('http://example.org/a/b/'));   // prints '//example.org/a/b/'.
+     *    echo UriResolver::relativize($base, new Uri('http://example.com'));         // prints '//example.com'.
      *
      * This method also accepts a target that is already relative and will try to relativize it further. Only a
      * relative-path reference will be returned as-is.
@@ -182,6 +183,15 @@ final class UriResolver
         }
 
         if ($target->getAuthority() !== '' && $base->getAuthority() !== $target->getAuthority()) {
+            return $target->withScheme('');
+        }
+
+        // A target with the same authority as the base but an empty path can only be expressed by a network-path
+        // reference, as resolving a path reference always produces a path of at least "/" and an empty reference
+        // would keep the base path or inherit the base query (RFC 3986 Section 5.2.2).
+        if ($target->getAuthority() !== '' && Uri::rawPath($target) === ''
+            && (Uri::rawPath($base) !== '' || ($base->getQuery() !== '' && $target->getQuery() === ''))
+        ) {
             return $target->withScheme('');
         }
 

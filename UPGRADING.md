@@ -321,6 +321,30 @@ produced `http://example.org/a`. When the resulting URI has no authority,
 `//`-leading path with a `/.` prefix (`mailto:/.//a`), like the WHATWG URL
 Standard, instead of collapsing the slashes or throwing.
 
+#### URI Reference Relativization
+
+`UriResolver::relativize()` now returns a network-path reference (for example
+`//example.com`) when the target URI has the same authority as the base URI
+but an empty path. No path reference can express such a target, as resolving
+one always produces a path of at least `/`. The returned reference now
+resolves back to the exact target string, restoring the documented round-trip
+guarantee.
+
+```php
+$base = new Uri('http://example.com/a');
+$target = new Uri('http://example.com');
+
+// 2.x
+(string) UriResolver::relativize($base, $target); // ../
+// which resolved back to http://example.com/
+
+// 3.0
+(string) UriResolver::relativize($base, $target); // //example.com
+```
+
+The same applies when the base URI has a query component that an empty
+relative reference would otherwise inherit.
+
 #### HTTP Start-line Parsing
 
 `Message::parseRequest()` and `Message::parseResponse()` now validate HTTP
