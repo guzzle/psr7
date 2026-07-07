@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make `CachingStream::close()` idempotent, preserving remote cleanup after detach
 - Normalize multiple leading slashes in `Uri::getPath()` and origin-form request targets
 - Serialize authority-less `file` URIs with rootless paths without the `//` separator
+- Serialize authority-less `file` URIs with empty paths as `file:` instead of the unparseable `file://`
 - Remove dot segments above the root per RFC 3986, prefixing authority-less `//` paths with `/.`
 - Return a network-path reference from `UriResolver::relativize()` when an empty-path target requires one
 - Harden URI host validation (delimiters, backslashes, IPv6, embedded ports); require schemes to start with a letter

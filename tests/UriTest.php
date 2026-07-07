@@ -1116,6 +1116,41 @@ class UriTest extends TestCase
         self::assertSame('file:////tmp', (string) new Uri('file:////tmp'));
     }
 
+    public function testFileUriWithoutAuthorityAndPathSerializesWithoutSeparator(): void
+    {
+        $uri = new Uri('file:');
+
+        self::assertSame('', $uri->getPath());
+        self::assertSame('file:', (string) $uri);
+        self::assertSame('file:', (string) new Uri((string) $uri));
+        self::assertSame('file:', (string) Uri::fromParts(['scheme' => 'file']));
+        self::assertSame('file:', (string) (new Uri('file:///x'))->withPath(''));
+    }
+
+    /**
+     * @dataProvider composeComponentsProvider
+     */
+    public function testComposeComponents(?string $scheme, ?string $authority, string $path, ?string $query, ?string $fragment, string $expected): void
+    {
+        self::assertSame($expected, Uri::composeComponents($scheme, $authority, $path, $query, $fragment));
+    }
+
+    /**
+     * @return iterable<string, array{0: ?string, 1: ?string, 2: string, 3: ?string, 4: ?string, 5: string}>
+     */
+    public static function composeComponentsProvider(): iterable
+    {
+        yield 'all components' => ['http', 'user:pass@example.com:8080', '/path', 'query', 'fragment', 'http://user:pass@example.com:8080/path?query#fragment'];
+        yield 'null components compose like empty strings' => [null, null, '', null, null, ''];
+        yield 'relative path only' => ['', '', 'foo', '', '', 'foo'];
+        yield 'rootless path is rooted under an authority' => ['http', 'example.com', 'foo', '', '', 'http://example.com/foo'];
+        yield 'file with authority' => ['file', 'localhost', '/myfile', '', '', 'file://localhost/myfile'];
+        yield 'file separator added for authority-less rooted path' => ['file', '', '/myfile', '', '', 'file:///myfile'];
+        yield 'file separator omitted for authority-less rootless path' => ['file', '', 'foo/bar', '', '', 'file:foo/bar'];
+        yield 'file separator omitted for authority-less empty path' => ['file', '', '', '', '', 'file:'];
+        yield 'file separator omitted for null authority and empty path' => ['file', null, '', null, null, 'file:'];
+    }
+
     public static function uriComponentsEncodingProvider(): iterable
     {
         $unreserved = 'a-zA-Z0-9.-_~!$&\'()*+,;=:@';
