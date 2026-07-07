@@ -693,6 +693,13 @@ class UriTest extends TestCase
         };
 
         self::assertSame('//custom/form', Uri::rawPath($extendedUri));
+
+        // The split must not validate unrelated components: this host is
+        // accepted by the withers but rejected by the parser.
+        $plainSubclassUri = (new class() extends Uri {
+        })->withScheme('http')->withHost('[v1.fe80::a+en1]')->withPath('/');
+
+        self::assertSame('/', Uri::rawPath($plainSubclassUri));
     }
 
     public function testAddAndRemoveQueryValues(): void

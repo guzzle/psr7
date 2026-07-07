@@ -481,7 +481,7 @@ class Uri implements UriInterface, \JsonSerializable
     }
 
     /**
-     * Returns the path of a URI as used within its string form.
+     * Returns the path a URI's string form is composed from.
      *
      * getPath() collapses multiple leading slashes so that a path used in
      * isolation cannot be mistaken for a protocol-relative URL. Whole-URI
@@ -489,21 +489,27 @@ class Uri implements UriInterface, \JsonSerializable
      * Sections 5 and 6) are defined on the URI string form, where the path
      * stays verbatim, so they must read the path through this method instead.
      * For direct instances of this class the stored path is read directly as
-     * that is the exact path the string form is composed from; subclasses and
-     * other implementations may customize their string form, so their path is
-     * parsed from it.
+     * that is the exact path the string form is composed from; for subclasses
+     * and other implementations the path is split from the string form per
+     * RFC 3986 Appendix B, without validating or decoding any other component.
      *
-     * @throws MalformedUriException If the URI string form cannot be parsed.
+     * @throws \RuntimeException If the path cannot be split from the string form.
      *
      * @internal
      */
     public static function rawPath(UriInterface $uri): string
     {
-        if (get_class($uri) !== self::class) {
-            $uri = new self((string) $uri);
+        if (get_class($uri) === self::class) {
+            return $uri->path;
         }
 
-        return $uri->path;
+        $count = preg_match('%^(?:[^:/?#]+:)?(?://[^/?#]*)?([^?#]*)%', (string) $uri, $matches);
+
+        if ($count === false) {
+            throw new \RuntimeException('Unable to read the URI path: '.preg_last_error_msg());
+        }
+
+        return $matches[1] ?? '';
     }
 
     public function getQuery(): string
