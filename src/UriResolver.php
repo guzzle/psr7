@@ -186,14 +186,9 @@ final class UriResolver
             return $target->withScheme('');
         }
 
-        // A target with the same authority as the base but an empty path can only be expressed by a network-path
-        // reference, as resolving a path reference always produces a path of at least "/" and an empty reference
-        // would keep the base path or inherit the base query or fragment (RFC 3986 Section 5.2.2).
-        if ($target->getAuthority() !== '' && Uri::rawPath($target) === ''
-            && (Uri::rawPath($base) !== ''
-                || ($base->getQuery() !== '' && $target->getQuery() === '')
-                || ($base->getFragment() !== '' && $target->getFragment() === '' && $base->getQuery() === $target->getQuery()))
-        ) {
+        // A same-authority target with an empty path can only be expressed by a
+        // network-path reference (RFC 3986 Section 5.2.2).
+        if (self::needsNetworkPathReference($base, $target)) {
             return $target->withScheme('');
         }
 
@@ -222,6 +217,25 @@ final class UriResolver
         }
 
         return $emptyPathUri;
+    }
+
+    /**
+     * Whether relativizing to $target requires a network-path reference.
+     *
+     * A same-authority target with an empty path is expressible by a shorter
+     * relative reference unless resolving one would inherit a base component
+     * the target lacks: the base path (kept by any empty-path reference), or
+     * the base query or fragment (inherited by the empty reference).
+     */
+    private static function needsNetworkPathReference(UriInterface $base, UriInterface $target): bool
+    {
+        if ($target->getAuthority() === '' || Uri::rawPath($target) !== '') {
+            return false;
+        }
+
+        return Uri::rawPath($base) !== ''
+            || ($base->getQuery() !== '' && $target->getQuery() === '')
+            || ($base->getFragment() !== '' && $target->getFragment() === '' && $base->getQuery() === $target->getQuery());
     }
 
     private static function getRelativePath(UriInterface $base, UriInterface $target): string
