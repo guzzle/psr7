@@ -91,6 +91,15 @@ class UriNormalizerTest extends TestCase
         self::assertSame('file:///myfile', (string) $normalizedUri);
     }
 
+    public function testRemoveDefaultHostWithEmptyPath(): void
+    {
+        $uri = new Uri('file://localhost');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DEFAULT_HOST);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('file:', (string) $normalizedUri);
+    }
+
     public function testRemoveDefaultPort(): void
     {
         $uri = $this->createMock(UriInterface::class);

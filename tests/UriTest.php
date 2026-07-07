@@ -1127,6 +1127,16 @@ class UriTest extends TestCase
         self::assertSame('file:', (string) (new Uri('file:///x'))->withPath(''));
     }
 
+    public function testFileUriWithoutAuthorityAndPathKeepsQueryAndFragment(): void
+    {
+        self::assertSame('file:?q', (string) new Uri('file:?q'));
+        self::assertSame('file:?q', (string) new Uri((string) new Uri('file:?q')));
+        self::assertSame('file:#f', (string) new Uri('file:#f'));
+        self::assertSame('file:#f', (string) new Uri((string) new Uri('file:#f')));
+        self::assertSame('file:?q#f', (string) new Uri('file:?q#f'));
+        self::assertSame('file:?q#f', (string) new Uri((string) new Uri('file:?q#f')));
+    }
+
     /**
      * @dataProvider composeComponentsProvider
      */
@@ -1149,6 +1159,9 @@ class UriTest extends TestCase
         yield 'file separator omitted for authority-less rootless path' => ['file', '', 'foo/bar', '', '', 'file:foo/bar'];
         yield 'file separator omitted for authority-less empty path' => ['file', '', '', '', '', 'file:'];
         yield 'file separator omitted for null authority and empty path' => ['file', null, '', null, null, 'file:'];
+        yield 'file separator omitted for authority-less empty path with query' => ['file', '', '', 'q', '', 'file:?q'];
+        yield 'file separator omitted for authority-less empty path with fragment' => ['file', '', '', '', 'f', 'file:#f'];
+        yield 'file separator omitted for authority-less empty path with query and fragment' => ['file', '', '', 'q', 'f', 'file:?q#f'];
     }
 
     public static function uriComponentsEncodingProvider(): iterable
