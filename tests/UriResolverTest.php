@@ -380,6 +380,9 @@ class UriResolverTest extends TestCase
             ['urn://h/path',    'urn://h#f',    '//h#f'],
             ['urn://h/path?bq', 'urn://h',      '//h'],
             ['http://h/a/b/c',  'http://h',     '//h'],
+            // the network-path reference keeps the port and userinfo of the target authority
+            ['http://h:8080/path', 'http://h:8080', '//h:8080'],
+            ['http://u:p@h/path',  'http://u:p@h',  '//u:p@h'],
             // "http://h" and "http://h/" are distinct strings and must round-trip exactly
             ['http://h/',       'http://h',     '//h'],
             ['urn://h/path',    'urn://h/',     './'],
