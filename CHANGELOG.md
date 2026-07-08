@@ -75,6 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserve explicit custom `MultipartStream` boundary `'0'` instead of replacing it with a generated boundary
 - Made static utility classes non-instantiable
 - Validate bracketed IP-literal hosts consistently between parsing and `withHost()`, including userinfo forms
+- Percent-encode raw control bytes in userinfo before bracketed IP-literal hosts instead of parsing mutated values
+- Reject invalid UTF-8 and preserve percent-sequences in userinfo before bracketed IP-literal hosts
+- Reject raw DEL bytes in bracketed IP-literal hosts instead of parsing a mutated host
 - Normalize percent-encoded octets in the URI host to uppercase hex
 - Trim header list elements with only spaces, horizontal tabs, and line terminators in `Header::splitList()`
 - Report header parameter PCRE failures explicitly in `Header::parse()`

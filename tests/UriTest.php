@@ -951,6 +951,48 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider getBracketedIpLiteralUserinfoEncodingCases
+     */
+    public function testParseEncodesUserinfoBeforeBracketedIpLiteral(string $input, string $expectedUserInfo, string $expectedString): void
+    {
+        $uri = new Uri($input);
+
+        self::assertSame($expectedUserInfo, $uri->getUserInfo());
+        self::assertSame($expectedString, (string) $uri);
+    }
+
+    public static function getBracketedIpLiteralUserinfoEncodingCases(): iterable
+    {
+        yield 'NUL before IPv6' => ["http://u\x00@[::1]/", 'u%00', 'http://u%00@[::1]/'];
+        yield 'space before IPv6' => ['http://u s@[::1]/', 'u%20s', 'http://u%20s@[::1]/'];
+        yield 'DEL before IPvFuture' => ["http://u\x7F@[v1.a]/", 'u%7F', 'http://u%7F@[v1.a]/'];
+        yield 'control in network-path userinfo' => ["//u\x01@[::1]/", 'u%01', '//u%01@[::1]/'];
+        yield 'space in password part' => ['http://user:pa ss@[::1]/', 'user:pa%20ss', 'http://user:pa%20ss@[::1]/'];
+        yield 'percent-sequence preserved' => ['http://u%41@[::1]/', 'u%41', 'http://u%41@[::1]/'];
+    }
+
+    public function testParseRejectsInvalidUtf8UserinfoBeforeBracketedIpLiteral(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri("http://us\xFFer@[::1]/");
+    }
+
+    public function testParseRejectsDelInBracketedIpLiteralHost(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri("http://[v1.a\x7Fb]/");
+    }
+
+    public function testParseRejectsUnsupportedIpv6ZoneIdentifierHost(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri('http://[fe80::1%25eth0]/');
+    }
+
+    /**
      * @dataProvider getBracketedHostsWithDelimiters
      */
     public function testParseRejectsBracketedHostsWithDelimiters(string $uri): void
