@@ -225,4 +225,27 @@ class HeaderTest extends TestCase
     {
         self::assertSame($result, Psr7\Header::splitList($header));
     }
+
+    public static function nonStringSplitListValueProvider(): array
+    {
+        return [
+            'top-level integer' => [1],
+            'integer element' => [[1]],
+            'mixed element list' => [['ok', 1]],
+            'object element' => [[new \stdClass()]],
+        ];
+    }
+
+    /**
+     * @dataProvider nonStringSplitListValueProvider
+     *
+     * @param mixed $values
+     */
+    public function testSplitListRejectsNonStringValues($values): void
+    {
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('$header must either be a string or an array containing strings.');
+
+        Psr7\Header::splitList($values);
+    }
 }
