@@ -15,25 +15,9 @@ use PHPUnit\Framework\TestCase;
  */
 class StreamTest extends TestCase
 {
-    public static bool $isFReadError = false;
-    public static bool $isFReadZero = false;
-    public static bool $isFReadException = false;
-    public static bool $isFWriteError = false;
-    public static bool $isFWriteZero = false;
-    public static bool $isFWriteException = false;
-    public static bool $isStreamTimedOut = false;
-    public static bool $isStreamMetadataError = false;
-
     protected function tearDown(): void
     {
-        self::$isFReadError = false;
-        self::$isFReadZero = false;
-        self::$isFReadException = false;
-        self::$isFWriteError = false;
-        self::$isFWriteZero = false;
-        self::$isFWriteException = false;
-        self::$isStreamTimedOut = false;
-        self::$isStreamMetadataError = false;
+        PhpStreamMock::reset();
     }
 
     public function testConstructorThrowsExceptionOnInvalidArgument(): void
@@ -280,7 +264,7 @@ class StreamTest extends TestCase
 
     public function testStreamReadingFreadFalse(): void
     {
-        self::$isFReadError = true;
+        PhpStreamMock::$isFReadError = true;
         $r = fopen('php://temp', 'r');
         $stream = new Stream($r);
         $this->expectException(\RuntimeException::class);
@@ -289,12 +273,12 @@ class StreamTest extends TestCase
         try {
             $stream->read(1);
         } catch (\Exception $e) {
-            self::$isFReadError = false;
+            PhpStreamMock::$isFReadError = false;
             $stream->close();
             throw $e;
         }
 
-        self::$isFReadError = false;
+        PhpStreamMock::$isFReadError = false;
         $stream->close();
     }
 
@@ -324,8 +308,8 @@ class StreamTest extends TestCase
 
     public function testStreamReadingFreadFalseWhenTimedOutThrowsTimeoutException(): void
     {
-        self::$isFReadError = true;
-        self::$isStreamTimedOut = true;
+        PhpStreamMock::$isFReadError = true;
+        PhpStreamMock::$isStreamTimedOut = true;
         $r = fopen('php://temp', 'r+');
         $stream = new Stream($r);
 
@@ -341,8 +325,8 @@ class StreamTest extends TestCase
 
     public function testStreamReadingEmptyStringWhenTimedOutThrowsTimeoutException(): void
     {
-        self::$isFReadZero = true;
-        self::$isStreamTimedOut = true;
+        PhpStreamMock::$isFReadZero = true;
+        PhpStreamMock::$isStreamTimedOut = true;
         $r = fopen('php://temp', 'r+');
         $stream = new Stream($r);
 
@@ -358,8 +342,8 @@ class StreamTest extends TestCase
 
     public function testStreamReadingFreadExceptionWhenTimedOutThrowsTimeoutExceptionWithPrevious(): void
     {
-        self::$isFReadException = true;
-        self::$isStreamTimedOut = true;
+        PhpStreamMock::$isFReadException = true;
+        PhpStreamMock::$isStreamTimedOut = true;
         $r = fopen('php://temp', 'r+');
         $stream = new Stream($r);
 
@@ -377,7 +361,7 @@ class StreamTest extends TestCase
 
     public function testStreamReadingEmptyStringWithoutTimeoutReturnsEmptyString(): void
     {
-        self::$isFReadZero = true;
+        PhpStreamMock::$isFReadZero = true;
         $r = fopen('php://temp', 'r+');
         $stream = new Stream($r);
 
@@ -390,7 +374,7 @@ class StreamTest extends TestCase
 
     public function testStreamReadingFreadFalseWithoutTimeoutThrowsRuntimeException(): void
     {
-        self::$isFReadError = true;
+        PhpStreamMock::$isFReadError = true;
         $r = fopen('php://temp', 'r+');
         $stream = new Stream($r);
 
@@ -407,7 +391,7 @@ class StreamTest extends TestCase
 
     public function testStreamWritingFwriteFalseThrowsRuntimeException(): void
     {
-        self::$isFWriteError = true;
+        PhpStreamMock::$isFWriteError = true;
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
 
@@ -423,8 +407,8 @@ class StreamTest extends TestCase
 
     public function testStreamWritingFwriteFalseWhenTimedOutThrowsTimeoutException(): void
     {
-        self::$isFWriteError = true;
-        self::$isStreamTimedOut = true;
+        PhpStreamMock::$isFWriteError = true;
+        PhpStreamMock::$isStreamTimedOut = true;
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
 
@@ -440,8 +424,8 @@ class StreamTest extends TestCase
 
     public function testStreamWritingZeroBytesWhenTimedOutThrowsTimeoutException(): void
     {
-        self::$isFWriteZero = true;
-        self::$isStreamTimedOut = true;
+        PhpStreamMock::$isFWriteZero = true;
+        PhpStreamMock::$isStreamTimedOut = true;
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
 
@@ -457,7 +441,7 @@ class StreamTest extends TestCase
 
     public function testStreamWritingZeroBytesWithoutTimeoutReturnsZero(): void
     {
-        self::$isFWriteZero = true;
+        PhpStreamMock::$isFWriteZero = true;
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
 
@@ -475,9 +459,9 @@ class StreamTest extends TestCase
         $stream = new Stream($r);
         self::assertSame(4, $stream->getSize());
 
-        self::$isFWriteException = true;
-        self::$isStreamTimedOut = true;
-        self::$isStreamMetadataError = true;
+        PhpStreamMock::$isFWriteException = true;
+        PhpStreamMock::$isStreamTimedOut = true;
+        PhpStreamMock::$isStreamMetadataError = true;
 
         try {
             self::assertSame(0, $stream->write(''));
@@ -506,7 +490,7 @@ class StreamTest extends TestCase
     {
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
-        self::$isStreamTimedOut = true;
+        PhpStreamMock::$isStreamTimedOut = true;
 
         try {
             self::assertSame(3, $stream->write('foo'));
@@ -517,8 +501,8 @@ class StreamTest extends TestCase
 
     public function testStreamWritingFwriteExceptionWhenTimedOutThrowsTimeoutExceptionWithPrevious(): void
     {
-        self::$isFWriteException = true;
-        self::$isStreamTimedOut = true;
+        PhpStreamMock::$isFWriteException = true;
+        PhpStreamMock::$isStreamTimedOut = true;
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
 
@@ -536,7 +520,7 @@ class StreamTest extends TestCase
 
     public function testStreamWritingFwriteExceptionWithoutTimeoutThrowsRuntimeExceptionWithPrevious(): void
     {
-        self::$isFWriteException = true;
+        PhpStreamMock::$isFWriteException = true;
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
 
@@ -555,10 +539,10 @@ class StreamTest extends TestCase
 
     public function testStreamWritingFwriteFalseWhenMetadataProbeFailsPreservesGenericRuntimeException(): void
     {
-        self::$isFWriteError = true;
+        PhpStreamMock::$isFWriteError = true;
         $r = fopen('php://temp', 'w+');
         $stream = new Stream($r);
-        self::$isStreamMetadataError = true;
+        PhpStreamMock::$isStreamMetadataError = true;
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Unable to write to stream');
@@ -794,76 +778,4 @@ class StreamTest extends TestCase
             $stream->close();
         }
     }
-}
-
-namespace GuzzleHttp\Psr7;
-
-use GuzzleHttp\Tests\Psr7\StreamTest;
-
-/**
- * @param resource $handle
- *
- * @return string|false
- */
-function fread($handle, int $length)
-{
-    if (StreamTest::$isFReadException) {
-        throw new \ErrorException('Some read error');
-    }
-
-    if (StreamTest::$isFReadError) {
-        return false;
-    }
-
-    if (StreamTest::$isFReadZero) {
-        return '';
-    }
-
-    return \fread($handle, $length);
-}
-
-/**
- * @param resource $handle
- *
- * @return int|false
- */
-function fwrite($handle, string $string, ?int $length = null)
-{
-    if (StreamTest::$isFWriteException) {
-        throw new \ErrorException('Some write error');
-    }
-
-    if (StreamTest::$isFWriteError) {
-        return false;
-    }
-
-    if (StreamTest::$isFWriteZero) {
-        return 0;
-    }
-
-    if ($length === null) {
-        return \fwrite($handle, $string);
-    }
-
-    return \fwrite($handle, $string, $length);
-}
-
-/**
- * @param resource $stream
- *
- * @return array<string, mixed>
- */
-function stream_get_meta_data($stream): array
-{
-    if (StreamTest::$isStreamMetadataError) {
-        throw new \RuntimeException('metadata failed');
-    }
-
-    $metadata = \stream_get_meta_data($stream);
-
-    if (StreamTest::$isStreamTimedOut) {
-        $metadata['timed_out'] = true;
-    }
-
-    return $metadata;
 }

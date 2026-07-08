@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use PHP debug type names in type error messages
 - Changed `Utils::copyToStream()` to throw when destination streams cannot make progress
 - Throw `TimeoutException` from `Stream` read/write and `Utils` copy/hash/readLine on stream timeouts
+- Throw `TimeoutException` from `AppendStream::read()`, `CachingStream::read()`, and `Utils::tryGetContents()` on stream timeouts
 - Re-throw `TimeoutException` from `InflateStream` when the decoded source stream times out
 - Close the compressed source stream from `InflateStream::close()`
 - Return the number of bytes copied from `Utils::copyToStream()`

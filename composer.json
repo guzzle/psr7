@@ -90,7 +90,10 @@
     "autoload-dev": {
         "psr-4": {
             "GuzzleHttp\\Tests\\Psr7\\": "tests/"
-        }
+        },
+        "files": [
+            "tests/PhpStreamMock.php"
+        ]
     },
     "config": {
         "allow-plugins": {
