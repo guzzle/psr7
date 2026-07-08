@@ -451,9 +451,10 @@ when the stream is complete.
 #### Iterator-backed Streams
 
 `Utils::streamFor()` now validates values yielded by `Iterator` instances before
-passing them to the internal `PumpStream`. Scalar values, `null`, and stringable
-objects are converted to string chunks. Arrays, resources, and non-stringable
-objects now throw `UnexpectedValueException`.
+passing them to the internal `PumpStream`. Strings, integers, finite floats,
+booleans, `null`, and stringable objects are converted to string chunks.
+Non-finite floats, arrays, resources, and non-stringable objects now throw
+`UnexpectedValueException` when the stream is read.
 
 Iterator exhaustion is now the only EOF signal for iterator-backed streams.
 Yielding `false`, `null`, or an empty string no longer ends the stream; those
