@@ -356,7 +356,7 @@ class FnStreamTest extends TestCase
     public function testDoNotAllowUnserialization(): void
     {
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('FnStream should never be unserialized');
+        $this->expectExceptionMessage(FnStream::class.' should never be unserialized');
         unserialize(self::serializedObject(FnStream::class));
     }
 
@@ -373,7 +373,7 @@ class FnStreamTest extends TestCase
             unserialize($payload);
             self::fail('Expected unserialization to fail.');
         } catch (\LogicException $e) {
-            self::assertSame('FnStream should never be unserialized', $e->getMessage());
+            self::assertSame(FnStream::class.' should never be unserialized', $e->getMessage());
         }
 
         self::assertSame(0, FnStreamUnserializeMarker::$calls);

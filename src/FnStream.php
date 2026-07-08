@@ -78,7 +78,7 @@ final class FnStream implements StreamInterface
         $this->methods = [];
         $this->detached = true;
 
-        throw new \LogicException('FnStream should never be unserialized');
+        throw new \LogicException(static::class.' should never be unserialized');
     }
 
     public function __unserialize(array $data): void
@@ -86,7 +86,7 @@ final class FnStream implements StreamInterface
         $this->methods = [];
         $this->detached = true;
 
-        throw new \LogicException('FnStream should never be unserialized');
+        throw new \LogicException(static::class.' should never be unserialized');
     }
 
     /**

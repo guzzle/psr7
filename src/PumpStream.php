@@ -64,7 +64,7 @@ final class PumpStream implements StreamInterface
         $this->metadata = [];
         $this->buffer = new BufferStream();
 
-        throw new \LogicException('PumpStream should never be unserialized');
+        throw new \LogicException(static::class.' should never be unserialized');
     }
 
     public function __toString(): string
