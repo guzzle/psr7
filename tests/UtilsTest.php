@@ -954,6 +954,36 @@ class UtilsTest extends TestCase
         $stream->getContents();
     }
 
+    /**
+     * @dataProvider nonFiniteIteratorChunkProvider
+     */
+    public function testIteratorBasedStreamRejectsNonFiniteFloatValues(float $value): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator([$value]));
+
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Iterator must not yield non-finite float values');
+
+        $stream->getContents();
+    }
+
+    public static function nonFiniteIteratorChunkProvider(): iterable
+    {
+        yield 'NAN' => [\NAN];
+        yield 'INF' => [\INF];
+        yield '-INF' => [-\INF];
+    }
+
+    public function testIteratorBasedStreamRejectsNonFiniteFloatAfterValidChunks(): void
+    {
+        $stream = Psr7\Utils::streamFor(new \ArrayIterator(['foo', \NAN]));
+
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Iterator must not yield non-finite float values');
+
+        $stream->getContents();
+    }
+
     public function testConvertsRequestsToStrings(): void
     {
         $request = new Psr7\Request('PUT', 'http://foo.com/hi?123', [

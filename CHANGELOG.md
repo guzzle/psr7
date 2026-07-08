@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject malformed HTTP request/response start-lines
 - Validate iterator chunks passed to `Utils::streamFor()`
 - Validate unsupported values passed to `Query::build()`
-- Reject non-finite float values in `Query::build()` and `MultipartStream` contents
+- Reject non-finite float values in `Query::build()`, `MultipartStream` contents, and iterator chunks passed to `Utils::streamFor()`
 - `Utils::streamFor()` now rejects non-string scalar bodies
 - `Uri::withQueryValues()` now rejects non-string values
 - Reject invalid `Utils::modifyRequest()` change values

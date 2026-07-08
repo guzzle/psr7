@@ -468,9 +468,12 @@ final class Utils
      *   stream object will be created that wraps the given iterable. Each time the
      *   stream is read from, data from the iterator will fill a buffer and will be
      *   continuously called until the buffer is equal to the requested read size.
-     *   Values that stringify to an empty string are skipped while the iterator
-     *   advances. Subsequent read calls will first read from the buffer and then
-     *   call `next` on the underlying iterator until it is exhausted.
+     *   Yielded strings, integers, finite floats, booleans, `null`, and stringable
+     *   objects are converted to string chunks; non-finite floats and other values
+     *   throw `UnexpectedValueException` when the stream is read. Values that
+     *   stringify to an empty string are skipped while the iterator advances.
+     *   Subsequent read calls will first read from the buffer and then call `next`
+     *   on the underlying iterator until it is exhausted.
      * - `object` with `__toString()`: If the object has the `__toString()` method,
      *   the object will be cast to a string and then a stream will be returned that
      *   uses the string value.
@@ -534,6 +537,10 @@ final class Utils
                         while ($resource->valid()) {
                             $result = $resource->current();
                             $resource->next();
+
+                            if (is_float($result) && !is_finite($result)) {
+                                throw new \UnexpectedValueException('Iterator must not yield non-finite float values');
+                            }
 
                             if ($result === null || is_scalar($result)) {
                                 $data = (string) $result;
