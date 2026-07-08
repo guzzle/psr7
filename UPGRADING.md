@@ -206,6 +206,19 @@ the intact host. Bracketed literals containing authority/path delimiters, such
 as `[a@b]` or `[v1.a/b]`, still reject after fallback parsing and may report the
 mangled parsed host.
 
+Userinfo before a bracketed IP-literal host is now percent-encoded ahead of
+parsing, so raw control bytes yield encoded userinfo, such as `us%01er`,
+instead of a silently mutated value, and raw DEL bytes in bracketed hosts are
+rejected instead of parsed as a mutated host. Consistent with registered-name
+authorities, such userinfo containing invalid UTF-8 is now rejected,
+percent-sequences such as `u%41` are preserved rather than decoded, and a
+literal `+` is preserved rather than decoded to a space.
+
+Only an optional numeric port (which may be empty) and a path, query, or
+fragment may follow a bracketed IP-literal host. Trailing bytes that are
+neither, such as `http://[::1]:80@evil/` or `http://[::1]:80x/`, are now
+rejected instead of being reparsed into a different host.
+
 Parsing still URL-decodes hosts before validation. Bracketed hosts containing
 bytes that change under URL decoding, such as `+` or percent-encoded octets,
 therefore are not guaranteed to match `withHost()` acceptance. For example,

@@ -99,23 +99,48 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         // Preserve bracketed IP-literals (IPv6 or IPvFuture) in scheme, userinfo,
-        // and network-path authorities before encoding.
+        // and network-path authorities before encoding. Userinfo is encoded
+        // separately so raw bytes cannot reach parse_url(), which mutates
+        // control characters instead of failing.
         $prefix = '';
-        $ipv6Prefix = preg_match('%\A((?:[0-9A-Za-z+.-]+:)?//(?:[^/?#@]*@)?\[[^\]\x00-\x20/?#@]+\])(.*)\z%s', $url, $matches);
+        $ipv6Prefix = preg_match('%\A((?:[0-9A-Za-z+.-]+:)?//)(?:([^/?#@]*)(@))?(\[[^\]\x00-\x20\x7F/?#@]+\])(.*)\z%s', $url, $matches);
 
         if ($ipv6Prefix === false) {
             return false;
         }
 
         if ($ipv6Prefix === 1) {
-            /** @var array{0:string, 1:string, 2:string} $matches */
-            $suffix = $matches[2];
+            /** @var array{0:string, 1:string, 2:string, 3:string, 4:string, 5:string} $matches */
+            $suffix = $matches[5];
 
-            if ($suffix !== '' && strpos(':/?#', $suffix[0]) === false) {
+            // After the bracketed host only an optional numeric port and/or a
+            // path, query, or fragment may follow. Anything else (for example
+            // `:80@evil` or `:80x`) would let parse_url() reinterpret a
+            // different host.
+            if (preg_match('%\A(?::[0-9]*)?(?:[/?#].*)?\z%s', $suffix) !== 1) {
                 return false;
             }
 
             $prefix = $matches[1];
+
+            if ($matches[3] === '@') {
+                /** @var string|null */
+                $encodedUserInfo = preg_replace_callback(
+                    '%[^:/@?&=#]+%usD',
+                    static function (array $matches): string {
+                        return urlencode($matches[0]);
+                    },
+                    $matches[2]
+                );
+
+                if ($encodedUserInfo === null) {
+                    return false;
+                }
+
+                $prefix .= $encodedUserInfo.'@';
+            }
+
+            $prefix .= $matches[4];
             $url = $suffix;
         }
 
