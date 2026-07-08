@@ -130,6 +130,12 @@ function stream_get_contents($stream, ?int $length = null, int $offset = -1)
         return PhpStreamMock::$streamGetContentsResult;
     }
 
+    // PHP 7.4's stream_get_contents() rejects a null length, so pass only the
+    // stream when no length was requested (the sole call site does).
+    if ($length === null) {
+        return \stream_get_contents($stream);
+    }
+
     return $offset === -1
         ? \stream_get_contents($stream, $length)
         : \stream_get_contents($stream, $length, $offset);
