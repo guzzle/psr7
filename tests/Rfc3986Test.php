@@ -113,6 +113,7 @@ class Rfc3986Test extends TestCase
         yield 'percent-encoded NUL in reg-name' => ['ex%00ample.com', false];
         yield 'percent-encoded LF in reg-name' => ['ex%0Aample.com', false];
         yield 'percent-encoded lowercase LF in reg-name' => ['ex%0aample.com', false];
+        yield 'percent-encoded unit separator boundary in reg-name' => ['ex%1Fample.com', false];
         yield 'percent-encoded SP in reg-name' => ['ex%20ample.com', false];
         yield 'percent-encoded DEL in reg-name' => ['ex%7Fample.com', false];
         yield 'percent-encoded slash in reg-name' => ['ex%2Fample.com', false];

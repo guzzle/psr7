@@ -1019,6 +1019,26 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider getBracketedHostsWithPercentEncoding
+     */
+    public function testParseRejectsPercentEncodingInBracketedHost(string $uri): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri($uri);
+    }
+
+    public static function getBracketedHostsWithPercentEncoding(): iterable
+    {
+        // RFC 3986 IP-literals contain no percent-encoding. Parsing must not
+        // urldecode these into valid literals that the component API rejects.
+        yield 'encoded colons decode to IPv6' => ['http://[%3A%3A1]/'];
+        yield 'encoded colon in IPvFuture' => ['http://[v1.a%3Ab]/'];
+        yield 'encoded plus in IPvFuture' => ['http://[v1.fe80::a%2Ben1]/'];
+        yield 'encoded unreserved in IPvFuture' => ['http://[v1.a%61b]/'];
+    }
+
+    /**
      * @dataProvider getInvalidBracketedIpLiteralSuffixes
      */
     public function testParseRejectsInvalidBracketedIpLiteralSuffix(string $input): void

@@ -80,12 +80,15 @@ rejected if it contains control characters, whitespace, an authority or path del
 `@`, `\`), or an embedded colon denoting a port. Percent-encoding is validated the same way: malformed
 sequences (a `%` not followed by two hex digits) and percent-encoded octets that decode to one of the
 rejected bytes — or to `%` itself — are invalid, while all other percent-encoded octets are accepted.
-RFC 6874 IPv6 zone identifiers (for example `[fe80::1%25eth0]`) are not supported.
+Rejecting these percent-encoded octets is a deliberate guzzle host policy, stricter than the RFC 3986
+`reg-name` grammar, which permits any well-formed `pct-encoded` octet; it matches the stricter policy
+used throughout the library. RFC 6874 IPv6 zone identifiers (for example `[fe80::1%25eth0]`) are not
+supported.
 
 Registered names are otherwise intentionally permissive: single-label hosts such as `localhost`,
 underscores, sub-delims, and raw or percent-encoded non-ASCII (IDN) data are accepted and preserved as
-given, with no punycode conversion. IDNA is treated as a client concern — HTTP clients such as guzzle
-(via its `idn_conversion` request option), curl, and browsers apply it before a URL is serialized.
+given, with no punycode conversion. IDNA is treated as a client concern — consumers that need DNS IDNs
+must perform the conversion themselves, for example via Guzzle's `idn_conversion` request option.
 
 ### `GuzzleHttp\Psr7\Rfc3986::isValidPort`
 
