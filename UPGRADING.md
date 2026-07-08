@@ -293,6 +293,16 @@ rules apply to absolute-form targets of every scheme.
 `ServerRequest::fromGlobals()` is unchanged and continues to strip
 `REQUEST_URI` userinfo.
 
+URI hosts now validate percent-encoding. Malformed sequences such as
+`ex%zz`, and percent-encoded octets that decode to bytes the raw host
+grammar already rejects — controls, space, DEL, `/`, `?`, `#`, `@`, `\`,
+`:`, `[`, `]`, and `%` itself — throw `MalformedUriException` from URI
+parsing and `InvalidArgumentException` from `Uri::withHost()`, and are
+rejected wherever hosts are validated, including `Host` headers and request
+targets in `Message::parseRequest()`. curl and WHATWG-conformant browsers
+also reject these hosts. Other percent-encoded octets, including UTF-8 data
+such as `a%C3%A9b`, remain accepted and are normalized to uppercase hex.
+
 #### Request Host Synchronization
 
 `Request::withUri()` now applies PSR-7 Host header synchronization before using

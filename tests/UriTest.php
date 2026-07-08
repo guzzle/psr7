@@ -876,24 +876,47 @@ class UriTest extends TestCase
 
     public function testHostPercentEncodingIsNormalizedToUppercaseHex(): void
     {
-        $uri = new Uri('http://%2fhost/');
-        self::assertSame('%2Fhost', $uri->getHost());
-        self::assertSame('http://%2Fhost/', (string) $uri);
+        $uri = new Uri('http://a%c3%a9b/');
+        self::assertSame('a%C3%A9b', $uri->getHost());
+        self::assertSame('http://a%C3%A9b/', (string) $uri);
 
-        $uri = (new Uri())->withHost('EX%2fAMPLE');
-        self::assertSame('ex%2Fample', $uri->getHost());
-
-        $uri = (new Uri())->withHost('a%c3%a9b');
+        $uri = (new Uri())->withHost('A%c3%a9B');
         self::assertSame('a%C3%A9b', $uri->getHost());
     }
 
-    public function testMalformedPercentEncodingInHostStaysAccepted(): void
+    /**
+     * @dataProvider getHostsWithInvalidPercentEncoding
+     */
+    public function testParseRejectsHostsWithInvalidPercentEncoding(string $host): void
     {
-        $uri = (new Uri())->withHost('ex%zz');
-        self::assertSame('ex%zz', $uri->getHost());
+        $this->expectException(MalformedUriException::class);
 
-        $uri = new Uri('http://ex%zz/');
-        self::assertSame('ex%zz', $uri->getHost());
+        new Uri("http://{$host}/");
+    }
+
+    /**
+     * @dataProvider getHostsWithInvalidPercentEncoding
+     */
+    public function testWithHostRejectsInvalidPercentEncoding(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new Uri())->withHost($host);
+    }
+
+    public static function getHostsWithInvalidPercentEncoding(): iterable
+    {
+        yield 'malformed percent-encoding' => ['ex%zz'];
+        yield 'bare percent sign' => ['ex%ample.com'];
+        yield 'percent-encoded NUL' => ['ex%00ample.com'];
+        yield 'percent-encoded slash' => ['ex%2Fample.com'];
+        yield 'percent-encoded percent' => ['ex%25ample.com'];
+    }
+
+    public function testPercentEncodedNonDelimiterOctetsInHostStayAccepted(): void
+    {
+        $uri = new Uri('http://ex%61mple%FFcom/');
+        self::assertSame('ex%61mple%FFcom', $uri->getHost());
     }
 
     public function testCommonNonDnsHostsStayValid(): void

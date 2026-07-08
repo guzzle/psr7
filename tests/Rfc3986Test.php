@@ -101,9 +101,36 @@ class Rfc3986Test extends TestCase
         yield 'high byte 0x80 in reg-name (lenient)' => ["a\x80b", true];
         yield 'high byte 0xFF in reg-name (lenient)' => ["a\xFFb", true];
         yield 'raw UTF-8 e-acute in reg-name (lenient)' => ["h\xC3\xA9llo", true];
-        yield 'unencoded percent sign in reg-name (lenient)' => ['ex%ample', true];
-        yield 'malformed percent-encoding in reg-name (lenient)' => ['ex%zz', true];
         yield 'non-blocklisted ASCII punctuation in reg-name (lenient)' => ['a<b>{c}|^`"', true];
+
+        // Percent-encoding in reg-names: malformed sequences and octets that
+        // decode to bytes the raw grammar rejects are invalid; other octets,
+        // including non-ASCII UTF-8 data, remain accepted.
+        yield 'unencoded percent sign in reg-name' => ['ex%ample', false];
+        yield 'malformed percent-encoding in reg-name' => ['ex%zz', false];
+        yield 'truncated percent-encoding at end of reg-name' => ['example.com%4', false];
+        yield 'double percent before valid octet' => ['ex%%41mple', false];
+        yield 'percent-encoded NUL in reg-name' => ['ex%00ample.com', false];
+        yield 'percent-encoded LF in reg-name' => ['ex%0Aample.com', false];
+        yield 'percent-encoded lowercase LF in reg-name' => ['ex%0aample.com', false];
+        yield 'percent-encoded SP in reg-name' => ['ex%20ample.com', false];
+        yield 'percent-encoded DEL in reg-name' => ['ex%7Fample.com', false];
+        yield 'percent-encoded slash in reg-name' => ['ex%2Fample.com', false];
+        yield 'percent-encoded lowercase slash in reg-name' => ['ex%2fample.com', false];
+        yield 'percent-encoded question mark in reg-name' => ['ex%3Fample.com', false];
+        yield 'percent-encoded hash in reg-name' => ['ex%23ample.com', false];
+        yield 'percent-encoded at sign in reg-name' => ['ex%40ample.com', false];
+        yield 'percent-encoded colon in reg-name' => ['ex%3Aample.com', false];
+        yield 'percent-encoded open bracket in reg-name' => ['ex%5Bample.com', false];
+        yield 'percent-encoded backslash in reg-name' => ['ex%5Cample.com', false];
+        yield 'percent-encoded close bracket in reg-name' => ['ex%5Dample.com', false];
+        yield 'percent-encoded percent in reg-name' => ['ex%25ample.com', false];
+        yield 'percent-encoded unreserved letter in reg-name' => ['ex%61mple.com', true];
+        yield 'percent-encoded sub-delim plus in reg-name' => ['ex%2Bample.com', true];
+        yield 'percent-encoded exclamation boundary octet' => ['ex%21ample.com', true];
+        yield 'percent-encoded tilde boundary octet' => ['ex%7Eample.com', true];
+        yield 'percent-encoded UTF-8 pair in reg-name' => ['a%C3%A9b', true];
+        yield 'percent-encoded lone high byte in reg-name' => ['ex%FFample.com', true];
 
         // Reg-name byte boundaries around the forbidden range [\x00-\x20\x7F].
         yield 'byte 0x21 boundary (bang, just above forbidden range)' => ["a\x21b", true];
