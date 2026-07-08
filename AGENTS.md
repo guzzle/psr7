@@ -1,50 +1,42 @@
 # Agent Guidelines
 
-This file captures the repository conventions for `guzzlehttp/psr7`. The
-organization-wide
-[contributing guidelines](https://github.com/guzzle/guzzle/blob/8.0/docs/overview.md#contributing)
-are required reading and apply here too.
-
-## Branches
-
-- `3.0` is the unreleased next major version and `2.12` is the current stable
-  branch. Bug fixes target the oldest maintained branch they apply to and are
-  merged up; changes are never cherry-picked down.
-- Backwards compatibility on released branches is paramount. Breaking changes
-  are only acceptable on an unreleased major version branch.
-
-## Commits and pull requests
-
-- Write a single concise commit subject line in sentence case and the imperative
-  mood, with no body and no `Co-Authored-By` or other attribution trailers.
-- Keep pull request titles to at most 64 characters.
-- Write pull request descriptions as concise prose in full sentences that
-  explain why the change is being made and what it does. Prefer a single
-  paragraph, and never use bullet points, headers, test plans, or checklists.
-  Backticks are fine in titles and descriptions.
-- Changes in behavior need tests, a `CHANGELOG.md` entry in the unreleased
-  section of the target branch, and an `UPGRADING.md` note when the behavior
-  differs between major versions.
-
 ## Code and tooling
 
+- Backwards compatibility on released branches is paramount, and breaking
+  changes are only acceptable on an unreleased major version branch.
 - The minimum supported PHP version is 7.4, and all code must remain compatible
   with it.
 - PHPStan and PHP-CS-Fixer must be run against PHP 7.4.
+- Always pass an explicit character list to `trim()`, `ltrim()`, and `rtrim()`;
+  never rely on the default characters.
+- Handle `preg_*` engine failures: when the result is used as data, test for
+  `false` or `null` and throw a `\RuntimeException` including
+  `preg_last_error_msg()`; boolean validation guards must compare strictly, such
+  as `=== 1`, so an engine failure can only ever fail closed.
+- Anchor validation patterns to the true end of input with the `D` modifier or
+  `\z`; a bare `$` accepts a trailing newline.
+- Never embed raw control bytes in exception messages and other diagnostics;
+  escape or redact the offending value first.
+- Classes holding streams, resources, or callbacks reject native PHP
+  serialization, and refusal messages report the class name with
+  `static::class`.
+- Reject non-finite floats where numeric values are accepted or converted to
+  strings.
 - Keep new tests consistent with the existing tests in style and structure, and
   only add tests that meaningfully cover behavior.
+- Changes in behavior need tests, a `CHANGELOG.md` entry in the unreleased
+  section of the target branch, and an `UPGRADING.md` note when the behavior
+  differs between major versions.
 
 ## Documentation
 
 - Wrap markdown prose and PHPDoc text to 80 columns using greedy wrapping. Never
   split a markdown link or an inline code span across a line break; a line that
   cannot be broken may exceed the limit. Avoid em dashes.
-- The pages under `docs/` document the public API and behavior. Keep PHPDoc and
-  `docs/` in sync when either changes.
-- `CHANGELOG.md` follows the Keep a Changelog format, with one concise bullet
-  per change.
-
-## Security
-
-Never disclose security issues publicly. Follow the
-[security policy](https://github.com/guzzle/psr7/security/policy) instead.
+- PHPDoc generic types always put a space after each comma, as in
+  `array<array-key, string>`.
+- Keep PHPDoc and the corresponding `docs/` pages in sync: shared prose is
+  deliberately word-for-word identical, including boilerplate copied verbatim
+  between related functions, so apply the same edit to every copy. Only
+  formatting and linking may differ, such as a docs link becoming a PHPDoc
+  `@see` tag; the wording must never drift.
