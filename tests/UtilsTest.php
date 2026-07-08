@@ -535,6 +535,71 @@ class UtilsTest extends TestCase
         );
     }
 
+    public function testRedactUserInfoInString(): void
+    {
+        self::assertSame(
+            "Failed to connect to 'http://***@localhost:8125'",
+            Psr7\Utils::redactUserInfoInString(
+                "Failed to connect to 'http://my_user:secretPass@localhost:8125'",
+                'http://my_user:secretPass@localhost:8125'
+            )
+        );
+
+        self::assertSame(
+            'Could not resolve ***@localhost',
+            Psr7\Utils::redactUserInfoInString('Could not resolve ghp_TOKEN@localhost', 'http://ghp_TOKEN@localhost/')
+        );
+
+        self::assertSame(
+            'via http://***@localhost and http://***@localhost',
+            Psr7\Utils::redactUserInfoInString('via http://user:pass@localhost and http://user:pass@localhost', 'http://user:pass@localhost')
+        );
+    }
+
+    public function testRedactUserInfoInStringWithAuthorityFormUri(): void
+    {
+        self::assertSame(
+            "Unsupported proxy syntax in '***@localhost:8125'",
+            Psr7\Utils::redactUserInfoInString("Unsupported proxy syntax in 'user:pass@localhost:8125'", 'user:pass@localhost:8125')
+        );
+    }
+
+    public function testRedactUserInfoInStringWithRawControlBytes(): void
+    {
+        $uri = "http://user:se\x01cr\x7Fet@localhost:8125";
+
+        self::assertSame(
+            'Failed to connect to http://***@localhost:8125',
+            Psr7\Utils::redactUserInfoInString('Failed to connect to '.$uri, $uri)
+        );
+    }
+
+    public function testRedactUserInfoInStringWithRawSeparatorsInCredentials(): void
+    {
+        foreach (['/', '?', '#'] as $separator) {
+            $uri = 'http://user:se'.$separator.'cret@localhost:8125';
+
+            self::assertSame(
+                "Unsupported proxy syntax in 'http://***@localhost:8125'",
+                Psr7\Utils::redactUserInfoInString("Unsupported proxy syntax in '".$uri."'", $uri)
+            );
+        }
+    }
+
+    public function testRedactUserInfoInStringLeavesUriWithAtInPathUntouched(): void
+    {
+        $error = "Failed to connect to 'http://localhost:8125/health@check'";
+
+        self::assertSame($error, Psr7\Utils::redactUserInfoInString($error, 'http://localhost:8125/health@check'));
+    }
+
+    public function testRedactUserInfoInStringLeavesUriWithoutUserInfoUntouched(): void
+    {
+        self::assertSame('error text', Psr7\Utils::redactUserInfoInString('error text', 'http://localhost:8125'));
+        self::assertSame('error text', Psr7\Utils::redactUserInfoInString('error text', ''));
+        self::assertSame('http://@localhost', Psr7\Utils::redactUserInfoInString('http://@localhost', 'http://@localhost'));
+    }
+
     public function testCalculatesHash(): void
     {
         $s = Psr7\Utils::streamFor('foobazbar');

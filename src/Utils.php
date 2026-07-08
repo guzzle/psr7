@@ -471,6 +471,51 @@ final class Utils
     }
 
     /**
+     * Redacts the userinfo of a raw URI string wherever it appears in a
+     * subject string.
+     *
+     * The needle is taken verbatim from the raw URI rather than from parsed
+     * components, so credentials that URI normalization would rewrite, such
+     * as raw control bytes or unencoded reserved characters, are still found
+     * in text that embeds the URI exactly as given, for example transport
+     * error messages. A URI without "://" is treated as authority-form: a
+     * host and port with optional userinfo.
+     *
+     * @param string $subject Text that may embed the URI
+     * @param string $uri     Raw URI whose userinfo is redacted in the text
+     */
+    public static function redactUserInfoInString(string $subject, string $uri): string
+    {
+        if (\strpos($uri, '@') === false) {
+            return $subject;
+        }
+
+        $schemePosition = \strpos($uri, '://');
+        $remainder = $schemePosition === false ? $uri : \substr($uri, $schemePosition + 3);
+        $authority = \substr($remainder, 0, \strcspn($remainder, '/?#'));
+        $atPosition = \strrpos($authority, '@');
+
+        if ($atPosition === false || $atPosition === 0) {
+            // The last '@' sits past a raw '/', '?', or '#': not userinfo in
+            // a parseable URI, but a URI that defeats parse_url() may carry
+            // the separator inside its credentials, so everything up to the
+            // last '@' is redacted as a safe-side fallback.
+            if (\parse_url($schemePosition === false ? 'http://'.$uri : $uri) !== false) {
+                return $subject;
+            }
+
+            $atPosition = \strrpos($remainder, '@');
+            if ($atPosition === false || $atPosition === 0) {
+                return $subject;
+            }
+
+            return \str_replace(\substr($remainder, 0, $atPosition).'@', '***@', $subject);
+        }
+
+        return \str_replace(\substr($authority, 0, $atPosition).'@', '***@', $subject);
+    }
+
+    /**
      * Create a new stream based on the input type.
      *
      * Options are provided as an associative array that can contain the
