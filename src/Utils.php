@@ -16,7 +16,7 @@ final class Utils
     }
 
     /**
-     * Remove the items given by the keys, case insensitively from the data.
+     * Remove the items given by the keys from the data, case-insensitively.
      *
      * @param array<array-key, string|int> $keys
      */
@@ -39,11 +39,18 @@ final class Utils
 
     /**
      * Copy the contents of a stream into another stream until the given number
-     * of bytes have been read, returning the number of bytes copied.
+     * of bytes have been read, returning the number of bytes copied as an
+     * `int`. On 32-bit PHP, an unbounded copy larger than `PHP_INT_MAX` bytes
+     * cannot be represented by that return type. 64-bit PHP is not affected.
      *
      * The destination must accept writes that make positive progress. Streams
-     * that return 0 as a backpressure or drop signal (a BufferStream at its high
-     * water mark, or a full DroppingStream) will cause this method to throw.
+     * that return 0 as a backpressure or drop signal (a `BufferStream` at its
+     * high water mark, or a full `DroppingStream`) will cause this method to
+     * throw. For full copies, use a normal writable stream such as a file or
+     * `php://temp` stream.
+     *
+     * Throws `TimeoutException` when PHP-style timeout metadata can be detected
+     * after a source read or destination write cannot make progress.
      *
      * @param StreamInterface $source Stream to read from
      * @param StreamInterface $dest   Stream to write to
@@ -114,6 +121,9 @@ final class Utils
      * Copy the contents of a stream into a string until the given number of
      * bytes have been read.
      *
+     * Throws `TimeoutException` when PHP-style timeout metadata can be detected
+     * after a stream read cannot make progress.
+     *
      * @param StreamInterface $stream Stream to read
      * @param int             $maxLen Maximum number of bytes to read. Pass -1
      *                                to read the entire stream.
@@ -152,8 +162,11 @@ final class Utils
     /**
      * Calculate a hash of a stream.
      *
-     * This method reads the entire stream to calculate a rolling hash, based
-     * on PHP's `hash_init` functions.
+     * This method reads the entire stream to calculate a rolling hash, based on
+     * PHP's `hash_init` functions.
+     *
+     * Throws `TimeoutException` when PHP-style timeout metadata can be detected
+     * after a stream read cannot make progress.
      *
      * @param StreamInterface $stream    Stream to calculate the hash for
      * @param string          $algo      Hash algorithm (e.g. md5, crc32, etc)
@@ -197,10 +210,10 @@ final class Utils
      *   or non-empty arrays of strings.
      * - remove_headers: (array) Remove the given headers. Values may be
      *   strings or integers.
-     * - body: (mixed) Sets the given body. Present non-null values are converted
-     *   with self::streamFor(), including resources, streams, iterators, callable
-     *   arrays, closures, invokable objects, and stringable objects. String inputs
-     *   remain literal bodies.
+     * - body: (mixed) Sets the given body. Present non-null values are
+     *   converted with self::streamFor(), including resources, streams,
+     *   iterators, callable arrays, closures, invokable objects, and stringable
+     *   objects. String inputs remain literal bodies.
      * - uri: (UriInterface) Set the URI. When the URI contains a host, the
      *   Host header is updated from it, and combining this with an explicit
      *   Host entry in set_headers throws an InvalidArgumentException. Apply
@@ -424,6 +437,9 @@ final class Utils
     /**
      * Read a line from the stream up to the maximum allowed buffer length.
      *
+     * Throws `TimeoutException` when PHP-style timeout metadata can be detected
+     * after a stream read cannot make progress.
+     *
      * @param StreamInterface $stream    Stream to read from
      * @param int|null        $maxLength Maximum buffer length
      */
@@ -457,37 +473,41 @@ final class Utils
     /**
      * Create a new stream based on the input type.
      *
-     * Options is an associative array that can contain the following keys:
+     * Options are provided as an associative array that can contain the
+     * following keys:
      * - metadata: Array of custom metadata.
      * - size: Size of the stream.
      *
      * This method accepts the following `$resource` types:
      * - `Psr\Http\Message\StreamInterface`: Returns the value as-is.
-     * - `string`: Creates a stream object that uses the given string as the contents.
-     * - `resource`: Creates a stream object that wraps the given PHP stream resource.
-     * - `Iterator`: If the provided value implements `Iterator`, then a read-only
-     *   stream object will be created that wraps the given iterable. Each time the
-     *   stream is read from, data from the iterator will fill a buffer and will be
-     *   continuously called until the buffer is equal to the requested read size.
-     *   Yielded strings, integers, finite floats, booleans, `null`, and stringable
-     *   objects are converted to string chunks; non-finite floats and other values
-     *   throw `UnexpectedValueException` when the stream is read. Values that
+     * - `string`: Creates a stream object that uses the given string as the
+     *   contents.
+     * - `resource`: Creates a stream object that wraps the given PHP stream
+     *   resource.
+     * - `Iterator`: If the provided value implements `Iterator`, then a
+     *   read-only stream object will be created that wraps the given iterable.
+     *   Each time the stream is read from, data from the iterator will fill a
+     *   buffer and will be continuously called until the buffer is equal to the
+     *   requested read size. Yielded strings, integers, finite floats,
+     *   booleans, `null`, and stringable objects are converted to string
+     *   chunks; non-finite floats and other values throw
+     *   `UnexpectedValueException` when the stream is read. Values that
      *   stringify to an empty string are skipped while the iterator advances.
-     *   Subsequent read calls will first read from the buffer and then call `next`
-     *   on the underlying iterator until it is exhausted.
-     * - `object` with `__toString()`: If the object has the `__toString()` method,
-     *   the object will be cast to a string and then a stream will be returned that
-     *   uses the string value.
+     *   Subsequent read calls will first read from the buffer and then call
+     *   `next` on the underlying iterator until it is exhausted.
+     * - `object` with `__toString()`: If the object has the `__toString()`
+     *   method, the object will be cast to a string and then a stream will be
+     *   returned that uses the string value.
      * - `NULL`: When `null` is passed, an empty stream object is returned.
-     * - `callable`: When a callable array, closure, or invokable object is passed
-     *   and no earlier resource or object rule applies, a read-only stream object
-     *   will be created that invokes the given callable. The callable is invoked
-     *   with the suggested number of bytes to read. The callable can return fewer
-     *   or more bytes than requested, but MUST return a non-empty string when data
-     *   is available and `false` or `null` when there is no more data to return.
-     *   Any additional bytes will be buffered and used in subsequent reads. String
-     *   inputs are always treated as string bodies, even when they name callable
-     *   functions.
+     * - `callable`: When a callable array, closure, or invokable object is
+     *   passed and no earlier resource or object rule applies, a read-only
+     *   stream object will be created that invokes the given callable. The
+     *   callable is invoked with the suggested number of bytes to read. The
+     *   callable can return fewer or more bytes than requested, but MUST return
+     *   a non-empty string to provide data and MUST return `false` or `null`
+     *   when there is no more data to return. Any additional bytes will be
+     *   buffered and used in subsequent reads. String inputs are always treated
+     *   as string bodies, even when they name callable functions.
      *
      * @param resource|string|StreamInterface|callable|\Iterator|\Stringable|null $resource Entity body data
      * @param array{size?: int, metadata?: array}                                 $options  Additional options
@@ -576,8 +596,8 @@ final class Utils
     /**
      * Safely opens a PHP stream resource using a filename.
      *
-     * When fopen fails, PHP normally raises a warning. This function adds an
-     * error handler that checks for errors and throws an exception instead.
+     * When `fopen()` fails, PHP normally raises a warning. This function adds
+     * an error handler that checks for errors and throws an exception instead.
      *
      * @param string $filename File to open
      * @param string $mode     Mode used to open the file
@@ -625,9 +645,12 @@ final class Utils
     /**
      * Safely gets the contents of a given stream.
      *
-     * When stream_get_contents fails, PHP normally raises a warning. This
+     * When `stream_get_contents()` fails, PHP normally raises a warning. This
      * function adds an error handler that checks for errors and throws an
      * exception instead.
+     *
+     * Throws `TimeoutException` when PHP-style timeout metadata can be detected
+     * after a stream read cannot make progress.
      *
      * @param resource $stream
      *
@@ -678,11 +701,11 @@ final class Utils
     }
 
     /**
-     * Returns a UriInterface for the given value.
+     * Returns a `UriInterface` for the given value.
      *
-     * This function accepts a string or UriInterface and returns a
-     * UriInterface for the given value. If the value is already a
-     * UriInterface, it is returned as-is.
+     * This function accepts a string or `UriInterface` and returns a
+     * `UriInterface` for the given value. If the value is already a
+     * `UriInterface`, it is returned as-is.
      *
      * @param string|UriInterface $uri
      *

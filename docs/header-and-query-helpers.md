@@ -1,18 +1,23 @@
 # Header and Query Helpers
 
-This page covers helper methods for parsing structured header values, splitting list headers, and parsing or building query strings. For basic message header behavior, see [PSR-7 Messages](psr-7-messages.md).
+This page covers helper methods for parsing structured header values, splitting
+list headers, and parsing or building query strings. For basic message header
+behavior, see [PSR-7 Messages](psr-7-messages.md).
 
 ## `GuzzleHttp\Psr7\Header::parse`
 
 `public static function parse(string|array $header): array`
 
-Parses semicolon-separated header parameters into associative arrays. Parameters without values receive an empty-string value.
+Parses semicolon-separated header parameters into associative arrays, one per
+comma-separated header value. Parameters without a value are appended as values
+under integer keys.
 
 ## `GuzzleHttp\Psr7\Header::splitList`
 
 `public static function splitList(string|string[] $header): string[]`
 
-Splits an HTTP header defined to contain a comma-separated list into each individual value:
+Splits an HTTP header defined to contain a comma-separated list into each
+individual value. Empty values are removed:
 
 ```php
 $knownEtags = Header::splitList($request->getHeader('if-none-match'));
@@ -20,13 +25,19 @@ $knownEtags = Header::splitList($request->getHeader('if-none-match'));
 
 Example headers include `accept`, `cache-control`, and `if-none-match`.
 
+This method must not be used to parse headers that are not defined as a list,
+such as `user-agent` or `set-cookie`.
+
 ## `GuzzleHttp\Psr7\Query::parse`
 
 `public static function parse(string $str, int|bool $urlEncoding = true): array`
 
 Parse a query string into an associative array.
 
-If multiple values are found for the same key, the value of that key-value pair becomes an array. This function does not parse nested PHP style arrays into an associative array. For example, `foo[a]=1&foo[b]=2` will be parsed into `['foo[a]' => '1', 'foo[b]' => '2']`.
+If multiple values are found for the same key, the value of that key-value pair
+becomes an array. This function does not parse nested PHP style arrays into an
+associative array. For example, `foo[a]=1&foo[b]=2` will be parsed into
+`['foo[a]' => '1', 'foo[b]' => '2']`.
 
 ## `GuzzleHttp\Psr7\Query::build`
 
@@ -34,7 +45,9 @@ If multiple values are found for the same key, the value of that key-value pair 
 
 Build a query string from an array of key-value pairs.
 
-This function can use the return value of `parse()` to build a query string. This function does not modify the provided keys when an array is encountered, unlike `http_build_query()`.
+This function can use the return value of `parse()` to build a query string.
+This function does not modify the provided keys when an array is encountered,
+unlike `http_build_query()`.
 
 ## `GuzzleHttp\Psr7\Utils::caselessRemove`
 

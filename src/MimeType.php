@@ -1288,7 +1288,7 @@ final class MimeType
     ];
 
     /**
-     * Determines the mimetype of a file by looking at its extension.
+     * Determines the MIME type of a file by looking at its extension.
      *
      * @see https://raw.githubusercontent.com/jshttp/mime-db/master/db.json
      */
@@ -1298,7 +1298,7 @@ final class MimeType
     }
 
     /**
-     * Maps a file extensions to a mimetype.
+     * Maps a file extension to a MIME type.
      *
      * @see https://raw.githubusercontent.com/jshttp/mime-db/master/db.json
      */
