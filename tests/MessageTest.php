@@ -267,6 +267,7 @@ class MessageTest extends TestCase
         yield 'http leading zero default port' => ['foo.com:000080', 'http://foo.com/'];
         yield 'leading zero non-default port' => ['foo.com:0008080', 'http://foo.com:8080/'];
         yield 'maximum port' => ['foo.com:65535', 'http://foo.com:65535/'];
+        yield 'percent-encoded host' => ['ex%61mple.com', 'http://ex%61mple.com/'];
         yield 'ipv6' => ['[::1]', 'http://[::1]/'];
         yield 'ipv6 port' => ['[::1]:443', 'https://[::1]/'];
         yield 'ipv6 https leading zero default port' => ['[::1]:000443', 'https://[::1]/'];

@@ -63,7 +63,7 @@ final class Rfc3986
      * value is rejected if it contains control characters, whitespace, an
      * authority or path delimiter (`/ ? # @ \`), an embedded colon denoting
      * a port, a malformed percent-sequence, or a percent-encoded octet that
-     * decodes to one of those rejected bytes or to `%` itself.
+     * decodes to one of those rejected bytes, to a bracket, or to `%` itself.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2
      */
@@ -127,7 +127,7 @@ final class Rfc3986
         // Octets decoding to any other byte (unreserved, sub-delims, and
         // non-ASCII UTF-8 data) remain accepted.
         $invalidEncoding = preg_match(
-            '/%(?![0-9A-Fa-f]{2})|%(?:[01][0-9A-Fa-f]|2[035F]|3[AF]|40|5[BCD]|7F)/i',
+            '/%(?!'.self::HEX_OCTET.')|%(?:[01][0-9A-Fa-f]|2[035F]|3[AF]|40|5[BCD]|7F)/i',
             $host
         );
 
