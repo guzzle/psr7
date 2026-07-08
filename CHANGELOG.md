@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject empty arrays and non-string values as header values
 - Reject invalid uploaded file trees and invalid parsed body values
 - Reject uploaded file specs missing `tmp_name`, `size`, or `error`
+- Reject non-integer and negative uploaded file `error` values
 - Reject invalid stream/upload sizes, buffer high-water marks, and dropping-stream limits
 - Rewind seekable uploaded-file streams before copying in `UploadedFile::moveTo()`
 - Reject negative `read()` lengths across all stream implementations
@@ -42,8 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop returning an empty reference from `UriResolver::relativize()` when it would inherit the base fragment
 - Stop throwing from `UriResolver::relativize()` when an equal-path target's last path segment contains a colon
 - Harden URI host validation (delimiters, backslashes, IPv6, embedded ports); require schemes to start with a letter
+- Validate `Uri::fromParts()` ports instead of casting them
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
 - Rebuild server request URIs from `$_SERVER` by `REQUEST_METHOD`, using target authority before `SERVER_PORT`
+- Remove userinfo from absolute-form `REQUEST_URI` targets in `ServerRequest::fromGlobals()`
 - Reject zero-port `HTTP_HOST` and malformed `SERVER_PORT` in `ServerRequest::getUriFromGlobals()`
 - Reject malformed `REQUEST_METHOD` and `SERVER_PROTOCOL` server values in `ServerRequest::fromGlobals()`
 - Reject zero-port `Host` and normalize leading-zero ports in `Message::parseRequest()`
