@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include non-default URI ports in `Host` headers set by `Utils::modifyRequest()` URI changes
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
 - Reject malformed HTTP request/response start-lines
+- Unfold obsolete HTTP/1.0 line folding for all valid request method tokens
 - Reject empty and control-character request targets in `Request::withRequestTarget()`
 - Validate iterator chunks passed to `Utils::streamFor()`
 - Validate unsupported values passed to `Query::build()`

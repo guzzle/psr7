@@ -429,6 +429,12 @@ tolerated.
 `Request::withRequestTarget('')` throws `InvalidArgumentException`; omit the
 explicit request target to derive `/` or the URI-derived target automatically.
 
+`Message::parseMessage()` no longer unfolds folded HTTP/1.0 messages whose
+start line carries control bytes in the request target; such messages now
+throw the obsolete-line-folding `InvalidArgumentException`.
+`Message::parseRequest()` and `Message::parseResponse()` rejected these
+messages either way.
+
 #### Query Builder Values
 
 `Query::build()` now rejects unsupported values instead of relying on PHP string
