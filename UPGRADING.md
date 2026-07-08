@@ -214,10 +214,10 @@ authorities, such userinfo containing invalid UTF-8 is now rejected,
 percent-sequences such as `u%41` are preserved rather than decoded, and a
 literal `+` is preserved rather than decoded to a space.
 
-Only an optional numeric port and a path, query, or fragment may follow a
-bracketed IP-literal host. Trailing bytes that are neither, such as
-`http://[::1]:80@evil/` or `http://[::1]:80x/`, are now rejected instead of
-being reparsed into a different host.
+Only an optional numeric port (which may be empty) and a path, query, or
+fragment may follow a bracketed IP-literal host. Trailing bytes that are
+neither, such as `http://[::1]:80@evil/` or `http://[::1]:80x/`, are now
+rejected instead of being reparsed into a different host.
 
 Parsing still URL-decodes hosts before validation. Bracketed hosts containing
 bytes that change under URL decoding, such as `+` or percent-encoded octets,
