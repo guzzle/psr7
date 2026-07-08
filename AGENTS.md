@@ -24,10 +24,11 @@
   serializable.
 - To resist, `__serialize()` and `__unserialize()` both throw
   `\LogicException(static::class.' should never be serialized')` and its
-  unserialized counterpart, usually via the repo's `@internal` non-serializable
-  trait. Where a `__destruct()` has such a side effect, it is enabled only by
-  the constructor and disabled in `__wakeup()` and `__unserialize()` before
-  throwing, so the protection holds even if the exception is swallowed.
+  unserialized counterpart, usually via the `@internal`
+  `NonSerializableStreamTrait`. Where a `__destruct()` has such a side effect,
+  it is enabled only by the constructor and disabled in `__wakeup()` and
+  `__unserialize()` before throwing, so the protection holds even if the
+  exception is swallowed.
 - In general, numeric inputs should not accept non-finite floats. In situations
   where they are accepted and we need to cast to a string, we should branch on
   `\is_finite($value)`, using `(string) $value` for the finite case and
