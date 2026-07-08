@@ -39,7 +39,7 @@ final class LazyOpenStream implements StreamInterface
     {
         $this->stream = new BufferStream();
 
-        throw new \LogicException('LazyOpenStream should never be unserialized');
+        throw new \LogicException(static::class.' should never be unserialized');
     }
 
     /**

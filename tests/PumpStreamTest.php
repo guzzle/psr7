@@ -337,7 +337,7 @@ class PumpStreamTest extends TestCase
             unserialize($payload);
             self::fail('Expected unserialization to fail.');
         } catch (\LogicException $e) {
-            self::assertSame('PumpStream should never be unserialized', $e->getMessage());
+            self::assertSame(PumpStream::class.' should never be unserialized', $e->getMessage());
         }
 
         self::assertSame(0, PumpStreamUnserializeMarker::$calls);

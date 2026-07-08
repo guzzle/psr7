@@ -80,4 +80,13 @@ class LazyOpenStreamTest extends TestCase
         self::assertSame('foo', stream_get_contents($r));
         fclose($r);
     }
+
+    public function testDoNotAllowUnserialization(): void
+    {
+        $class = LazyOpenStream::class;
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage($class.' should never be unserialized');
+        unserialize(sprintf('O:%d:"%s":0:{}', strlen($class), $class));
+    }
 }
