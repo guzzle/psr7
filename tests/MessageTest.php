@@ -538,12 +538,45 @@ class MessageTest extends TestCase
         self::assertSame('Bar Bam', $request->getHeaderLine('Foo'));
     }
 
+    /**
+     * @dataProvider foldedTokenMethodProvider
+     */
+    public function testParsesRequestMessagesWithFoldedHeadersAndTokenMethodOnHttp10(string $method): void
+    {
+        $request = Psr7\Message::parseRequest("{$method} / HTTP/1.0\r\nFoo: Bar\r\n Bam\r\n\r\n");
+
+        self::assertSame($method, $request->getMethod());
+        self::assertSame('Bar Bam', $request->getHeaderLine('Foo'));
+    }
+
+    public static function foldedTokenMethodProvider(): iterable
+    {
+        yield 'underscore' => ['GET_DATA'];
+        yield 'hyphen' => ['M-SEARCH'];
+    }
+
+    public function testParseMessageRejectsFoldedHeadersWhenTargetHasControlBytes(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid header syntax: Obsolete line folding');
+
+        Psr7\Message::parseMessage("GET /a\x7Fb HTTP/1.0\r\nFoo: Bar\r\n Bam\r\n\r\n");
+    }
+
+    public function testParseMessageUnfoldsFoldedHeadersWithLowercaseHttp10StartLine(): void
+    {
+        $parsed = Psr7\Message::parseMessage("get / http/1.0\r\nFoo: Bar\r\n Bam\r\n\r\n");
+
+        self::assertSame('get / http/1.0', $parsed['start-line']);
+        self::assertSame(['Bar Bam'], $parsed['headers']['Foo']);
+    }
+
     public function testRequestParsingFailsWithFoldedHeadersOnHttp11(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid header syntax: Obsolete line folding');
 
-        Psr7\Message::parseResponse("GET_DATA / HTTP/1.1\r\nFoo: Bar\r\n Biz: Bam\r\n\r\n");
+        Psr7\Message::parseRequest("GET_DATA / HTTP/1.1\r\nFoo: Bar\r\n Biz: Bam\r\n\r\n");
     }
 
     public function testParsesRequestMessagesWhenHeaderDelimiterIsOnlyALineFeed(): void

@@ -13,6 +13,18 @@ final class Message
 {
     private const DEFAULT_BODY_SUMMARY_TRUNCATE_AT = 120;
 
+    /**
+     * Method token (tchar+) for use in a regex.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.2
+     */
+    private const REQUEST_METHOD_TOKEN = '[!#$%&\'*+.^_`|~0-9A-Za-z-]+';
+
+    /**
+     * Request-target bytes accepted by the start-line parser (no CTL, SP, or DEL), for use in a regex.
+     */
+    private const REQUEST_TARGET_CHARS = '[^\x00-\x20\x7F]+';
+
     private function __construct()
     {
     }
@@ -231,7 +243,11 @@ final class Message
 
         [$startLine, $rawHeaders] = $headerParts;
 
-        $versionMatch = preg_match("/(?:^HTTP\/|^[A-Z]+ \S+ HTTP\/)(\d+(?:\.\d+)?)/i", $startLine, $matches);
+        $versionMatch = preg_match(
+            '/(?:^HTTP\/|^'.self::REQUEST_METHOD_TOKEN.' '.self::REQUEST_TARGET_CHARS.' HTTP\/)(\d+(?:\.\d+)?)/i',
+            $startLine,
+            $matches
+        );
 
         if ($versionMatch === false) {
             throw new \RuntimeException('Unable to parse HTTP start line: '.preg_last_error_msg());
@@ -404,7 +420,11 @@ final class Message
     {
         $data = self::parseMessage($message);
         $matches = [];
-        $matched = preg_match('/^(?P<method>[!#$%&\'*+.^_`|~0-9A-Za-z-]+) (?P<target>[^\x00-\x20\x7F]+) HTTP\/(?P<version>\d+(?:\.\d+)?)$/D', $data['start-line'], $matches);
+        $matched = preg_match(
+            '/^(?P<method>'.self::REQUEST_METHOD_TOKEN.') (?P<target>'.self::REQUEST_TARGET_CHARS.') HTTP\/(?P<version>\d+(?:\.\d+)?)$/D',
+            $data['start-line'],
+            $matches
+        );
 
         if ($matched === false) {
             throw new \RuntimeException('Unable to parse request start line: '.preg_last_error_msg());
