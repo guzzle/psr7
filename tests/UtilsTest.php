@@ -13,6 +13,11 @@ use Psr\Http\Message\UriInterface;
 
 class UtilsTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        PhpStreamMock::reset();
+    }
+
     public function testCopiesToString(): void
     {
         $s = Psr7\Utils::streamFor('foobaz');
@@ -627,6 +632,56 @@ class UtilsTest extends TestCase
         $this->expectExceptionMessage('Unable to read stream contents');
 
         Psr7\Utils::tryGetContents($r);
+    }
+
+    public function testTryGetContentsThrowsTimeoutWhenReadReturnsFalseAndResourceTimedOut(): void
+    {
+        PhpStreamMock::$streamGetContentsReturnsFalse = true;
+        PhpStreamMock::$isStreamTimedOut = true;
+        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read stream contents: timed out');
+
+        try {
+            Psr7\Utils::tryGetContents($resource);
+        } finally {
+            fclose($resource);
+        }
+    }
+
+    public function testTryGetContentsThrowsTimeoutWhenPartialReadTimesOut(): void
+    {
+        PhpStreamMock::$streamGetContentsResult = 'partial';
+        PhpStreamMock::$isStreamTimedOut = true;
+        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
+
+        $this->expectException(Psr7\Exception\TimeoutException::class);
+        $this->expectExceptionMessage('Unable to read stream contents: timed out');
+
+        try {
+            Psr7\Utils::tryGetContents($resource);
+        } finally {
+            fclose($resource);
+        }
+    }
+
+    public function testTryGetContentsWrapsReadFailureWhenResourceTimedOut(): void
+    {
+        $previous = new \ErrorException('read failed');
+        PhpStreamMock::$streamGetContentsThrowable = $previous;
+        PhpStreamMock::$isStreamTimedOut = true;
+        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
+
+        try {
+            Psr7\Utils::tryGetContents($resource);
+            self::fail('Expected timeout exception.');
+        } catch (Psr7\Exception\TimeoutException $e) {
+            self::assertSame('Unable to read stream contents: timed out', $e->getMessage());
+            self::assertSame($previous, $e->getPrevious());
+        } finally {
+            fclose($resource);
+        }
     }
 
     public function testCreatesUriForValue(): void

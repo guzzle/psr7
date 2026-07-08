@@ -5,7 +5,7 @@
     colors="true"
     beStrictAboutOutputDuringTests="true"
     beStrictAboutTestsThatDoNotTestAnything="true"
-    bootstrap="vendor/autoload.php"
+    bootstrap="tests/bootstrap.php"
     convertDeprecationsToExceptions="true"
 >
     <testsuites>
