@@ -113,7 +113,11 @@ class Uri implements UriInterface, \JsonSerializable
             /** @var array{0:string, 1:string, 2:string, 3:string, 4:string, 5:string} $matches */
             $suffix = $matches[5];
 
-            if ($suffix !== '' && strpos(':/?#', $suffix[0]) === false) {
+            // After the bracketed host only an optional numeric port and/or a
+            // path, query, or fragment may follow. Anything else (for example
+            // `:80@evil` or `:80x`) would let parse_url() reinterpret a
+            // different host.
+            if (preg_match('%\A(?::[0-9]*)?(?:[/?#].*)?\z%s', $suffix) !== 1) {
                 return false;
             }
 

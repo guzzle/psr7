@@ -969,6 +969,9 @@ class UriTest extends TestCase
         yield 'control in network-path userinfo' => ["//u\x01@[::1]/", 'u%01', '//u%01@[::1]/'];
         yield 'space in password part' => ['http://user:pa ss@[::1]/', 'user:pa%20ss', 'http://user:pa%20ss@[::1]/'];
         yield 'percent-sequence preserved' => ['http://u%41@[::1]/', 'u%41', 'http://u%41@[::1]/'];
+        yield 'double-encoded percent preserved' => ['http://%2561@[::1]/', '%2561', 'http://%2561@[::1]/'];
+        yield 'plus preserved before IPv6' => ['http://user+name@[::1]/', 'user+name', 'http://user+name@[::1]/'];
+        yield 'plus preserved in password part' => ['http://user:p+ass@[::1]/', 'user:p+ass', 'http://user:p+ass@[::1]/'];
     }
 
     public function testParseRejectsInvalidUtf8UserinfoBeforeBracketedIpLiteral(): void
@@ -990,6 +993,48 @@ class UriTest extends TestCase
         $this->expectException(MalformedUriException::class);
 
         new Uri('http://[fe80::1%25eth0]/');
+    }
+
+    /**
+     * @dataProvider getInvalidBracketedIpLiteralSuffixes
+     */
+    public function testParseRejectsInvalidBracketedIpLiteralSuffix(string $input): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri($input);
+    }
+
+    public static function getInvalidBracketedIpLiteralSuffixes(): iterable
+    {
+        yield 'userinfo after port' => ['http://[::1]:80@evil/'];
+        yield 'userinfo after port with leading userinfo' => ['http://user@[::1]:80@evil/'];
+        yield 'userinfo after port on network path' => ['//[::1]:80@evil/'];
+        yield 'userinfo after empty port' => ['http://[::1]:@evil/'];
+        yield 'non-numeric port' => ['http://[::1]:80x/'];
+        yield 'trailing bytes without delimiter' => ['http://[::1]foo/'];
+    }
+
+    /**
+     * @dataProvider getValidBracketedIpLiteralSuffixes
+     */
+    public function testParsePreservesHostForValidBracketedIpLiteralSuffix(string $input): void
+    {
+        self::assertSame('[::1]', (new Uri($input))->getHost());
+    }
+
+    public static function getValidBracketedIpLiteralSuffixes(): iterable
+    {
+        yield 'no suffix' => ['x://[::1]'];
+        yield 'port' => ['x://[::1]:80'];
+        yield 'empty port' => ['x://[::1]:'];
+        yield 'path' => ['x://[::1]/path'];
+        yield 'query' => ['x://[::1]?q'];
+        yield 'fragment' => ['x://[::1]#f'];
+        yield 'port and path' => ['x://[::1]:80/path'];
+        yield 'port and query' => ['x://[::1]:80?q'];
+        yield 'port and fragment' => ['x://[::1]:80#f'];
+        yield 'port and path containing at sign' => ['x://[::1]:80/@evil'];
     }
 
     /**
