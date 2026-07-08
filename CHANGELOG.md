@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject zero-port, hostless, and userinfo absolute-form request targets in `Message::parseRequest()`
 - Synchronize the `Host` header in `Request::withUri()` when the URI changes or Host is empty
 - Include the URI port in `Host` headers synthesized by `Message::toString()`
+- Validate the Host header synthesized by `Message::toString()` from the request URI
 - Include non-default URI ports in `Host` headers set by `Utils::modifyRequest()` URI changes
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
 - Reject malformed HTTP request/response start-lines

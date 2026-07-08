@@ -73,6 +73,8 @@ final class Message
             return '';
         }
 
+        Uri::assertValidHost($host);
+
         if (($port = $uri->getPort()) !== null) {
             $host .= ':'.$port;
         }

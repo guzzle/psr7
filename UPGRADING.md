@@ -333,6 +333,12 @@ after calling `withUri()` or preserve a non-empty Host header explicitly.
 serializing a request without a `Host` header. Generated `Host` lines include
 non-null URI ports.
 
+`Message::toString()` also validates the host it synthesizes from the request
+URI and throws `InvalidArgumentException` for an invalid host, closing a header-
+injection vector. This affects only a custom `UriInterface` implementation that
+returns an invalid host when the request has no stored `Host` header; first-
+party `Uri` instances always carry a valid host and are unaffected.
+
 #### URI Paths and Request Targets
 
 `Uri::getPath()` now normalizes multiple leading slashes to one slash when

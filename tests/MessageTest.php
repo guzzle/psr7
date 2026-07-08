@@ -62,6 +62,42 @@ class MessageTest extends TestCase
         );
     }
 
+    public function testToStringRejectsCrlfHostSynthesizedFromUri(): void
+    {
+        $uri = new class('http://safe.example/') extends Psr7\Uri {
+            public function getHost(): string
+            {
+                return "a\r\nX-Injected: yes";
+            }
+        };
+        $request = (new Psr7\Request('GET', 'http://safe.example/', ['Host' => 'safe.example']))
+            ->withUri($uri, true)
+            ->withoutHeader('Host');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid host');
+
+        Psr7\Message::toString($request);
+    }
+
+    public function testToStringRejectsDelimiterHostSynthesizedFromUri(): void
+    {
+        $uri = new class('http://safe.example/') extends Psr7\Uri {
+            public function getHost(): string
+            {
+                return 'ex%2Fample.com';
+            }
+        };
+        $request = (new Psr7\Request('GET', 'http://safe.example/', ['Host' => 'safe.example']))
+            ->withUri($uri, true)
+            ->withoutHeader('Host');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid host');
+
+        Psr7\Message::toString($request);
+    }
+
     public function testConvertsResponsesToStrings(): void
     {
         $response = new Psr7\Response(200, [
