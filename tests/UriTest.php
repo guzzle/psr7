@@ -157,6 +157,48 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider getAmbiguousBracketedIpLiteralSuffixes
+     */
+    public function testParseRejectsAmbiguousBracketedIpLiteralSuffix(string $uri): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri($uri);
+    }
+
+    public static function getAmbiguousBracketedIpLiteralSuffixes(): iterable
+    {
+        yield 'userinfo after port' => ['http://[::1]:80@evil/'];
+        yield 'userinfo after empty port' => ['http://[::1]:@evil/'];
+        yield 'non-numeric port' => ['http://[::1]:80x/'];
+        yield 'trailing bytes' => ['http://[::1]foo/'];
+    }
+
+    public function testParseRejectsDelInBracketedIpLiteralHost(): void
+    {
+        $this->expectException(MalformedUriException::class);
+
+        new Uri("http://[v1.a\x7Fb]/");
+    }
+
+    /**
+     * @dataProvider getValidBracketedIpLiteralUris
+     */
+    public function testParsePreservesValidBracketedIpLiteral(string $uri, string $host): void
+    {
+        self::assertSame($host, (new Uri($uri))->getHost());
+    }
+
+    public static function getValidBracketedIpLiteralUris(): iterable
+    {
+        yield 'plain' => ['http://[::1]/', '[::1]'];
+        yield 'port + path + query + fragment' => ['http://[::1]:8080/x?q#f', '[::1]'];
+        yield 'userinfo' => ['http://user:pw@[::1]:80/a', '[::1]'];
+        yield 'empty port' => ['http://[::1]:', '[::1]'];
+        yield 'ipvfuture' => ['http://[v1.abc]/', '[v1.abc]'];
+    }
+
+    /**
      * @dataProvider getPathNoSchemeReferencesWithColonInLaterSegment
      */
     public function testParsesPathNoSchemeReferenceWithColonInLaterSegment(string $input, string $path, string $query = '', string $fragment = '', ?string $expectedString = null): void
