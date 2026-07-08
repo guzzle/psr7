@@ -358,6 +358,28 @@ class MessageTest extends TestCase
         self::assertSame('https://up.example//admin', (string) $request->getUri());
     }
 
+    /**
+     * @dataProvider validAbsoluteFormTargetProvider
+     */
+    public function testParseRequestAcceptsAbsoluteFormTarget(string $target, string $expectedHost, string $expectedUri): void
+    {
+        $request = Psr7\Message::parseRequest("GET {$target} HTTP/1.1\r\n\r\n");
+
+        self::assertSame($target, $request->getRequestTarget());
+        self::assertSame($expectedHost, $request->getHeaderLine('Host'));
+        self::assertSame($expectedUri, (string) $request->getUri());
+    }
+
+    public static function validAbsoluteFormTargetProvider(): iterable
+    {
+        yield 'non-default port' => ['http://up.example:8080/admin', 'up.example:8080', 'http://up.example:8080/admin'];
+        yield 'ipv6 non-default port' => ['http://[::1]:8080/admin?x=1', '[::1]:8080', 'http://[::1]:8080/admin?x=1'];
+        yield 'path at-sign' => ['http://up.example/admin@v1', 'up.example', 'http://up.example/admin@v1'];
+        yield 'query at-sign' => ['http://up.example?email=user@example.com', 'up.example', 'http://up.example?email=user@example.com'];
+        yield 'percent-encoded authority delimiters in host' => ['http://user%3Apass%40example.com/admin', 'user%3Apass%40example.com', 'http://user%3Apass%40example.com/admin'];
+        yield 'empty port' => ['http://up.example:/admin', 'up.example', 'http://up.example/admin'];
+    }
+
     public function testParsesOptionsAsteriskFormRequestTarget(): void
     {
         $req = "OPTIONS * HTTP/1.1\r\nHost: foo.com\r\n\r\n";
@@ -570,6 +592,17 @@ class MessageTest extends TestCase
         yield 'connect user info' => ['CONNECT user@up.example:443 HTTP/1.1'];
         yield 'connect path' => ['CONNECT up.example:443/ HTTP/1.1'];
         yield 'connect query' => ['CONNECT up.example:443?x=1 HTTP/1.1'];
+        yield 'absolute-form zero port' => ['GET http://up.example:0/admin HTTP/1.1'];
+        yield 'absolute-form ipv6 zero port' => ['GET http://[::1]:0/admin HTTP/1.1'];
+        yield 'absolute-form zero padded zero port' => ['GET http://up.example:0000/admin HTTP/1.1'];
+        yield 'absolute-form missing host' => ['GET file:///etc/passwd HTTP/1.1'];
+        yield 'absolute-form user info' => ['GET http://user:pass@up.example/admin HTTP/1.1'];
+        yield 'absolute-form authority-obscuring user info' => ['GET http://trusted.example@evil.example/admin HTTP/1.1'];
+        yield 'absolute-form empty user info' => ['GET http://@up.example/admin HTTP/1.1'];
+        yield 'absolute-form double at user info' => ['GET http://a@b@up.example/admin HTTP/1.1'];
+        yield 'absolute-form ipv6 user info' => ['GET http://u@[::1]:8080/admin HTTP/1.1'];
+        yield 'absolute-form user info zero port' => ['GET http://u@up.example:0/admin HTTP/1.1'];
+        yield 'absolute-form non-http user info' => ['GET ftp://u:p@files.example/x HTTP/1.1'];
         yield 'invalid protocol text' => ['GET / HTTP/foo'];
         yield 'invalid protocol segments' => ['GET / HTTP/1.1.1'];
         yield 'bare carriage return after version' => ["GET / HTTP/1.1\rX-Injected: yes"];

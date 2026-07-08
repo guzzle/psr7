@@ -278,6 +278,21 @@ For server globals, applications that need to reject malformed inbound `Host`
 headers should validate the original server parameters before calling
 `getUriFromGlobals()` or inspect them afterward.
 
+`Message::parseRequest()` now applies the same HTTP authority validation to
+absolute-form request targets. A zero or padded-zero port
+(`http://example.com:0/admin`) is rejected instead of producing a request
+whose synthesized `Host` header the same parser rejects elsewhere.
+Absolute-form targets with no URI host, such as `file:///etc/passwd`, are
+also rejected instead of producing a hostless request URI.
+
+Absolute-form targets whose authority contains userinfo are also rejected,
+including empty userinfo such as `http://@example.com/`. RFC 9110 deprecates
+userinfo in http(s) target URIs and directs recipients to treat its presence
+as an error; `Host` headers and CONNECT targets already reject it. These
+rules apply to absolute-form targets of every scheme.
+`ServerRequest::fromGlobals()` is unchanged and continues to strip
+`REQUEST_URI` userinfo.
+
 #### Request Host Synchronization
 
 `Request::withUri()` now applies PSR-7 Host header synchronization before using
@@ -410,6 +425,9 @@ hydrated, such as the `SERVER_PROTOCOL` value `INCLUDED` that Apache sets for
 server-side include subrequests, now throw `InvalidArgumentException`. Sanitize
 `$_SERVER` before calling `fromGlobals()` if such environments must be
 tolerated.
+
+`Request::withRequestTarget('')` throws `InvalidArgumentException`; omit the
+explicit request target to derive `/` or the URI-derived target automatically.
 
 #### Query Builder Values
 

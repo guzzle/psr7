@@ -426,10 +426,11 @@ final class Message
             );
         }
 
-        if (Rfc9112::isAbsoluteFormRequestTarget($matches['target'])) {
+        $absoluteFormUri = self::parseAbsoluteFormRequestTarget($matches['target']);
+        if ($absoluteFormUri !== null) {
             return (new Request(
                 $matches['method'],
-                $matches['target'],
+                $absoluteFormUri,
                 $data['headers'],
                 $data['body'],
                 $matches['version']
@@ -458,6 +459,41 @@ final class Message
         }
 
         throw new \InvalidArgumentException('Invalid request string');
+    }
+
+    private static function parseAbsoluteFormRequestTarget(string $target): ?Uri
+    {
+        if (!Rfc9112::isAbsoluteFormRequestTarget($target)) {
+            return null;
+        }
+
+        $authority = substr($target, strpos($target, '//') + 2);
+        $authority = substr($authority, 0, strcspn($authority, '/?#'));
+
+        // RFC 9110 deprecates userinfo in message target URIs and directs
+        // recipients to treat its presence as an error, since it can obscure
+        // the authority. Host headers and CONNECT targets already reject it.
+        if (str_contains($authority, '@')) {
+            return null;
+        }
+
+        try {
+            $uri = new Uri($target);
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
+
+        if ($uri->getHost() === '') {
+            return null;
+        }
+
+        try {
+            self::parseHostHeaderAuthority(self::composeAuthority($uri->getHost(), $uri->getPort()));
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
+
+        return $uri;
     }
 
     private static function parseConnectAuthorityFormRequestTarget(string $method, string $target): ?Uri
