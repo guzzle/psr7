@@ -1,15 +1,19 @@
 # URI Helpers
 
-This page covers this package's `Psr\Http\Message\UriInterface` implementation and URI helper classes for classifying, composing, resolving, normalizing, comparing, and safely modifying URIs.
+This page covers this package's `Psr\Http\Message\UriInterface` implementation
+and URI helper classes for classifying, composing, resolving, normalizing,
+comparing, and safely modifying URIs.
 
-Aside from the standard `Psr\Http\Message\UriInterface` implementation provided by the `GuzzleHttp\Psr7\Uri` class,
-this library also provides additional static methods for working with URIs.
+Aside from the standard `Psr\Http\Message\UriInterface` implementation provided
+by the `GuzzleHttp\Psr7\Uri` class, this library also provides additional static
+methods for working with URIs.
 
 ## URI Types
 
-An instance of `Psr\Http\Message\UriInterface` can either be an absolute URI or a relative reference.
-An absolute URI has a scheme. A relative reference is used to express a URI relative to another URI,
-the base URI. Relative references can be divided into several forms according to
+An instance of `Psr\Http\Message\UriInterface` can either be an absolute URI or
+a relative reference. An absolute URI has a scheme. A relative reference is used
+to express a URI relative to another URI, the base URI. Relative references can
+be divided into several forms according to
 [RFC 3986 Section 4.2](https://datatracker.ietf.org/doc/html/rfc3986#section-4.2):
 
 - network-path references, e.g. `//example.com/path`
@@ -28,35 +32,37 @@ Whether the URI is absolute, i.e. it has a scheme.
 
 `public static function isNetworkPathReference(UriInterface $uri): bool`
 
-Whether the URI is a network-path reference. A relative reference that begins with two slash characters is
-termed a network-path reference.
+Whether the URI is a network-path reference. A relative reference that begins
+with two slash characters is termed a network-path reference.
 
 ### `GuzzleHttp\Psr7\Uri::isAbsolutePathReference`
 
 `public static function isAbsolutePathReference(UriInterface $uri): bool`
 
-Whether the URI is an absolute-path reference. A relative reference that begins with a single slash character is
-termed an absolute-path reference.
+Whether the URI is an absolute-path reference. A relative reference that begins
+with a single slash character is termed an absolute-path reference.
 
 ### `GuzzleHttp\Psr7\Uri::isRelativePathReference`
 
 `public static function isRelativePathReference(UriInterface $uri): bool`
 
-Whether the URI is a relative-path reference. A relative reference that does not begin with a slash character is
-termed a relative-path reference.
+Whether the URI is a relative-path reference. A relative reference that does not
+begin with a slash character is termed a relative-path reference.
 
 ### `GuzzleHttp\Psr7\Uri::isSameDocumentReference`
 
 `public static function isSameDocumentReference(UriInterface $uri, ?UriInterface $base = null): bool`
 
-Whether the URI is a same-document reference. A same-document reference refers to a URI that is, aside from its
-fragment component, identical to the base URI. When no base URI is given, only an empty URI reference
-(apart from its fragment) is considered a same-document reference.
+Whether the URI is a same-document reference. A same-document reference refers
+to a URI that is, aside from its fragment component, identical to the base URI.
+When no base URI is given, only an empty URI reference (apart from its fragment)
+is considered a same-document reference.
 
 ## URI Syntax Validation
 
-`GuzzleHttp\Psr7\Rfc3986` provides static methods for validating individual URI components against the
-grammar defined by [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986). They operate on raw
+`GuzzleHttp\Psr7\Rfc3986` provides static methods for validating individual URI
+components against the grammar defined by
+[RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986). They operate on raw
 component strings rather than on `Psr\Http\Message\UriInterface` instances.
 
 ### `GuzzleHttp\Psr7\Rfc3986::isValidScheme`
@@ -64,39 +70,47 @@ component strings rather than on `Psr\Http\Message\UriInterface` instances.
 `public static function isValidScheme(string $scheme): bool`
 
 Whether the string is a valid URI scheme. Per
-[RFC 3986 Section 3.1](https://datatracker.ietf.org/doc/html/rfc3986#section-3.1), a scheme must start
-with a letter, followed by any number of letters, digits, `+`, `-`, or `.`. The empty string is also
-accepted, since a URI reference may omit the scheme.
+[RFC 3986 Section 3.1](https://datatracker.ietf.org/doc/html/rfc3986#section-3.1),
+a scheme must start with a letter, followed by any number of letters, digits,
+`+`, `-`, or `.`. The empty string is also accepted, since a URI reference may
+omit the scheme.
 
 ### `GuzzleHttp\Psr7\Rfc3986::isValidHost`
 
 `public static function isValidHost(string $host): bool`
 
 Whether the string is a valid URI host. Per
-[RFC 3986 Section 3.2.2](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2), the host is an
-IP-literal, IPv4 address, or registered name. An empty host is accepted, since the authority, and thus the
-host, may be empty. Bracketed values are validated as IPv6 or IPvFuture literals; any other value is
-rejected if it contains control characters, whitespace, an authority or path delimiter (`/`, `?`, `#`, `@`,
-`\`), or an embedded colon denoting a port. Percent-encoding is validated the same way: malformed sequences
-(a `%` not followed by two hex digits) and percent-encoded octets that decode to one of the rejected bytes,
-to a bracket (`[`, `]`), or to `%` itself are invalid, while all other percent-encoded octets are accepted.
-Rejecting these percent-encoded octets is a deliberate guzzle host policy, stricter than the RFC 3986
-`reg-name` grammar, which permits any well-formed `pct-encoded` octet; it matches the stricter policy used
-throughout the library. RFC 6874 IPv6 zone identifiers (for example `[fe80::1%25eth0]`) are not supported.
+[RFC 3986 Section 3.2.2](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2),
+the host is an IP-literal, IPv4 address, or registered name. An empty host is
+accepted, since the authority, and thus the host, may be empty. Bracketed values
+are validated as IPv6 or IPvFuture literals; any other value is rejected if it
+contains control characters, whitespace, an authority or path delimiter (`/`,
+`?`, `#`, `@`, `\`), or an embedded colon denoting a port. Percent-encoding is
+validated the same way: malformed sequences (a `%` not followed by two hex
+digits) and percent-encoded octets that decode to one of the rejected bytes, to
+a bracket (`[`, `]`), or to `%` itself are invalid, while all other
+percent-encoded octets are accepted. Rejecting these percent-encoded octets is a
+deliberate guzzle host policy, stricter than the RFC 3986 `reg-name` grammar,
+which permits any well-formed `pct-encoded` octet; it matches the stricter
+policy used throughout the library. RFC 6874 IPv6 zone identifiers (for example
+`[fe80::1%25eth0]`) are not supported.
 
-Registered names are otherwise intentionally permissive: single-label hosts such as `localhost`,
-underscores, sub-delims, and raw or percent-encoded non-ASCII (IDN) data are accepted and preserved as
-given, with no punycode conversion. IDNA is treated as a client concern. Consumers that need DNS IDNs must
-perform the conversion themselves, for example via Guzzle's `idn_conversion` request option.
+Registered names are otherwise intentionally permissive: single-label hosts such
+as `localhost`, underscores, sub-delims, and raw or percent-encoded non-ASCII
+(IDN) data are accepted and preserved as given, with no punycode conversion.
+IDNA is treated as a client concern. Consumers that need DNS IDNs must perform
+the conversion themselves, for example via Guzzle's `idn_conversion` request
+option.
 
 ### `GuzzleHttp\Psr7\Rfc3986::isValidPort`
 
 `public static function isValidPort(string $port): bool`
 
-Whether the string is a valid port number. RFC 3986 defines the port as `*DIGIT`, which also permits an
-empty port and has no upper bound; this applies the stricter policy used throughout the library instead,
-accepting a non-empty run of digits (leading zeros are accepted and normalized) that resolves to a value
-in the range 0-65535.
+Whether the string is a valid port number. RFC 3986 defines the port as
+`*DIGIT`, which also permits an empty port and has no upper bound; this applies
+the stricter policy used throughout the library instead, accepting a non-empty
+run of digits (leading zeros are accepted and normalized) that resolves to a
+value in the range 0-65535.
 
 ## URI Components
 
@@ -106,65 +120,89 @@ Additional methods to work with URI components.
 
 `public static function isDefaultPort(UriInterface $uri): bool`
 
-Whether the URI has the default port of the current scheme. `Psr\Http\Message\UriInterface::getPort` may return null
-or the standard port. This method can be used independently of the implementation.
+Whether the URI has the default port of the current scheme.
+`Psr\Http\Message\UriInterface::getPort` may return null or the standard port.
+This method can be used independently of the implementation.
 
 ### `GuzzleHttp\Psr7\Uri::composeComponents`
 
-`public static function composeComponents($scheme, $authority, $path, $query, $fragment): string`
+`public static function composeComponents(?string $scheme, ?string $authority, string $path, ?string $query, ?string $fragment): string`
 
 Composes a URI reference string from its various components according to
-[RFC 3986 Section 5.3](https://datatracker.ietf.org/doc/html/rfc3986#section-5.3). Usually this method does not need
-to be called manually but instead is used indirectly via `Psr\Http\Message\UriInterface::__toString`.
+[RFC 3986 Section 5.3](https://datatracker.ietf.org/doc/html/rfc3986#section-5.3).
+Usually this method does not need to be called manually but instead is used
+indirectly via `Psr\Http\Message\UriInterface::__toString`.
+
+PSR-7 UriInterface treats an empty component the same as a missing component as
+`getQuery()`, `getFragment()` etc. always return a string. This explains the
+slight difference to RFC 3986 Section 5.3.
+
+Another adjustment is that the authority separator is added even when the
+authority is missing/empty for the "file" scheme. This is because PHP stream
+functions like `file_get_contents` only work with `file:///myfile` but not with
+`file:/myfile` although they are equivalent according to RFC 3986. But
+`file:///` is the more common syntax for the file scheme anyway (Chrome for
+example redirects to that format). The separator is omitted when such a URI has
+a rootless or empty path: adding it would turn the first path segment into the
+authority of the composed URI, or compose the string `file://`, which cannot be
+parsed back into a URI.
 
 ### `GuzzleHttp\Psr7\Uri::fromParts`
 
 `public static function fromParts(array $parts): UriInterface`
 
-Creates a URI from a hash of [`parse_url`](https://www.php.net/manual/en/function.parse-url.php) components.
-
+Creates a URI from a hash of
+[`parse_url`](https://www.php.net/manual/en/function.parse-url.php) components.
 
 ### `GuzzleHttp\Psr7\Uri::withQueryValue`
 
-`public static function withQueryValue(UriInterface $uri, $key, $value): UriInterface`
+`public static function withQueryValue(UriInterface $uri, string $key, ?string $value): UriInterface`
 
-Creates a new URI with a specific query string value. Any existing query string values that exactly match the
-provided key are removed and replaced with the given key value pair. A value of null will set the query string
-key without a value, e.g. "key" instead of "key=value".
+Creates a new URI with a specific query string value. Any existing query string
+values that exactly match the provided key are removed and replaced with the
+given key value pair. A value of null will set the query string key without a
+value, e.g. "key" instead of "key=value".
 
 ### `GuzzleHttp\Psr7\Uri::withQueryValues`
 
 `public static function withQueryValues(UriInterface $uri, array $keyValueArray): UriInterface`
 
-Creates a new URI with multiple query string values. It has the same behavior as `withQueryValue()` but for an
-associative array of key => value.
+Creates a new URI with multiple query string values. It has the same behavior as
+`withQueryValue()` but for an associative array of key => value.
 
 ### `GuzzleHttp\Psr7\Uri::withoutQueryValue`
 
-`public static function withoutQueryValue(UriInterface $uri, $key): UriInterface`
+`public static function withoutQueryValue(UriInterface $uri, string $key): UriInterface`
 
-Creates a new URI with a specific query string value removed. Any existing query string values that exactly match the
-provided key are removed.
+Creates a new URI with a specific query string value removed. Any existing query
+string values that exactly match the provided key are removed.
 
 ## Cross-Origin Detection
 
-`GuzzleHttp\Psr7\UriComparator` provides methods to determine if a modified URI should be considered cross-origin.
+`GuzzleHttp\Psr7\UriComparator` provides methods to determine if a modified URI
+should be considered cross-origin.
 
 ### `GuzzleHttp\Psr7\UriComparator::isCrossOrigin`
 
 `public static function isCrossOrigin(UriInterface $original, UriInterface $modified): bool`
 
-Determines if a modified URI should be considered cross-origin with respect to an original URI.
+Determines if a modified URI should be considered cross-origin with respect to
+an original URI.
 
-Two URIs are cross-origin when their scheme, host, or effective port differ. Host comparison is case-insensitive, and missing ports use the default port for `http` or `https`. Other schemes do not receive implicit default ports.
+Two URIs are cross-origin when their scheme, host, or effective port differ.
+Host comparison is case-insensitive, and missing ports use the default port for
+`http` or `https`. Other schemes do not receive implicit default ports.
 
-This helper only compares URI origins. It does not implement redirect handling or credential policy.
+This helper only compares URI origins. It does not implement redirect handling
+or credential policy.
 
 ## Reference Resolution
 
-`GuzzleHttp\Psr7\UriResolver` provides methods to resolve a URI reference in the context of a base URI according
-to [RFC 3986 Section 5](https://datatracker.ietf.org/doc/html/rfc3986#section-5). This is also what web
-browsers do when resolving a link in a document based on the current request URI.
+`GuzzleHttp\Psr7\UriResolver` provides methods to resolve a URI reference in the
+context of a base URI according to
+[RFC 3986 Section 5](https://datatracker.ietf.org/doc/html/rfc3986#section-5).
+This is also what web browsers do when resolving a link in a document based on
+the current request URI.
 
 ### `GuzzleHttp\Psr7\UriResolver::resolve`
 
@@ -179,18 +217,26 @@ Converts the relative URI into a new URI that is resolved against the base URI.
 Removes dot segments from a path and returns the new path according to
 [RFC 3986 Section 5.2.4](https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.4).
 
+Excess `..` segments above the root of an absolute path are dropped without
+consuming the root, so the result can begin with `//` (e.g. `/..//a` becomes
+`//a`). Such a path is not valid for a URI without an authority (RFC 3986
+Section 3.3); `resolve()` and `UriNormalizer::normalize()` serialize it with a
+`/.` prefix in that case, like the WHATWG URL Standard.
+
 ### `GuzzleHttp\Psr7\UriResolver::relativize`
 
 `public static function relativize(UriInterface $base, UriInterface $target): UriInterface`
 
-Returns the target URI as a relative reference from the base URI. This method is the counterpart to `resolve()`:
+Returns the target URI as a relative reference from the base URI. This method is
+the counterpart to `resolve()`:
 
 ```php
 (string) $target === (string) UriResolver::resolve($base, UriResolver::relativize($base, $target))
 ```
 
-One use case is to use the current request URI as the base URI and then generate relative links in your documents
-to reduce the document size or offer self-contained downloadable document archives.
+One use case is to use the current request URI as the base URI and then generate
+relative links in your documents to reduce the document size or offer
+self-contained downloadable document archives.
 
 ```php
 $base = new Uri('http://example.com/a/b/');
@@ -201,18 +247,35 @@ echo UriResolver::relativize($base, new Uri('http://example.org/a/b/'));   // pr
 echo UriResolver::relativize($base, new Uri('http://example.com'));         // prints '//example.com'.
 ```
 
+This method also accepts a target that is already relative and will try to
+relativize it further. Only a relative-path reference will be returned as-is.
+
+```php
+echo UriResolver::relativize($base, new Uri('/a/b/c'));  // prints 'c' as well
+```
+
 ## Normalization and Comparison
 
-`GuzzleHttp\Psr7\UriNormalizer` provides methods to normalize and compare URIs according to
+`GuzzleHttp\Psr7\UriNormalizer` provides methods to normalize and compare URIs
+according to
 [RFC 3986 Section 6](https://datatracker.ietf.org/doc/html/rfc3986#section-6).
 
 ### `GuzzleHttp\Psr7\UriNormalizer::normalize`
 
-`public static function normalize(UriInterface $uri, $flags = self::PRESERVING_NORMALIZATIONS): UriInterface`
+`public static function normalize(UriInterface $uri, int $flags = self::PRESERVING_NORMALIZATIONS): UriInterface`
 
-Returns a normalized URI. The scheme and host component are already normalized to lowercase per PSR-7 UriInterface.
-This method adds additional normalizations that can be configured with the `$flags` parameter, which is a bitmask
-of normalizations to apply. The following normalizations are available:
+Returns a normalized URI. The scheme and host component are already normalized
+to lowercase per PSR-7 UriInterface. This method adds additional normalizations
+that can be configured with the `$flags` parameter, which is a bitmask of
+normalizations to apply.
+
+PSR-7 UriInterface cannot distinguish between an empty component and a missing
+component as `getQuery()`, `getFragment()` etc. always return a string. This
+means the URIs `/?#` and `/` are treated equivalent which is not necessarily
+true according to RFC 3986. But that difference is highly uncommon in reality.
+So this potential normalization is implied in PSR-7 as well.
+
+The following normalizations are available:
 
 - `UriNormalizer::PRESERVING_NORMALIZATIONS`
 
@@ -220,16 +283,18 @@ of normalizations to apply. The following normalizations are available:
 
 - `UriNormalizer::CAPITALIZE_PERCENT_ENCODING`
 
-    All letters within a percent-encoding triplet (e.g., "%3A") are case-insensitive, and should be capitalized.
+    All letters within a percent-encoding triplet (e.g., "%3A") are
+    case-insensitive, and should be capitalized.
 
     Example: `http://example.org/a%c2%b1b` → `http://example.org/a%C2%B1b`
 
 - `UriNormalizer::DECODE_UNRESERVED_CHARACTERS`
 
-    Decodes percent-encoded octets of unreserved characters. For consistency, percent-encoded octets in the ranges of
-    ALPHA (%41–%5A and %61–%7A), DIGIT (%30–%39), hyphen (%2D), period (%2E), underscore (%5F), or tilde (%7E) should
-    not be created by URI producers and, when found in a URI, should be decoded to their corresponding unreserved
-    characters by URI normalizers.
+    Decodes percent-encoded octets of unreserved characters. For consistency,
+    percent-encoded octets in the ranges of ALPHA (%41–%5A and %61–%7A), DIGIT
+    (%30–%39), hyphen (%2D), period (%2E), underscore (%5F), or tilde (%7E)
+    should not be created by URI producers and, when found in a URI, should be
+    decoded to their corresponding unreserved characters by URI normalizers.
 
     Example: `http://example.org/%7Eusern%61me/` → `http://example.org/~username/`
 
@@ -241,8 +306,9 @@ of normalizations to apply. The following normalizations are available:
 
 - `UriNormalizer::REMOVE_DEFAULT_HOST`
 
-    Removes the default host of the given URI scheme from the URI. Only the "file" scheme defines the default host
-    "localhost". All of `file:/myfile`, `file:///myfile`, and `file://localhost/myfile` are equivalent according to
+    Removes the default host of the given URI scheme from the URI. Only the
+    "file" scheme defines the default host "localhost". All of `file:/myfile`,
+    `file:///myfile`, and `file://localhost/myfile` are equivalent according to
     RFC 3986.
 
     Example: `file://localhost/myfile` → `file:///myfile`
@@ -255,35 +321,39 @@ of normalizations to apply. The following normalizations are available:
 
 - `UriNormalizer::REMOVE_DOT_SEGMENTS`
 
-    Removes unnecessary dot-segments. Dot-segments in relative-path references are not removed as it would
-    change the semantics of the URI reference.
+    Removes unnecessary dot-segments. Dot-segments in relative-path references
+    are not removed as it would change the semantics of the URI reference.
 
     Example: `http://example.org/../a/b/../c/./d.html` → `http://example.org/a/c/d.html`
 
 - `UriNormalizer::REMOVE_DUPLICATE_SLASHES`
 
-    Paths which include two or more adjacent slashes are converted to one. Webservers usually ignore duplicate slashes
-    and treat those URIs equivalent. But in theory those URIs do not need to be equivalent. So this normalization
+    Paths which include two or more adjacent slashes are converted to one.
+    Webservers usually ignore duplicate slashes and treat those URIs equivalent.
+    But in theory those URIs do not need to be equivalent. So this normalization
     may change the semantics. Encoded slashes (%2F) are not removed.
 
     Example: `http://example.org//foo///bar.html` → `http://example.org/foo/bar.html`
 
 - `UriNormalizer::SORT_QUERY_PARAMETERS`
 
-    Sort query parameters with their values in alphabetical order. However, the order of parameters in a URI may be
-    significant (this is not defined by the standard). So this normalization is not safe and may change the semantics
-    of the URI.
+    Sort query parameters with their values in alphabetical order. However, the
+    order of parameters in a URI may be significant (this is not defined by the
+    standard). So this normalization is not safe and may change the semantics of
+    the URI.
 
     Example: `?lang=en&article=fred` → `?article=fred&lang=en`
 
 ### `GuzzleHttp\Psr7\UriNormalizer::isEquivalent`
 
-`public static function isEquivalent(UriInterface $uri1, UriInterface $uri2, $normalizations = self::PRESERVING_NORMALIZATIONS): bool`
+`public static function isEquivalent(UriInterface $uri1, UriInterface $uri2, int $normalizations = self::PRESERVING_NORMALIZATIONS): bool`
 
-Whether two URIs can be considered equivalent. Both URIs are normalized automatically before comparison with the given
-`$normalizations` bitmask. The method also accepts relative URI references and returns true when they are equivalent.
-This of course assumes they will be resolved against the same base URI. If this is not the case, determination of
-equivalence or difference of relative references does not mean anything.
+Whether two URIs can be considered equivalent. Both URIs are normalized
+automatically before comparison with the given `$normalizations` bitmask. The
+method also accepts relative URI references and returns true when they are
+equivalent. This of course assumes they will be resolved against the same base
+URI. If this is not the case, determination of equivalence or difference of
+relative references does not mean anything.
 
 ## Related
 

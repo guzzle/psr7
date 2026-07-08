@@ -1,6 +1,9 @@
 # URI and MIME Helpers
 
-This page covers small helper methods for redacting URI user info, converting values into URI objects, and resolving MIME types from filenames or extensions. For URI resolution, normalization, and comparison helpers, see [URI Helpers](uri-helpers.md).
+This page covers small helper methods for redacting URI user info, converting
+values into URI objects, and resolving MIME types from filenames or extensions.
+For URI resolution, normalization, and comparison helpers, see
+[URI Helpers](uri-helpers.md).
 
 ## `GuzzleHttp\Psr7\Utils::redactUserInfo`
 
@@ -14,7 +17,9 @@ Redact the user info part of a URI.
 
 Returns a `UriInterface` for the given value.
 
-This function accepts a string or `UriInterface` and returns a `UriInterface` for the given value. If the value is already a `UriInterface`, it is returned as-is.
+This function accepts a string or `UriInterface` and returns a `UriInterface`
+for the given value. If the value is already a `UriInterface`, it is returned
+as-is.
 
 ## `GuzzleHttp\Psr7\MimeType::fromFilename`
 

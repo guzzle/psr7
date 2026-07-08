@@ -16,13 +16,15 @@ use Psr\Http\Message\UriInterface;
 final class UriResolver
 {
     /**
-     * Removes dot segments from a path and returns the new path.
+     * Removes dot segments from a path and returns the new path according to
+     * RFC 3986 Section 5.2.4.
      *
-     * Excess ".." segments above the root of an absolute path are dropped without
-     * consuming the root, so the result can begin with "//" (e.g. "/..//a" becomes
-     * "//a"). Such a path is not valid for a URI without an authority (RFC 3986
-     * Section 3.3); resolve() and UriNormalizer::normalize() serialize it with a
-     * "/." prefix in that case, like the WHATWG URL Standard.
+     * Excess `..` segments above the root of an absolute path are dropped
+     * without consuming the root, so the result can begin with `//` (e.g.
+     * `/..//a` becomes `//a`). Such a path is not valid for a URI without an
+     * authority (RFC 3986 Section 3.3); `resolve()` and
+     * `UriNormalizer::normalize()` serialize it with a `/.` prefix in that
+     * case, like the WHATWG URL Standard.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.4
      */
@@ -63,15 +65,16 @@ final class UriResolver
     }
 
     /**
-     * Returns the path, prefixed with "/." when it would otherwise start the URI's
-     * string form with an authority-like "//".
+     * Returns the path, prefixed with "/." when it would otherwise start the
+     * URI's string form with an authority-like "//".
      *
-     * A URI without an authority cannot hold a path beginning with "//" (RFC 3986
-     * Section 3.3), but removeDotSegments() can produce one. The "/." prefix
-     * serializes such a path unambiguously, the same way the WHATWG URL Standard
-     * does, and resolves back to the same path. Hostless http and https Uri
-     * instances gain the default localhost host when the path is written, so the
-     * path cannot be mistaken for an authority and the prefix is not added.
+     * A URI without an authority cannot hold a path beginning with "//" (RFC
+     * 3986 Section 3.3), but removeDotSegments() can produce one. The "/."
+     * prefix serializes such a path unambiguously, the same way the WHATWG URL
+     * Standard does, and resolves back to the same path. Hostless http and
+     * https Uri instances gain the default localhost host when the path is
+     * written, so the path cannot be mistaken for an authority and the prefix
+     * is not added.
      *
      * @see https://url.spec.whatwg.org/#url-serializing
      *
@@ -91,7 +94,8 @@ final class UriResolver
     }
 
     /**
-     * Converts the relative URI into a new URI that is resolved against the base URI.
+     * Converts the relative URI into a new URI that is resolved against the
+     * base URI.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2
      */
@@ -148,12 +152,13 @@ final class UriResolver
     /**
      * Returns the target URI as a relative reference from the base URI.
      *
-     * This method is the counterpart to resolve():
+     * This method is the counterpart to `resolve()`:
      *
      *    (string) $target === (string) UriResolver::resolve($base, UriResolver::relativize($base, $target))
      *
-     * One use-case is to use the current request URI as base URI and then generate relative links in your documents
-     * to reduce the document size or offer self-contained downloadable document archives.
+     * One use case is to use the current request URI as the base URI and then
+     * generate relative links in your documents to reduce the document size or
+     * offer self-contained downloadable document archives.
      *
      *    $base = new Uri('http://example.com/a/b/');
      *    echo UriResolver::relativize($base, new Uri('http://example.com/a/b/c'));  // prints 'c'.
@@ -162,8 +167,9 @@ final class UriResolver
      *    echo UriResolver::relativize($base, new Uri('http://example.org/a/b/'));   // prints '//example.org/a/b/'.
      *    echo UriResolver::relativize($base, new Uri('http://example.com'));         // prints '//example.com'.
      *
-     * This method also accepts a target that is already relative and will try to relativize it further. Only a
-     * relative-path reference will be returned as-is.
+     * This method also accepts a target that is already relative and will try
+     * to relativize it further. Only a relative-path reference will be returned
+     * as-is.
      *
      *    echo UriResolver::relativize($base, new Uri('/a/b/c'));  // prints 'c' as well
      */

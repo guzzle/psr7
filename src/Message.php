@@ -21,7 +21,8 @@ final class Message
     private const REQUEST_METHOD_TOKEN = '[!#$%&\'*+.^_`|~0-9A-Za-z-]+';
 
     /**
-     * Request-target bytes accepted by the start-line parser (no CTL, SP, or DEL), for use in a regex.
+     * Request-target bytes accepted by the start-line parser (no CTL, SP, or
+     * DEL), for use in a regex.
      */
     private const REQUEST_TARGET_CHARS = '[^\x00-\x20\x7F]+';
 
@@ -84,8 +85,12 @@ final class Message
      *
      * Will return `null` if the response is not printable.
      *
+     * Reads seekable bodies from the beginning and restores the original cursor
+     * position before returning. Pass `null` for `$truncateAt` to use the
+     * default summary length.
+     *
      * @param MessageInterface $message    The message to get the body summary
-     * @param int|null         $truncateAt The maximum allowed size of the summary
+     * @param int|null         $truncateAt Maximum allowed size of the summary
      */
     public static function bodySummary(MessageInterface $message, ?int $truncateAt = null): ?string
     {
@@ -205,9 +210,9 @@ final class Message
     /**
      * Parses an HTTP message into an associative array.
      *
-     * The array contains the "start-line" key containing the start line of
-     * the message, "headers" key containing an associative array of header
-     * array values, and a "body" key containing the body of the message.
+     * The array contains the `start-line` key containing the start line of the
+     * message, `headers` key containing an associative array of header array
+     * values, and a `body` key containing the body of the message.
      *
      * @param string $message HTTP request or response to parse.
      */
@@ -300,6 +305,13 @@ final class Message
 
     /**
      * Constructs a URI for an HTTP request message.
+     *
+     * The URI is composed from the start-line path and the `Host` header, using
+     * `https` when the host's port is `443` and `http` otherwise. Without a
+     * `Host` header, only the path is returned, with extra leading slashes
+     * collapsed so an origin-form target cannot be parsed as a network-path
+     * reference with its own authority. An `InvalidArgumentException` is thrown
+     * when the `Host` header is invalid.
      *
      * @param string $path    Path from the start-line
      * @param array  $headers Array of headers (each value an array).
@@ -413,6 +425,12 @@ final class Message
 
     /**
      * Parses a request message string into a request object.
+     *
+     * The request-target must be in origin form, absolute form (without a
+     * userinfo component), authority form (`CONNECT`), or asterisk form
+     * (`OPTIONS`), and any `Host` header must be a single valid value;
+     * otherwise an `InvalidArgumentException` is thrown. Non-origin-form
+     * targets are preserved on the returned request via `withRequestTarget()`.
      *
      * @param string $message Request message string.
      */

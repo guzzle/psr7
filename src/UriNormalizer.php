@@ -16,7 +16,8 @@ use Psr\Http\Message\UriInterface;
 final class UriNormalizer
 {
     /**
-     * Default normalizations which only include the ones that preserve semantics.
+     * Default normalizations which only include the ones that preserve
+     * semantics.
      */
     public const PRESERVING_NORMALIZATIONS =
         self::CAPITALIZE_PERCENT_ENCODING |
@@ -27,7 +28,8 @@ final class UriNormalizer
         self::REMOVE_DOT_SEGMENTS;
 
     /**
-     * All letters within a percent-encoding triplet (e.g., "%3A") are case-insensitive, and should be capitalized.
+     * All letters within a percent-encoding triplet (e.g., "%3A") are
+     * case-insensitive, and should be capitalized.
      *
      * Example: http://example.org/a%c2%b1b → http://example.org/a%C2%B1b
      */
@@ -36,9 +38,11 @@ final class UriNormalizer
     /**
      * Decodes percent-encoded octets of unreserved characters.
      *
-     * For consistency, percent-encoded octets in the ranges of ALPHA (%41–%5A and %61–%7A), DIGIT (%30–%39),
-     * hyphen (%2D), period (%2E), underscore (%5F), or tilde (%7E) should not be created by URI producers and,
-     * when found in a URI, should be decoded to their corresponding unreserved characters by URI normalizers.
+     * For consistency, percent-encoded octets in the ranges of ALPHA (%41–%5A
+     * and %61–%7A), DIGIT (%30–%39), hyphen (%2D), period (%2E), underscore
+     * (%5F), or tilde (%7E) should not be created by URI producers and, when
+     * found in a URI, should be decoded to their corresponding unreserved
+     * characters by URI normalizers.
      *
      * Example: http://example.org/%7Eusern%61me/ → http://example.org/~username/
      */
@@ -54,11 +58,12 @@ final class UriNormalizer
     /**
      * Removes the default host of the given URI scheme from the URI.
      *
-     * Only the "file" scheme defines the default host "localhost".
-     * All of `file:/myfile`, `file:///myfile`, and `file://localhost/myfile`
-     * are equivalent according to RFC 3986. The first format is not accepted
-     * by PHPs stream functions and thus already normalized implicitly to the
-     * second format in the Uri class. See `GuzzleHttp\Psr7\Uri::composeComponents`.
+     * Only the "file" scheme defines the default host "localhost". All of
+     * `file:/myfile`, `file:///myfile`, and `file://localhost/myfile` are
+     * equivalent according to RFC 3986. The first format is not accepted by
+     * PHPs stream functions and thus already normalized implicitly to the
+     * second format in the Uri class. See
+     * `GuzzleHttp\Psr7\Uri::composeComponents`.
      *
      * Example: file://localhost/myfile → file:///myfile
      */
@@ -84,9 +89,10 @@ final class UriNormalizer
     /**
      * Paths which include two or more adjacent slashes are converted to one.
      *
-     * Webservers usually ignore duplicate slashes and treat those URIs equivalent.
-     * But in theory those URIs do not need to be equivalent. So this normalization
-     * may change the semantics. Encoded slashes (%2F) are not removed.
+     * Webservers usually ignore duplicate slashes and treat those URIs
+     * equivalent. But in theory those URIs do not need to be equivalent. So
+     * this normalization may change the semantics. Encoded slashes (%2F) are
+     * not removed.
      *
      * Example: http://example.org//foo///bar.html → http://example.org/foo/bar.html
      */
@@ -95,26 +101,32 @@ final class UriNormalizer
     /**
      * Sort query parameters with their values in alphabetical order.
      *
-     * However, the order of parameters in a URI may be significant (this is not defined by the standard).
-     * So this normalization is not safe and may change the semantics of the URI.
+     * However, the order of parameters in a URI may be significant (this is not
+     * defined by the standard). So this normalization is not safe and may
+     * change the semantics of the URI.
      *
      * Example: ?lang=en&article=fred → ?article=fred&lang=en
      *
-     * Note: The sorting is neither locale nor Unicode aware (the URI query does not get decoded at all) as the
-     * purpose is to be able to compare URIs in a reproducible way, not to have the params sorted perfectly.
+     * Note: The sorting is neither locale nor Unicode aware (the URI query does
+     * not get decoded at all) as the purpose is to be able to compare URIs in a
+     * reproducible way, not to have the params sorted perfectly.
      */
     public const SORT_QUERY_PARAMETERS = 128;
 
     /**
      * Returns a normalized URI.
      *
-     * The scheme and host component are already normalized to lowercase per PSR-7 UriInterface.
-     * This methods adds additional normalizations that can be configured with the $flags parameter.
+     * The scheme and host component are already normalized to lowercase per
+     * PSR-7 UriInterface. This method adds additional normalizations that can
+     * be configured with the `$flags` parameter, which is a bitmask of
+     * normalizations to apply.
      *
-     * PSR-7 UriInterface cannot distinguish between an empty component and a missing component as
-     * getQuery(), getFragment() etc. always return a string. This means the URIs "/?#" and "/" are
-     * treated equivalent which is not necessarily true according to RFC 3986. But that difference
-     * is highly uncommon in reality. So this potential normalization is implied in PSR-7 as well.
+     * PSR-7 UriInterface cannot distinguish between an empty component and a
+     * missing component as `getQuery()`, `getFragment()` etc. always return a
+     * string. This means the URIs `/?#` and `/` are treated equivalent which is
+     * not necessarily true according to RFC 3986. But that difference is highly
+     * uncommon in reality. So this potential normalization is implied in PSR-7
+     * as well.
      *
      * @param UriInterface $uri   The URI to normalize
      * @param int          $flags A bitmask of normalizations to apply, see constants
@@ -177,10 +189,12 @@ final class UriNormalizer
     /**
      * Whether two URIs can be considered equivalent.
      *
-     * Both URIs are normalized automatically before comparison with the given $normalizations bitmask. The method also
-     * accepts relative URI references and returns true when they are equivalent. This of course assumes they will be
-     * resolved against the same base URI. If this is not the case, determination of equivalence or difference of
-     * relative references does not mean anything.
+     * Both URIs are normalized automatically before comparison with the given
+     * `$normalizations` bitmask. The method also accepts relative URI
+     * references and returns true when they are equivalent. This of course
+     * assumes they will be resolved against the same base URI. If this is not
+     * the case, determination of equivalence or difference of relative
+     * references does not mean anything.
      *
      * @param UriInterface $uri1           An URI to compare
      * @param UriInterface $uri2           An URI to compare

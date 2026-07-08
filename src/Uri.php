@@ -219,22 +219,25 @@ class Uri implements UriInterface, \JsonSerializable
     }
 
     /**
-     * Composes a URI reference string from its various components.
+     * Composes a URI reference string from its various components according to
+     * RFC 3986 Section 5.3.
      *
-     * Usually this method does not need to be called manually but instead is used indirectly via
-     * `Psr\Http\Message\UriInterface::__toString`.
+     * Usually this method does not need to be called manually but instead is
+     * used indirectly via `Psr\Http\Message\UriInterface::__toString`.
      *
-     * PSR-7 UriInterface treats an empty component the same as a missing component as
-     * getQuery(), getFragment() etc. always return a string. This explains the slight
-     * difference to RFC 3986 Section 5.3.
+     * PSR-7 UriInterface treats an empty component the same as a missing
+     * component as `getQuery()`, `getFragment()` etc. always return a string.
+     * This explains the slight difference to RFC 3986 Section 5.3.
      *
-     * Another adjustment is that the authority separator is added even when the authority is missing/empty
-     * for the "file" scheme. This is because PHP stream functions like `file_get_contents` only work with
-     * `file:///myfile` but not with `file:/myfile` although they are equivalent according to RFC 3986. But
-     * `file:///` is the more common syntax for the file scheme anyway (Chrome for example redirects to
-     * that format). The separator is omitted when such a URI has a rootless or empty path: adding it would
-     * turn the first path segment into the authority of the composed URI, or compose the string `file://`,
-     * which cannot be parsed back into a URI.
+     * Another adjustment is that the authority separator is added even when the
+     * authority is missing/empty for the "file" scheme. This is because PHP
+     * stream functions like `file_get_contents` only work with `file:///myfile`
+     * but not with `file:/myfile` although they are equivalent according to RFC
+     * 3986. But `file:///` is the more common syntax for the file scheme anyway
+     * (Chrome for example redirects to that format). The separator is omitted
+     * when such a URI has a rootless or empty path: adding it would turn the
+     * first path segment into the authority of the composed URI, or compose the
+     * string `file://`, which cannot be parsed back into a URI.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.3
      */
@@ -271,8 +274,8 @@ class Uri implements UriInterface, \JsonSerializable
     /**
      * Whether the URI has the default port of the current scheme.
      *
-     * `Psr\Http\Message\UriInterface::getPort` may return null or the standard port. This method can be used
-     * independently of the implementation.
+     * `Psr\Http\Message\UriInterface::getPort` may return null or the standard
+     * port. This method can be used independently of the implementation.
      */
     public static function isDefaultPort(UriInterface $uri): bool
     {
@@ -283,17 +286,18 @@ class Uri implements UriInterface, \JsonSerializable
     /**
      * Whether the URI is absolute, i.e. it has a scheme.
      *
-     * An instance of UriInterface can either be an absolute URI or a relative reference. This method returns true
-     * if it is the former. An absolute URI has a scheme. A relative reference is used to express a URI relative
-     * to another URI, the base URI. Relative references can be divided into several forms:
-     * - network-path references, e.g. '//example.com/path'
-     * - absolute-path references, e.g. '/path'
-     * - relative-path references, e.g. 'subpath'
+     * An instance of UriInterface can either be an absolute URI or a relative
+     * reference. An absolute URI has a scheme. A relative reference is used to
+     * express a URI relative to another URI, the base URI. Relative references
+     * can be divided into several forms according to RFC 3986 Section 4.2:
+     * - network-path references, e.g. `//example.com/path`
+     * - absolute-path references, e.g. `/path`
+     * - relative-path references, e.g. `subpath`
      *
      * @see Uri::isNetworkPathReference
      * @see Uri::isAbsolutePathReference
      * @see Uri::isRelativePathReference
-     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.2
      */
     public static function isAbsolute(UriInterface $uri): bool
     {
@@ -303,7 +307,8 @@ class Uri implements UriInterface, \JsonSerializable
     /**
      * Whether the URI is a network-path reference.
      *
-     * A relative reference that begins with two slash characters is termed an network-path reference.
+     * A relative reference that begins with two slash characters is termed a
+     * network-path reference.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.2
      */
@@ -313,9 +318,10 @@ class Uri implements UriInterface, \JsonSerializable
     }
 
     /**
-     * Whether the URI is a absolute-path reference.
+     * Whether the URI is an absolute-path reference.
      *
-     * A relative reference that begins with a single slash character is termed an absolute-path reference.
+     * A relative reference that begins with a single slash character is termed
+     * an absolute-path reference.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.2
      */
@@ -330,7 +336,8 @@ class Uri implements UriInterface, \JsonSerializable
     /**
      * Whether the URI is a relative-path reference.
      *
-     * A relative reference that does not begin with a slash character is termed a relative-path reference.
+     * A relative reference that does not begin with a slash character is termed
+     * a relative-path reference.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.2
      */
@@ -344,9 +351,10 @@ class Uri implements UriInterface, \JsonSerializable
     /**
      * Whether the URI is a same-document reference.
      *
-     * A same-document reference refers to a URI that is, aside from its fragment
-     * component, identical to the base URI. When no base URI is given, only an empty
-     * URI reference (apart from its fragment) is considered a same-document reference.
+     * A same-document reference refers to a URI that is, aside from its
+     * fragment component, identical to the base URI. When no base URI is given,
+     * only an empty URI reference (apart from its fragment) is considered a
+     * same-document reference.
      *
      * @param UriInterface      $uri  The URI to check
      * @param UriInterface|null $base An optional base URI to compare against
@@ -387,10 +395,9 @@ class Uri implements UriInterface, \JsonSerializable
      * Creates a new URI with a specific query string value.
      *
      * Any existing query string values that exactly match the provided key are
-     * removed and replaced with the given key value pair.
-     *
-     * A value of null will set the query string key without a value, e.g. "key"
-     * instead of "key=value".
+     * removed and replaced with the given key value pair. A value of null will
+     * set the query string key without a value, e.g. "key" instead of
+     * "key=value".
      *
      * @param UriInterface $uri   URI to use as a base.
      * @param string       $key   Key to set.
@@ -406,9 +413,10 @@ class Uri implements UriInterface, \JsonSerializable
     }
 
     /**
-     * Creates a new URI with multiple specific query string values.
+     * Creates a new URI with multiple query string values.
      *
-     * It has the same behavior as withQueryValue() but for an associative array of key => value.
+     * It has the same behavior as `withQueryValue()` but for an associative
+     * array of key => value.
      *
      * @param UriInterface    $uri           URI to use as a base.
      * @param (string|null)[] $keyValueArray Associative array of key and values

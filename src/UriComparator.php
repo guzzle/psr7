@@ -7,15 +7,24 @@ namespace GuzzleHttp\Psr7;
 use Psr\Http\Message\UriInterface;
 
 /**
- * Provides methods to determine if a modified URL should be considered cross-origin.
+ * Provides methods to determine if a modified URI should be considered
+ * cross-origin.
  *
  * @author Graham Campbell
  */
 final class UriComparator
 {
     /**
-     * Determines if a modified URL should be considered cross-origin with
-     * respect to an original URL.
+     * Determines if a modified URI should be considered cross-origin with
+     * respect to an original URI.
+     *
+     * Two URIs are cross-origin when their scheme, host, or effective port
+     * differ. Host comparison is case-insensitive, and missing ports use the
+     * default port for `http` or `https`. Other schemes do not receive implicit
+     * default ports.
+     *
+     * This helper only compares URI origins. It does not implement redirect
+     * handling or credential policy.
      */
     public static function isCrossOrigin(UriInterface $original, UriInterface $modified): bool
     {
