@@ -11,6 +11,24 @@ For URI resolution, normalization, and comparison helpers, see
 
 Redact the user info part of a URI.
 
+Returns the URI with the whole userinfo component replaced by `***` when one
+is present, so neither the username nor the password survives into logs and
+diagnostics. A URI without userinfo is returned unchanged.
+
+## `GuzzleHttp\Psr7\Utils::redactUserInfoInString`
+
+`public static function redactUserInfoInString(string $subject, string $uri): string`
+
+Redacts the userinfo of a raw URI string wherever it appears in a subject
+string.
+
+The needle is taken verbatim from the raw URI rather than from parsed
+components, so credentials that URI normalization would rewrite, such as raw
+control bytes or unencoded reserved characters, are still found in text that
+embeds the URI exactly as given, for example transport error messages. A URI
+without `://` is treated as authority-form: a host and port with optional
+userinfo.
+
 ## `GuzzleHttp\Psr7\Utils::uriFor`
 
 `public static function uriFor(string|UriInterface $uri): UriInterface`

@@ -464,6 +464,11 @@ final class Utils
 
     /**
      * Redact the user info part of a URI.
+     *
+     * Returns the URI with the whole userinfo component replaced by "***"
+     * when one is present, so neither the username nor the password survives
+     * into logs and diagnostics. A URI without userinfo is returned
+     * unchanged.
      */
     public static function redactUserInfo(UriInterface $uri): UriInterface
     {
