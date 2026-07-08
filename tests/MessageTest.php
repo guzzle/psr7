@@ -161,6 +161,8 @@ class MessageTest extends TestCase
     {
         yield 'empty' => [''];
         yield 'userinfo delimiter' => ['trusted.example@evil.example'];
+        yield 'percent-encoded userinfo delimiters' => ['user%3Apass%40example.com'];
+        yield 'percent-encoded slash' => ['ex%2Fample.com'];
         yield 'path delimiter' => ['example.com/path'];
         yield 'query delimiter' => ['example.com?query'];
         yield 'fragment delimiter' => ['example.com#fragment'];
@@ -265,6 +267,7 @@ class MessageTest extends TestCase
         yield 'http leading zero default port' => ['foo.com:000080', 'http://foo.com/'];
         yield 'leading zero non-default port' => ['foo.com:0008080', 'http://foo.com:8080/'];
         yield 'maximum port' => ['foo.com:65535', 'http://foo.com:65535/'];
+        yield 'percent-encoded host' => ['ex%61mple.com', 'http://ex%61mple.com/'];
         yield 'ipv6' => ['[::1]', 'http://[::1]/'];
         yield 'ipv6 port' => ['[::1]:443', 'https://[::1]/'];
         yield 'ipv6 https leading zero default port' => ['[::1]:000443', 'https://[::1]/'];
@@ -376,7 +379,7 @@ class MessageTest extends TestCase
         yield 'ipv6 non-default port' => ['http://[::1]:8080/admin?x=1', '[::1]:8080', 'http://[::1]:8080/admin?x=1'];
         yield 'path at-sign' => ['http://up.example/admin@v1', 'up.example', 'http://up.example/admin@v1'];
         yield 'query at-sign' => ['http://up.example?email=user@example.com', 'up.example', 'http://up.example?email=user@example.com'];
-        yield 'percent-encoded authority delimiters in host' => ['http://user%3Apass%40example.com/admin', 'user%3Apass%40example.com', 'http://user%3Apass%40example.com/admin'];
+        yield 'percent-encoded host' => ['http://ex%61mple.com/admin', 'ex%61mple.com', 'http://ex%61mple.com/admin'];
         yield 'empty port' => ['http://up.example:/admin', 'up.example', 'http://up.example/admin'];
     }
 
@@ -636,6 +639,7 @@ class MessageTest extends TestCase
         yield 'absolute-form ipv6 user info' => ['GET http://u@[::1]:8080/admin HTTP/1.1'];
         yield 'absolute-form user info zero port' => ['GET http://u@up.example:0/admin HTTP/1.1'];
         yield 'absolute-form non-http user info' => ['GET ftp://u:p@files.example/x HTTP/1.1'];
+        yield 'absolute-form percent-encoded host delimiters' => ['GET http://user%3Apass%40example.com/admin HTTP/1.1'];
         yield 'invalid protocol text' => ['GET / HTTP/foo'];
         yield 'invalid protocol segments' => ['GET / HTTP/1.1.1'];
         yield 'bare carriage return after version' => ["GET / HTTP/1.1\rX-Injected: yes"];

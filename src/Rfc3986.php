@@ -61,8 +61,9 @@ final class Rfc3986
      * host is accepted, since the authority (and thus the host) may be empty.
      * Bracketed values are validated as IPv6 / IPvFuture literals; any other
      * value is rejected if it contains control characters, whitespace, an
-     * authority or path delimiter (`/ ? # @ \`), or an embedded colon denoting
-     * a port.
+     * authority or path delimiter (`/ ? # @ \`), an embedded colon denoting
+     * a port, a malformed percent-sequence, or a percent-encoded octet that
+     * decodes to one of those rejected bytes, to a bracket, or to `%` itself.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2
      */
@@ -86,7 +87,11 @@ final class Rfc3986
             return self::isValidIpLiteralHost($host);
         }
 
-        return !str_contains($host, ':');
+        if (str_contains($host, ':')) {
+            return false;
+        }
+
+        return !str_contains($host, '%') || self::hasValidHostPercentEncoding($host);
     }
 
     /**
@@ -111,6 +116,22 @@ final class Rfc3986
         }
 
         return strlen($normalized) <= 5 && (int) $normalized <= 0xFFFF;
+    }
+
+    private static function hasValidHostPercentEncoding(string $host): bool
+    {
+        // Mirror of the raw reg-name policy above for percent-encoded octets:
+        // reject malformed sequences (RFC 3986 requires "%" HEXDIG HEXDIG) and
+        // octets that decode to bytes the raw grammar rejects - C0 controls,
+        // SP, DEL, the delimiters / ? # @ \ [ ], the port colon, and % itself.
+        // Octets decoding to any other byte (unreserved, sub-delims, and
+        // non-ASCII UTF-8 data) remain accepted.
+        $invalidEncoding = preg_match(
+            '/%(?!'.self::HEX_OCTET.')|%(?:[01][0-9A-Fa-f]|2[035F]|3[AF]|40|5[BCD]|7F)/i',
+            $host
+        );
+
+        return $invalidEncoding === 0;
     }
 
     private static function isValidIpLiteralHost(string $host): bool

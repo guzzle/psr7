@@ -74,11 +74,20 @@ accepted, since a URI reference may omit the scheme.
 
 Whether the string is a valid URI host. Per
 [RFC 3986 Section 3.2.2](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2), the host is an
-IP-literal, IPv4 address, or registered name. An empty host is accepted, since the authority — and thus
-the host — may be empty. Bracketed values are validated as IPv6 or IPvFuture literals; any other value is
-rejected if it contains control characters, whitespace, an authority or path delimiter (`/`, `?`, `#`,
-`@`, `\`), or an embedded colon denoting a port. RFC 6874 IPv6 zone identifiers (for example
-`[fe80::1%25eth0]`) are not supported.
+IP-literal, IPv4 address, or registered name. An empty host is accepted, since the authority, and thus the
+host, may be empty. Bracketed values are validated as IPv6 or IPvFuture literals; any other value is
+rejected if it contains control characters, whitespace, an authority or path delimiter (`/`, `?`, `#`, `@`,
+`\`), or an embedded colon denoting a port. Percent-encoding is validated the same way: malformed sequences
+(a `%` not followed by two hex digits) and percent-encoded octets that decode to one of the rejected bytes,
+to a bracket (`[`, `]`), or to `%` itself are invalid, while all other percent-encoded octets are accepted.
+Rejecting these percent-encoded octets is a deliberate guzzle host policy, stricter than the RFC 3986
+`reg-name` grammar, which permits any well-formed `pct-encoded` octet; it matches the stricter policy used
+throughout the library. RFC 6874 IPv6 zone identifiers (for example `[fe80::1%25eth0]`) are not supported.
+
+Registered names are otherwise intentionally permissive: single-label hosts such as `localhost`,
+underscores, sub-delims, and raw or percent-encoded non-ASCII (IDN) data are accepted and preserved as
+given, with no punycode conversion. IDNA is treated as a client concern. Consumers that need DNS IDNs must
+perform the conversion themselves, for example via Guzzle's `idn_conversion` request option.
 
 ### `GuzzleHttp\Psr7\Rfc3986::isValidPort`
 

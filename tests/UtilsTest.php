@@ -1451,6 +1451,24 @@ class UtilsTest extends TestCase
         self::assertSame('1', $modified->getHeaderLine('X-Test'));
     }
 
+    public function testModifyRequestValidatesReaddedHostFromCustomUri(): void
+    {
+        $uri = new class('http://safe.example/') extends Psr7\Uri {
+            public function getHost(): string
+            {
+                return 'ex%2Fample.com';
+            }
+        };
+        $request = (new Psr7\Request('GET', 'http://safe.example/', ['Host' => 'safe.example']))
+            ->withUri($uri, true)
+            ->withoutHeader('Host');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid host');
+
+        Psr7\Utils::modifyRequest($request, ['set_headers' => ['X-Test' => '1']]);
+    }
+
     /**
      * @dataProvider hostHeaderCaseProvider
      */

@@ -513,6 +513,10 @@ class ServerRequestTest extends TestCase
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'example.com\\evil']),
             ],
+            'Host header with percent-encoded delimiter' => [
+                'https://www.example.org/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => 'ex%2Fample.com']),
+            ],
             'Host header with space' => [
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'bad host']),
@@ -687,6 +691,15 @@ class ServerRequestTest extends TestCase
             'evil.example',
             null,
             '/admin',
+            '',
+        ];
+
+        yield 'absolute-form target with percent-encoded host delimiter is treated as a path' => [
+            ['REQUEST_URI' => 'http://ex%2Fample.com/x', 'HTTP_HOST' => 'good.example'],
+            'http://good.example/http://ex%2Fample.com/x',
+            'good.example',
+            null,
+            '/http://ex%2Fample.com/x',
             '',
         ];
 
@@ -876,6 +889,15 @@ class ServerRequestTest extends TestCase
             'up.example',
             443,
             '',
+            '',
+        ];
+
+        yield 'connect authority-form with percent-encoded host delimiter is treated as a path' => [
+            ['REQUEST_METHOD' => 'CONNECT', 'REQUEST_URI' => 'ex%2Fample.com:443', 'HTTP_HOST' => 'good.example'],
+            'http://good.example/ex%2Fample.com:443',
+            'good.example',
+            null,
+            '/ex%2Fample.com:443',
             '',
         ];
 

@@ -219,16 +219,19 @@ fragment may follow a bracketed IP-literal host. Trailing bytes that are
 neither, such as `http://[::1]:80@evil/` or `http://[::1]:80x/`, are now
 rejected instead of being reparsed into a different host.
 
-Parsing still URL-decodes hosts before validation. Bracketed hosts containing
-bytes that change under URL decoding, such as `+` or percent-encoded octets,
-therefore are not guaranteed to match `withHost()` acceptance. For example,
-`withHost('[v1.fe80::a+en1]')` is accepted, while parsing
-`http://[v1.fe80::a+en1]/` is rejected.
+Parsing still URL-decodes bracketed IP-literal hosts before validation
+(registered-name hosts round-trip unchanged), so a literal `+` in a bracketed
+IP-literal decodes to a space and is rejected: `withHost('[v1.fe80::a+en1]')`
+accepts the literal while parsing `http://[v1.fe80::a+en1]/` rejects it.
+Percent-encoding inside a bracketed IP-literal is now rejected during parsing as
+well, since RFC 3986 IP-literals contain no percent-encoding, so
+`http://[%3A%3A1]/` no longer decodes to `[::1]`; this matches `withHost()` and
+`Rfc3986::isValidHost()`.
 
-Percent-encoded octets in the URI host are now normalized to uppercase hex, so
-hosts such as `%2fhost` and `a%c3%a9b` are represented as `%2Fhost` and
-`a%C3%A9b`. Malformed percent sequences in registered-name hosts are still
-accepted unchanged.
+Percent-encoded octets in a registered-name host are normalized to uppercase
+hex, so a host such as `a%c3%a9b` is represented as `a%C3%A9b`. Malformed
+percent sequences and percent-encoded octets that decode to a byte forbidden in
+a host, such as `ex%zz` and `%2fhost`, are rejected.
 
 `Uri::fromParts()` accepts integer and decimal digit string ports, but floats and
 other port values are no longer cast.
@@ -292,6 +295,17 @@ as an error; `Host` headers and CONNECT targets already reject it. These
 rules apply to absolute-form targets of every scheme.
 `ServerRequest::fromGlobals()` is unchanged and continues to strip
 `REQUEST_URI` userinfo.
+
+URI hosts now validate percent-encoding. Malformed sequences such as `ex%zz`,
+and percent-encoded octets that decode to bytes the raw host grammar already
+rejects (controls, space, DEL, `/`, `?`, `#`, `@`, `\`, `:`, `[`, `]`, and `%`
+itself) throw `MalformedUriException` from URI parsing and
+`InvalidArgumentException` from `Uri::withHost()`, and are rejected wherever
+hosts are validated, including `Host` headers and request targets in
+`Message::parseRequest()`. WHATWG-conformant browsers reject all of these hosts;
+curl rejects them too, except encoded DEL (`%7F`), which it decodes and forwards
+to name resolution. Other percent-encoded octets, including UTF-8 data such as
+`a%C3%A9b`, remain accepted and are normalized to uppercase hex.
 
 #### Request Host Synchronization
 

@@ -121,6 +121,14 @@ class Uri implements UriInterface, \JsonSerializable
                 return false;
             }
 
+            // RFC 3986 IP-literals contain no percent-encoding, so reject any
+            // "%" in the bracketed host rather than letting the urldecode()
+            // below turn an encoded octet into a different literal. This keeps
+            // parsing aligned with withHost()/Rfc3986::isValidHost().
+            if (str_contains($matches[4], '%')) {
+                return false;
+            }
+
             $prefix = $matches[1];
 
             if ($matches[3] === '@') {

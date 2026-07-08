@@ -286,6 +286,7 @@ final class Utils
         // Match Request::__construct() by adding a Host header when one is not provided.
         if (!$hasHost && $uri->getHost() !== '') {
             $host = $uri->getHost();
+            Uri::assertValidHost($host);
 
             if (($port = $uri->getPort()) !== null) {
                 $host .= ':'.$port;
