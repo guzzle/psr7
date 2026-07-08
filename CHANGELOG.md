@@ -71,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop adding default `Content-Length` to `multipart/form-data` parts (RFC 7578 §4.8)
 - Escape multipart `Content-Disposition` parameters and reject unsafe boundaries and part headers
 - Preserve trailing whitespace in custom `MultipartStream` part header values
+- Preserve explicit custom `MultipartStream` boundary `'0'` instead of replacing it with a generated boundary
 - Made static utility classes non-instantiable
 - Validate bracketed IP-literal hosts consistently between parsing and `withHost()`, including userinfo forms
 - Normalize percent-encoded octets in the URI host to uppercase hex

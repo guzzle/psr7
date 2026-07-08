@@ -634,6 +634,11 @@ Explicit custom boundaries are now validated using RFC 2046 multipart boundary
 syntax. Omit the boundary or pass `null` to continue using a generated random
 boundary.
 
+The string `'0'` is now treated as an explicit custom boundary and is serialized
+literally. In 2.x, PHP truthiness caused `new MultipartStream($elements, '0')`
+to use a generated random boundary. Omit the boundary or pass `null` when you
+want a generated boundary.
+
 Custom multipart part header names and values are also validated before
 serialization. Header names must be valid HTTP tokens, and header values must be
 strings without CR, LF, or other invalid control bytes.
