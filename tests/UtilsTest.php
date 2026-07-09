@@ -609,6 +609,26 @@ class UtilsTest extends TestCase
             "Unsupported proxy syntax in 'http://user:se#cret@localhost:8125'",
             'http://user:se#cret@localhost:8125',
         ];
+        yield 'multiple raw at signs across a raw slash' => [
+            "Unsupported proxy syntax in 'http://***@real.example'",
+            "Unsupported proxy syntax in 'http://user:old@localhost:99999999/se:cret@real.example'",
+            'http://user:old@localhost:99999999/se:cret@real.example',
+        ];
+        yield 'multiple raw at signs across a raw question mark' => [
+            "Unsupported proxy syntax in 'http://***@real.example'",
+            "Unsupported proxy syntax in 'http://user:old@localhost:99999999?se:cret@real.example'",
+            'http://user:old@localhost:99999999?se:cret@real.example',
+        ];
+        yield 'multiple raw at signs across a raw hash' => [
+            "Unsupported proxy syntax in 'http://***@real.example'",
+            "Unsupported proxy syntax in 'http://user:old@localhost:99999999#se:cret@real.example'",
+            'http://user:old@localhost:99999999#se:cret@real.example',
+        ];
+        yield 'multiple raw at signs in authority-form' => [
+            "Unsupported proxy syntax in '***@real.example'",
+            "Unsupported proxy syntax in 'user:old@localhost:99999999/se:cret@real.example'",
+            'user:old@localhost:99999999/se:cret@real.example',
+        ];
         yield 'at sign only in path' => [
             "Failed to connect to 'http://localhost:8125/health@check'",
             "Failed to connect to 'http://localhost:8125/health@check'",
@@ -618,6 +638,11 @@ class UtilsTest extends TestCase
             'via http://localhost:8125?q=user@example.com',
             'via http://localhost:8125?q=user@example.com',
             'http://localhost:8125?q=user@example.com',
+        ];
+        yield 'at sign only in fragment' => [
+            'via http://localhost:8125#frag@ment',
+            'via http://localhost:8125#frag@ment',
+            'http://localhost:8125#frag@ment',
         ];
         yield 'at sign only before the scheme' => [
             'via we@ird://host',

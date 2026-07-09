@@ -486,6 +486,10 @@ final class Utils
      * error messages. A URI without "://" is treated as authority-form: a
      * host and port with optional userinfo.
      *
+     * A URI that does not parse has no trustworthy authority boundary, so
+     * everything between any scheme and its last "@" is redacted as a safe-side
+     * fallback.
+     *
      * @param string $subject Text that may embed the URI
      * @param string $uri     Raw URI whose userinfo is redacted in the text
      */
@@ -497,24 +501,27 @@ final class Utils
 
         $schemePosition = \strpos($uri, '://');
         $remainder = $schemePosition === false ? $uri : \substr($uri, $schemePosition + 3);
-        $authority = \substr($remainder, 0, \strcspn($remainder, '/?#'));
-        $atPosition = \strrpos($authority, '@');
 
-        if ($atPosition === false || $atPosition === 0) {
-            // The last '@' sits past a raw '/', '?', or '#': not userinfo in
-            // a parseable URI, but a URI that defeats parse_url() may carry
-            // the separator inside its credentials, so everything up to the
-            // last '@' is redacted as a safe-side fallback.
-            if (\parse_url($schemePosition === false ? 'http://'.$uri : $uri) !== false) {
-                return $subject;
-            }
-
+        if (\parse_url($schemePosition === false ? 'http://'.$uri : $uri) === false) {
+            // Raw '/', '?', or '#' separators may sit inside the credentials
+            // of a URI that defeats parse_url(), so the redaction cannot stop
+            // at the apparent authority.
             $atPosition = \strrpos($remainder, '@');
+
             if ($atPosition === false || $atPosition === 0) {
                 return $subject;
             }
 
             return \str_replace(\substr($remainder, 0, $atPosition).'@', '***@', $subject);
+        }
+
+        $authority = \substr($remainder, 0, \strcspn($remainder, '/?#'));
+        $atPosition = \strrpos($authority, '@');
+
+        if ($atPosition === false || $atPosition === 0) {
+            // A parseable URI with '@' only past its authority, or with an
+            // empty userinfo, carries no credentials to redact.
+            return $subject;
         }
 
         return \str_replace(\substr($authority, 0, $atPosition).'@', '***@', $subject);
