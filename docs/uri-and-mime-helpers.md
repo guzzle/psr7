@@ -29,6 +29,9 @@ embeds the URI exactly as given, for example transport error messages. A URI
 without `://` is treated as authority-form: a host and port with optional
 userinfo.
 
+A URI that does not parse has no trustworthy authority boundary, so everything
+between any scheme and its last `@` is redacted as a safe-side fallback.
+
 ## `GuzzleHttp\Psr7\Utils::uriFor`
 
 `public static function uriFor(string|UriInterface $uri): UriInterface`
