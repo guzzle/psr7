@@ -18,6 +18,40 @@ class UtilsTest extends TestCase
         PhpStreamMock::reset();
     }
 
+    public function testAsciiToLower(): void
+    {
+        self::assertSame('abcdefghijklmnopqrstuvwxyz', Psr7\Utils::asciiToLower('ABCDEFGHIJKLMNOPQRSTUVWXYZ'));
+        self::assertSame('x-checksum', Psr7\Utils::asciiToLower('X-Checksum'));
+        self::assertSame('0123456789 !#$%&*+-.^_`|~', Psr7\Utils::asciiToLower('0123456789 !#$%&*+-.^_`|~'));
+        self::assertSame("\xC4\xB0i", Psr7\Utils::asciiToLower("\xC4\xB0I"));
+        self::assertSame('', Psr7\Utils::asciiToLower(''));
+    }
+
+    public function testAsciiToUpper(): void
+    {
+        self::assertSame('ABCDEFGHIJKLMNOPQRSTUVWXYZ', Psr7\Utils::asciiToUpper('abcdefghijklmnopqrstuvwxyz'));
+        self::assertSame('X-CHECKSUM', Psr7\Utils::asciiToUpper('x-Checksum'));
+        self::assertSame('0123456789 !#$%&*+-.^_`|~', Psr7\Utils::asciiToUpper('0123456789 !#$%&*+-.^_`|~'));
+        self::assertSame("\xC4\xB1I", Psr7\Utils::asciiToUpper("\xC4\xB1i"));
+        self::assertSame('', Psr7\Utils::asciiToUpper(''));
+    }
+
+    public function testCaselessContains(): void
+    {
+        self::assertTrue(Psr7\Utils::caselessContains('Connection TIMEOUT after', 'timeout'));
+        self::assertFalse(Psr7\Utils::caselessContains('Connection reset', 'timeout'));
+        self::assertTrue(Psr7\Utils::caselessContains('Connection timeout after', 'timeout'));
+        self::assertTrue(Psr7\Utils::caselessContains('Connection reset', ''));
+    }
+
+    public function testCaselessEquals(): void
+    {
+        self::assertTrue(Psr7\Utils::caselessEquals('HOST', 'host'));
+        self::assertFalse(Psr7\Utils::caselessEquals('host', 'hosts'));
+        self::assertTrue(Psr7\Utils::caselessEquals('', ''));
+        self::assertFalse(Psr7\Utils::caselessEquals("\xC4\xB0", 'i'));
+    }
+
     public function testCopiesToString(): void
     {
         $s = Psr7\Utils::streamFor('foobaz');

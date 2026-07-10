@@ -1304,6 +1304,6 @@ final class MimeType
      */
     public static function fromExtension(string $extension): ?string
     {
-        return self::MIME_TYPES[strtolower($extension)] ?? null;
+        return self::MIME_TYPES[Utils::asciiToLower($extension)] ?? null;
     }
 }

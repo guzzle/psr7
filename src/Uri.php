@@ -725,7 +725,7 @@ class Uri implements UriInterface, \JsonSerializable
      */
     private function filterScheme(string $scheme): string
     {
-        $scheme = \strtr($scheme, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
+        $scheme = Utils::asciiToLower($scheme);
 
         if (!Rfc3986::isValidScheme($scheme)) {
             throw new \InvalidArgumentException(sprintf('Invalid scheme: "%s"', $scheme));
@@ -751,9 +751,9 @@ class Uri implements UriInterface, \JsonSerializable
      */
     private function filterHost(string $host): string
     {
-        $host = \strtr($host, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
+        $host = Utils::asciiToLower($host);
         $filtered = \preg_replace_callback('/%'.Rfc3986::HEX_OCTET.'/', static function (array $m): string {
-            return \strtoupper($m[0]);
+            return Utils::asciiToUpper($m[0]);
         }, $host);
         if ($filtered === null) {
             throw new \RuntimeException('Unable to normalize URI host percent-encoding: '.\preg_last_error_msg());

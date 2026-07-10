@@ -53,7 +53,7 @@ final class Message
         }
 
         foreach ($message->getHeaders() as $name => $values) {
-            if (is_string($name) && strtolower($name) === 'set-cookie') {
+            if (is_string($name) && Utils::asciiToLower($name) === 'set-cookie') {
                 foreach ($values as $value) {
                     $msg .= "\r\n{$name}: ".$value;
                 }
@@ -386,7 +386,7 @@ final class Message
         $found = false;
 
         foreach ($headers as $name => $values) {
-            if (strtolower((string) $name) !== 'host') {
+            if (Utils::asciiToLower((string) $name) !== 'host') {
                 continue;
             }
 
