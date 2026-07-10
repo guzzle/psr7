@@ -220,7 +220,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     private static function removeInvalidHostHeader(array $headers): array
     {
         foreach ($headers as $name => $value) {
-            if (strtolower((string) $name) !== 'host') {
+            if (strtr((string) $name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') !== 'host') {
                 continue;
             }
 

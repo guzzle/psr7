@@ -20,11 +20,11 @@ final class Utils
         $result = [];
 
         foreach ($keys as &$key) {
-            $key = strtolower((string) $key);
+            $key = strtr((string) $key, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
         }
 
         foreach ($data as $k => $v) {
-            if (!in_array(strtolower((string) $k), $keys)) {
+            if (!in_array(strtr((string) $k, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), $keys)) {
                 $result[$k] = $v;
             }
         }
@@ -212,7 +212,7 @@ final class Utils
             if ($host !== '') {
                 if (isset($changes['set_headers']) && is_array($changes['set_headers'])) {
                     foreach (array_keys($changes['set_headers']) as $header) {
-                        if (strtolower((string) $header) === 'host') {
+                        if (strtr((string) $header, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') === 'host') {
                             throw new \InvalidArgumentException(
                                 'Cannot modify request with both a URI containing a host and an explicit Host header.'
                             );
@@ -248,7 +248,7 @@ final class Utils
 
         $hasHost = false;
         foreach (array_keys($headers) as $header) {
-            if (strtolower((string) $header) === 'host') {
+            if (strtr((string) $header, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') === 'host') {
                 $hasHost = true;
                 break;
             }
@@ -284,7 +284,7 @@ final class Utils
             $addedHeaders = [];
             foreach ($headers as $header => $value) {
                 $header = (string) $header;
-                $normalized = strtolower($header);
+                $normalized = strtr($header, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
 
                 if (isset($addedHeaders[$normalized])) {
                     /** @var RequestInterface */
