@@ -96,6 +96,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `ralouphie/getallheaders` dependency
 - Removed deprecated `Header::normalize()` method
 
+## 2.12.5 - Upcoming
+
+### Changed
+
+- Compare header names and hosts with locale-independent ASCII lowercasing
+
 ## 2.12.4 - 2026-07-08
 
 ### Changed
