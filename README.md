@@ -455,6 +455,28 @@ string. This function does not modify the provided keys when an array is
 encountered (like `http_build_query()` would).
 
 
+## `GuzzleHttp\Psr7\Utils::asciiToLower`
+
+`public static function asciiToLower(string $string): string`
+
+Converts ASCII uppercase letters in a string to lowercase.
+
+Unlike strtolower(), which honors LC_CTYPE before PHP 8.2, the conversion is
+locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
+elements require.
+
+
+## `GuzzleHttp\Psr7\Utils::asciiToUpper`
+
+`public static function asciiToUpper(string $string): string`
+
+Converts ASCII lowercase letters in a string to uppercase.
+
+Unlike strtoupper(), which honors LC_CTYPE before PHP 8.2, the conversion is
+locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
+elements require.
+
+
 ## `GuzzleHttp\Psr7\Utils::caselessRemove`
 
 `public static function caselessRemove(iterable<string> $keys, $keys, array $data): array`
