@@ -123,7 +123,13 @@ final class ServerRequestGlobalsFactory
                     continue;
                 }
 
-                $header = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', $header))));
+                $parts = explode(' ', Utils::asciiToLower(str_replace('_', ' ', $header)));
+                foreach ($parts as $i => $part) {
+                    if ($part !== '') {
+                        $parts[$i] = Utils::asciiToUpper($part[0]).substr($part, 1);
+                    }
+                }
+                $header = implode('-', $parts);
                 $headers[$header] = $value;
 
                 continue;
@@ -159,7 +165,7 @@ final class ServerRequestGlobalsFactory
     private static function removeInvalidHostHeader(array $headers): array
     {
         foreach ($headers as $name => $value) {
-            if (strtolower((string) $name) !== 'host') {
+            if (Utils::asciiToLower((string) $name) !== 'host') {
                 continue;
             }
 
@@ -185,7 +191,7 @@ final class ServerRequestGlobalsFactory
      */
     private static function getRequestMethodFromServer(array $server): string
     {
-        return strtoupper(self::getServerParam($server, 'REQUEST_METHOD') ?? 'GET');
+        return Utils::asciiToUpper(self::getServerParam($server, 'REQUEST_METHOD') ?? 'GET');
     }
 
     /**

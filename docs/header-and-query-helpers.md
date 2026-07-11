@@ -49,6 +49,40 @@ This function can use the return value of `parse()` to build a query string.
 This function does not modify the provided keys when an array is encountered,
 unlike `http_build_query()`.
 
+## `GuzzleHttp\Psr7\Utils::asciiToLower`
+
+`public static function asciiToLower(string $string): string`
+
+Converts ASCII uppercase letters in a string to lowercase.
+
+Unlike `strtolower()`, which honors `LC_CTYPE` before PHP 8.2, the conversion is
+locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
+elements require.
+
+## `GuzzleHttp\Psr7\Utils::asciiToUpper`
+
+`public static function asciiToUpper(string $string): string`
+
+Converts ASCII lowercase letters in a string to uppercase.
+
+Unlike `strtoupper()`, which honors `LC_CTYPE` before PHP 8.2, the conversion is
+locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
+elements require.
+
+## `GuzzleHttp\Psr7\Utils::caselessContains`
+
+`public static function caselessContains(string $haystack, string $needle): bool`
+
+Checks whether the haystack contains the needle, comparing ASCII letters
+case-insensitively and without locale sensitivity.
+
+## `GuzzleHttp\Psr7\Utils::caselessEquals`
+
+`public static function caselessEquals(string $left, string $right): bool`
+
+Checks whether two strings are equal, comparing ASCII letters case-insensitively
+and without locale sensitivity.
+
 ## `GuzzleHttp\Psr7\Utils::caselessRemove`
 
 `public static function caselessRemove(array $keys, array $data): array`

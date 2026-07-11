@@ -212,7 +212,7 @@ final class UriNormalizer
         $regex = '/(?:%'.Rfc3986::HEX_OCTET.')++/';
 
         $callback = function (array $match): string {
-            return strtoupper($match[0]);
+            return Utils::asciiToUpper($match[0]);
         };
 
         return $uri
