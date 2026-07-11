@@ -19,10 +19,7 @@ final class UriComparator
      */
     public static function isCrossOrigin(UriInterface $original, UriInterface $modified): bool
     {
-        $originalHost = \strtr($original->getHost(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
-        $modifiedHost = \strtr($modified->getHost(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
-
-        if ($originalHost !== $modifiedHost) {
+        if (!Utils::caselessEquals($original->getHost(), $modified->getHost())) {
             return true;
         }
 

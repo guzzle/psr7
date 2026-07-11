@@ -477,6 +477,34 @@ locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
 elements require.
 
 
+## `GuzzleHttp\Psr7\Utils::asciiUcFirst`
+
+`public static function asciiUcFirst(string $string): string`
+
+Converts the first character of a string to uppercase when it is an ASCII
+lowercase letter.
+
+Unlike ucfirst(), which honors LC_CTYPE before PHP 8.2, the conversion is
+locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
+elements require.
+
+
+## `GuzzleHttp\Psr7\Utils::caselessContains`
+
+`public static function caselessContains(string $haystack, string $needle): bool`
+
+Checks whether the haystack contains the needle, comparing ASCII letters
+case-insensitively and without locale sensitivity.
+
+
+## `GuzzleHttp\Psr7\Utils::caselessEquals`
+
+`public static function caselessEquals(string $left, string $right): bool`
+
+Checks whether two strings are equal, comparing ASCII letters
+case-insensitively and without locale sensitivity.
+
+
 ## `GuzzleHttp\Psr7\Utils::caselessRemove`
 
 `public static function caselessRemove(iterable<string> $keys, $keys, array $data): array`
