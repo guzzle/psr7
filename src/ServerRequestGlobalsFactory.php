@@ -125,9 +125,7 @@ final class ServerRequestGlobalsFactory
 
                 $parts = explode(' ', Utils::asciiToLower(str_replace('_', ' ', $header)));
                 foreach ($parts as $i => $part) {
-                    if ($part !== '') {
-                        $parts[$i] = Utils::asciiToUpper($part[0]).substr($part, 1);
-                    }
+                    $parts[$i] = Utils::asciiUcFirst($part);
                 }
                 $header = implode('-', $parts);
                 $headers[$header] = $value;

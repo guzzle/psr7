@@ -36,6 +36,16 @@ class UtilsTest extends TestCase
         self::assertSame('', Psr7\Utils::asciiToUpper(''));
     }
 
+    public function testAsciiUcFirst(): void
+    {
+        self::assertSame('Index', Psr7\Utils::asciiUcFirst('index'));
+        self::assertSame('Index', Psr7\Utils::asciiUcFirst('Index'));
+        self::assertSame('X-a', Psr7\Utils::asciiUcFirst('x-a'));
+        self::assertSame('0abc', Psr7\Utils::asciiUcFirst('0abc'));
+        self::assertSame("\xC4\xB1i", Psr7\Utils::asciiUcFirst("\xC4\xB1i"));
+        self::assertSame('', Psr7\Utils::asciiUcFirst(''));
+    }
+
     public function testCaselessContains(): void
     {
         self::assertTrue(Psr7\Utils::caselessContains('Connection TIMEOUT after', 'timeout'));

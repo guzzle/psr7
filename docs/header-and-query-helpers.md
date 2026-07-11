@@ -69,6 +69,17 @@ Unlike `strtoupper()`, which honors `LC_CTYPE` before PHP 8.2, the conversion is
 locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
 elements require.
 
+## `GuzzleHttp\Psr7\Utils::asciiUcFirst`
+
+`public static function asciiUcFirst(string $string): string`
+
+Converts the first character of a string to uppercase when it is an ASCII
+lowercase letter.
+
+Unlike `ucfirst()`, which honors `LC_CTYPE` before PHP 8.2, the conversion is
+locale-independent and leaves every non-ASCII byte unchanged, as HTTP protocol
+elements require.
+
 ## `GuzzleHttp\Psr7\Utils::caselessContains`
 
 `public static function caselessContains(string $haystack, string $needle): bool`

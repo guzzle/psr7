@@ -40,6 +40,23 @@ final class Utils
     }
 
     /**
+     * Converts the first character of a string to uppercase when it is an
+     * ASCII lowercase letter.
+     *
+     * Unlike ucfirst(), which honors LC_CTYPE before PHP 8.2, the conversion
+     * is locale-independent and leaves every non-ASCII byte unchanged, as
+     * HTTP protocol elements require.
+     */
+    public static function asciiUcFirst(string $string): string
+    {
+        if ($string === '') {
+            return '';
+        }
+
+        return self::asciiToUpper($string[0]).substr($string, 1);
+    }
+
+    /**
      * Checks whether the haystack contains the needle, comparing ASCII
      * letters case-insensitively and without locale sensitivity.
      */
