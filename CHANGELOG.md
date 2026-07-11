@@ -96,11 +96,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `ralouphie/getallheaders` dependency
 - Removed deprecated `Header::normalize()` method
 
-## 2.12.5 - Upcoming
+## 2.13.0 - Upcoming
+
+### Added
+
+- Add locale-independent Utils::asciiToLower and Utils::asciiToUpper helpers
 
 ### Changed
 
+- Use locale-independent ASCII case folding everywhere case is normalized
+
+## 2.12.5 - Upcoming
+
+### Fixed
+
 - Compare header names and hosts with locale-independent ASCII lowercasing
+- Compare hosts without locale sensitivity when detecting cross-origin redirects
 
 ## 2.12.4 - 2026-07-08
 
