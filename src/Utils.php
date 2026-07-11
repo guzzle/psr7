@@ -35,6 +35,41 @@ final class Utils
     }
 
     /**
+     * Converts the first character of a string to uppercase when it is an
+     * ASCII lowercase letter.
+     *
+     * Unlike ucfirst(), which honors LC_CTYPE before PHP 8.2, the conversion
+     * is locale-independent and leaves every non-ASCII byte unchanged, as
+     * HTTP protocol elements require.
+     */
+    public static function asciiUcFirst(string $string): string
+    {
+        if ($string === '') {
+            return '';
+        }
+
+        return self::asciiToUpper($string[0]).substr($string, 1);
+    }
+
+    /**
+     * Checks whether the haystack contains the needle, comparing ASCII
+     * letters case-insensitively and without locale sensitivity.
+     */
+    public static function caselessContains(string $haystack, string $needle): bool
+    {
+        return str_contains(self::asciiToLower($haystack), self::asciiToLower($needle));
+    }
+
+    /**
+     * Checks whether two strings are equal, comparing ASCII letters
+     * case-insensitively and without locale sensitivity.
+     */
+    public static function caselessEquals(string $left, string $right): bool
+    {
+        return self::asciiToLower($left) === self::asciiToLower($right);
+    }
+
+    /**
      * Remove the items given by the keys, case insensitively from the data.
      *
      * @param (string|int)[] $keys
