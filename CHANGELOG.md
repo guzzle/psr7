@@ -107,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use locale-independent ASCII case folding everywhere case is normalized
 
-## 2.12.5 - Upcoming
+## 2.12.5 - 2026-07-13
 
 ### Fixed
 
