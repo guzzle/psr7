@@ -17,6 +17,10 @@ class ServerRequestTest extends TestCase
     public static function dataNormalizeFiles(): iterable
     {
         return [
+            'No files' => [
+                [],
+                [],
+            ],
             'Single file' => [
                 [
                     'file' => [
@@ -532,6 +536,38 @@ class ServerRequestTest extends TestCase
                 UPLOAD_ERR_OK,
                 'MyFile.txt',
                 'text/plain'
+            ),
+        ];
+
+        self::assertEquals($expectedFiles, $server->getUploadedFiles());
+    }
+
+    public function testFromGlobalsRepresentsEmptyFileInputAsNoFileUpload(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'POST',
+            'HTTP_HOST' => 'www.example.org',
+        ];
+
+        $_FILES = [
+            'test_file' => [
+                'name' => '',
+                'type' => '',
+                'tmp_name' => '',
+                'error' => UPLOAD_ERR_NO_FILE,
+                'size' => 0,
+            ],
+        ];
+
+        $server = ServerRequest::fromGlobals();
+
+        $expectedFiles = [
+            'test_file' => new UploadedFile(
+                '',
+                0,
+                UPLOAD_ERR_NO_FILE,
+                '',
+                ''
             ),
         ];
 
