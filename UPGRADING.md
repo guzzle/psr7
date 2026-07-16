@@ -141,8 +141,10 @@ file `size` values and `error` values must be non-negative PHP integers;
 numeric strings are no longer cast. If PHP supplies an upload size as a string
 because the byte count cannot fit in `PHP_INT_MAX`, it is rejected rather than
 truncated or cast. Nested specifications must provide `tmp_name`, `size`, and
-`error` as arrays with matching keys. When nested `name` or `type` metadata is
-provided, it must also be an array.
+`error` as arrays. Every key in `tmp_name` must also exist in `size` and
+`error`; additional metadata entries without a matching `tmp_name` entry are
+ignored. When nested `name` or `type` metadata is provided, it must also be an
+array.
 
 If your tests or adapters build `$_FILES` arrays manually, populate the full
 shape or create `UploadedFile` instances directly.

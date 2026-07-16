@@ -48,7 +48,7 @@ final class ServerRequestGlobalsFactory
             ->withCookieParams($cookies)
             ->withQueryParams($query)
             ->withParsedBody($post)
-            ->withUploadedFiles(ServerRequest::normalizeFiles($files));
+            ->withUploadedFiles(UploadedFileNormalizer::normalize($files));
     }
 
     /**
