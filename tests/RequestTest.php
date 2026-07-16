@@ -577,6 +577,12 @@ class RequestTest extends TestCase
         self::assertSame('foo.com:8125', $r->getHeaderLine('host'));
     }
 
+    public function testAddsCanonicalIpv6HostAndPortToHeader(): void
+    {
+        $r = new Request('GET', 'http://[0:0::1]:8080/bar');
+        self::assertSame('[::1]:8080', $r->getHeaderLine('host'));
+    }
+
     public function testGeneratedHostHeaderRejectsInvalidUriHostFromCustomUri(): void
     {
         $uri = $this->createMock(UriInterface::class);

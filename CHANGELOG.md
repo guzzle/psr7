@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `GuzzleHttp\Psr7\Exception\TimeoutException` for timed-out stream operations
 - Add `GuzzleHttp\Psr7\Utils::redactUserInfoInString()` to redact the userinfo of a raw URI string within text
-- Promote `GuzzleHttp\Psr7\Rfc3986` to public API with `isValidScheme()`, `isValidHost()`, and `isValidPort()`
+- Promote `GuzzleHttp\Psr7\Rfc3986` to public API with `isValid*()` predicates and `canonicalizeIpv6()`
+- Add `GuzzleHttp\Psr7\UriNormalizer::CANONICALIZE_IPV6_HOST` to `PRESERVING_NORMALIZATIONS`
 
 ### Changed
 
@@ -86,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Percent-encode raw control bytes in userinfo before bracketed IP-literal hosts instead of parsing mutated values
 - Reject invalid UTF-8 and preserve percent-sequences in userinfo before bracketed IP-literal hosts
 - Normalize percent-encoded octets in the URI host to uppercase hex
+- Canonicalize IPv6 hosts to RFC 5952 form in `Uri` construction, `fromParts()`, and `withHost()`
+- Canonicalize bracketed IPv6 hosts in `UriComparator::isCrossOrigin()`
 - Reject malformed percent-sequences and percent-encoded bytes forbidden by the URI host policy
 - Trim header list elements with only spaces, horizontal tabs, and line terminators in `Header::splitList()`
 - Report header parameter PCRE failures explicitly in `Header::parse()`

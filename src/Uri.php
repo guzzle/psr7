@@ -760,6 +760,17 @@ class Uri implements UriInterface, \JsonSerializable
         }
         self::assertValidHost($filtered);
 
+        if (str_starts_with($filtered, '[') && !str_starts_with($filtered, '[v')) {
+            // assertValidHost() accepted this bracketed value with the same
+            // filter_var() predicate tryCanonicalizeIpv6() validates with, and
+            // its pure-PHP parse cannot fail on filter-accepted text, so the
+            // null guard is defense in depth only.
+            $canonical = Rfc3986::tryCanonicalizeIpv6(substr($filtered, 1, -1));
+            if ($canonical !== null) {
+                $filtered = '['.$canonical.']';
+            }
+        }
+
         return $filtered;
     }
 

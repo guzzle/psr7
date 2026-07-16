@@ -60,8 +60,8 @@ is considered a same-document reference.
 
 ## URI Syntax Validation
 
-`GuzzleHttp\Psr7\Rfc3986` provides static methods for validating individual URI
-components against the grammar defined by
+`GuzzleHttp\Psr7\Rfc3986` provides static methods for validating and
+canonicalizing individual URI components against the grammar defined by
 [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986). They operate on raw
 component strings rather than on `Psr\Http\Message\UriInterface` instances.
 
@@ -111,6 +111,39 @@ Whether the string is a valid port number. RFC 3986 defines the port as
 the stricter policy used throughout the library instead, accepting a non-empty
 run of digits (leading zeros are accepted and normalized) that resolves to a
 value in the range 0-65535.
+
+### `GuzzleHttp\Psr7\Rfc3986::canonicalizeIpv6`
+
+`public static function canonicalizeIpv6(string $address): string`
+
+Returns the [RFC 5952](https://datatracker.ietf.org/doc/html/rfc5952#section-4)
+canonical form of a valid IPv6 address. The address must be a valid textual
+IPv6 address without brackets and without a zone identifier, such as the
+inside of an IP-literal accepted by `isValidHost()`. Canonicalization
+lowercases the hexadecimal fields, suppresses leading zeros, and collapses the
+longest run of two or more zero fields (the leftmost on a tie) with `::`.
+Embedded dotted-decimal notation follows the rendering policy of BIND-derived
+`inet_ntop()` implementations and curl: exactly the IPv4-mapped
+(`::ffff:0:0/96`) and deprecated IPv4-compatible (`::/96`) layouts use it,
+while other embedded-IPv4 forms, including translated (NAT64) well-known
+prefixes such as `64:ff9b::/96` (RFC 6052), serialize in pure hexadecimal
+fields. An `\InvalidArgumentException` is thrown if the address cannot be
+parsed.
+
+Validation is strict and platform-independent: the address is checked against
+the RFC 3986 `IPv6address` grammar with PHP's `FILTER_VALIDATE_IP` filter and
+parsed in pure PHP, so spellings that only some platform parsers accept, such as
+the zero-padded dotted octets in `::ffff:192.168.001.001`, are rejected
+everywhere.
+
+Emitting dotted-decimal notation for these two selected layouts is the
+BIND-derived `inet_ntop()` and curl compatibility policy used here.
+[RFC 5952 Section 5](https://datatracker.ietf.org/doc/html/rfc5952#section-5)
+permits mixed notation for recognizable embedded-IPv4 prefixes but does not
+limit that category to these layouts; RFC 6052, for example, defines
+`64:ff9b::/96` as a Well-Known Prefix, which this implementation renders in
+pure hexadecimal. The WHATWG URL Standard always emits pure hexadecimal
+fields.
 
 ## URI Components
 
@@ -190,8 +223,13 @@ Determines if a modified URI should be considered cross-origin with respect to
 an original URI.
 
 Two URIs are cross-origin when their scheme, host, or effective port differ.
-Host comparison is case-insensitive, and missing ports use the default port for
-`http` or `https`. Other schemes do not receive implicit default ports.
+Host comparison is case-insensitive, and bracketed IPv6 literals are
+canonicalized to their RFC 5952 form from any PSR-7 implementation before
+comparison, so equivalent spellings of the same address are same-origin.
+IPvFuture literals and bracketed values that cannot be parsed as an IPv6
+address, such as those carrying zone identifiers, still compare as
+case-insensitive text. Missing ports use the default port for `http` or
+`https`. Other schemes do not receive implicit default ports.
 
 This helper only compares URI origins. It does not implement redirect handling
 or credential policy.
@@ -343,6 +381,21 @@ The following normalizations are available:
     the URI.
 
     Example: `?lang=en&article=fred` → `?article=fred&lang=en`
+
+- `UriNormalizer::CANONICALIZE_IPV6_HOST`
+
+    Canonicalizes IPv6 hosts to their RFC 5952 form. IPv6 addresses allow
+    leading zeros and multiple placements of the `::` elision, so the same
+    address has many textual spellings. The canonical form is required for
+    IPv6 literals in URIs by RFC 5952 Section 6 and never changes what the URI
+    refers to. Native `Uri` instances already guarantee canonical output; for
+    other implementations, the canonical host is requested through
+    `withHost()` and the result is kept only when the returned `getHost()`
+    exactly matches the requested spelling, otherwise this step leaves the URI
+    unchanged while other selected normalizations still apply, and setter
+    exceptions propagate.
+
+    Example: `http://[::0:0a]/` → `http://[::a]/`
 
 ### `GuzzleHttp\Psr7\UriNormalizer::isEquivalent`
 

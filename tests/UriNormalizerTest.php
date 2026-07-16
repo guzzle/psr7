@@ -245,6 +245,119 @@ class UriNormalizerTest extends TestCase
         self::assertSame('?a&a=a&a=b&a=c&a=d&b=a&b=b&b=c', (string) $normalizedUri);
     }
 
+    public function testCanonicalizeIpv6Host(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getHost')->willReturn('[::0:0A]');
+        $uri->expects(self::once())->method('withHost')->with('[::a]')->willReturn(new Uri('http://[::a]'));
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CANONICALIZE_IPV6_HOST);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('[::a]', $normalizedUri->getHost());
+    }
+
+    public function testCanonicalizeIpv6HostLowercasesForeignHosts(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getHost')->willReturn('[FE80::1]');
+        $uri->expects(self::once())->method('withHost')->with('[fe80::1]')->willReturn(new Uri('http://[fe80::1]'));
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CANONICALIZE_IPV6_HOST);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('[fe80::1]', $normalizedUri->getHost());
+    }
+
+    public function testCanonicalizeIpv6HostKeepsHostsTheImplementationCannotRetain(): void
+    {
+        $result = $this->createMock(UriInterface::class);
+        $result->expects(self::any())->method('getHost')->willReturn('[::0:0a]');
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getHost')->willReturn('[::0:0A]');
+        $uri->expects(self::once())->method('withHost')->with('[::a]')->willReturn($result);
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CANONICALIZE_IPV6_HOST);
+
+        self::assertSame($uri, $normalizedUri);
+    }
+
+    public function testCanonicalizeIpv6HostDiscardsUnrelatedSetterResults(): void
+    {
+        $result = $this->createMock(UriInterface::class);
+        $result->expects(self::any())->method('getHost')->willReturn('attacker.example');
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getHost')->willReturn('[::0:0A]');
+        $uri->expects(self::once())->method('withHost')->with('[::a]')->willReturn($result);
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CANONICALIZE_IPV6_HOST);
+
+        self::assertSame($uri, $normalizedUri);
+    }
+
+    public function testCanonicalizeIpv6HostPropagatesSetterExceptions(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getHost')->willReturn('[::0:0A]');
+        $uri->expects(self::once())->method('withHost')->with('[::a]')->willThrowException(new \RuntimeException('setter failed'));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('setter failed');
+
+        UriNormalizer::normalize($uri, UriNormalizer::CANONICALIZE_IPV6_HOST);
+    }
+
+    public function testCanonicalizeIpv6HostFallbackPreservesEarlierNormalizations(): void
+    {
+        // CONVERT_EMPTY_PATH succeeds first; the host step is then discarded
+        // because the implementation does not retain the canonical spelling.
+        $withPath = $this->createMock(UriInterface::class);
+        $withPath->expects(self::any())->method('getScheme')->willReturn('http');
+        $withPath->expects(self::any())->method('getPath')->willReturn('/');
+        $withPath->expects(self::any())->method('getHost')->willReturn('[::0:0A]');
+        $withPath->expects(self::once())->method('withHost')->with('[::a]')->willReturnSelf();
+
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getScheme')->willReturn('http');
+        $uri->expects(self::any())->method('getPath')->willReturn('');
+        $uri->expects(self::once())->method('withPath')->with('/')->willReturn($withPath);
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CONVERT_EMPTY_PATH | UriNormalizer::CANONICALIZE_IPV6_HOST);
+
+        self::assertSame($withPath, $normalizedUri);
+        self::assertSame('/', $normalizedUri->getPath());
+        self::assertSame('[::0:0A]', $normalizedUri->getHost());
+    }
+
+    /**
+     * @dataProvider getNonCanonicalizableHosts
+     */
+    public function testCanonicalizeIpv6HostLeavesOtherHostsUntouched(string $host): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getHost')->willReturn($host);
+        $uri->expects(self::never())->method('withHost');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CANONICALIZE_IPV6_HOST);
+
+        self::assertSame($uri, $normalizedUri);
+    }
+
+    public static function getNonCanonicalizableHosts(): iterable
+    {
+        return [
+            ['example.com'],
+            ['[::1]'],
+            ['[v1.fe]'],
+            ['[fe80::1%25eth0]'],
+            ['::0:1'],
+            ['[gggg::1]'],
+            ['[::ffff:192.168.001.001]'],
+        ];
+    }
+
     /**
      * @dataProvider getEquivalentTestCases
      */
@@ -268,6 +381,9 @@ class UriNormalizerTest extends TestCase
             ['urn:/..//x', 'urn:/.//x', true],
             ['http:/a/..//b', 'http:/%61/..//b', true],
             ['http://example.org/path#fr%61g%c2%b1', 'http://example.org/path#frag%C2%B1', true],
+            ['http://[::0:1]/', 'http://[::1]/', true],
+            ['http://[0:0:0:0:0:0:0:1]/', 'http://[::1]/', true],
+            ['http://[::1]/', 'http://[::2]/', false],
             ['https://example.org/', 'http://example.org/', false],
             ['https://example.org/', '//example.org/', false],
             ['//example.org/', '//example.org/', true],

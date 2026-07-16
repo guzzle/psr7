@@ -488,6 +488,7 @@ class UriTest extends TestCase
         yield 'underscore' => ['foo_bar.example', 'foo_bar.example'];
         yield 'sub-delims' => ['foo!$&\'()*+,;=.example', 'foo!$&\'()*+,;=.example'];
         yield 'ipv6 literal' => ['[::1]', '[::1]'];
+        yield 'ipv6 uncompressed' => ['[2001:db8:0:0:0:0:0:1]', '[2001:db8::1]'];
         yield 'ipvfuture literal' => ['[v7.a:b]', '[v7.a:b]'];
     }
 
@@ -1544,8 +1545,8 @@ class UriTest extends TestCase
 
         yield 'embedded ipv4 after hextets' => [
             'http://[2001:db8:3:4::192.0.2.33]/',
-            'http://[2001:db8:3:4::192.0.2.33]/',
-            '[2001:db8:3:4::192.0.2.33]',
+            'http://[2001:db8:3:4::c000:221]/',
+            '[2001:db8:3:4::c000:221]',
             null,
         ];
 
@@ -1576,6 +1577,47 @@ class UriTest extends TestCase
             '[::ffff:192.0.2.128]',
             null,
         ];
+    }
+
+    /**
+     * @dataProvider getIpv6CanonicalizationTestCases
+     */
+    public function testCanonicalizesIpv6Hosts(string $input, string $expectedHost, string $expectedUri): void
+    {
+        $uri = new Uri($input);
+
+        self::assertSame($expectedHost, $uri->getHost());
+        self::assertSame($expectedUri, (string) $uri);
+    }
+
+    public static function getIpv6CanonicalizationTestCases(): iterable
+    {
+        yield 'leading zeros and case' => ['http://[::0:0A]/', '[::a]', 'http://[::a]/'];
+        yield 'full form' => ['http://[0:0:0:0:0:0:0:1]/', '[::1]', 'http://[::1]/'];
+        yield 'longest zero run wins' => ['http://[1:0:0:1:0:0:0:1]/', '[1:0:0:1::1]', 'http://[1:0:0:1::1]/'];
+        yield 'leftmost zero run wins a tie' => ['http://[1:0:0:1:0:0:1:1]/', '[1::1:0:0:1:1]', 'http://[1::1:0:0:1:1]/'];
+        yield 'single zero field is not collapsed' => ['http://[1:0:1:1:1:1:1:1]/', '[1:0:1:1:1:1:1:1]', 'http://[1:0:1:1:1:1:1:1]/'];
+        yield 'unspecified address' => ['http://[::]/', '[::]', 'http://[::]/'];
+        yield 'v4-mapped from pure hex' => ['http://[::FFFF:7F00:1]/', '[::ffff:127.0.0.1]', 'http://[::ffff:127.0.0.1]/'];
+        yield 'v4-mapped stays dotted' => ['http://[::ffff:127.0.0.1]/', '[::ffff:127.0.0.1]', 'http://[::ffff:127.0.0.1]/'];
+        yield 'v4-compatible from pure hex' => ['http://[::102:304]/', '[::1.2.3.4]', 'http://[::1.2.3.4]/'];
+        yield 'embedded v4 after hextets becomes hex' => ['http://[2001:db8:3:4::192.0.2.33]/', '[2001:db8:3:4::c000:221]', 'http://[2001:db8:3:4::c000:221]/'];
+        yield 'ipvfuture untouched' => ['http://[v1.fe]/', '[v1.fe]', 'http://[v1.fe]/'];
+        yield 'with port' => ['http://[::0:1]:8080/', '[::1]', 'http://[::1]:8080/'];
+    }
+
+    public function testCanonicalizesIpv6HostsFromAllConstructionPaths(): void
+    {
+        $uri = new Uri('http://[0:0::1]/');
+        self::assertSame('[::1]', $uri->getHost());
+        self::assertSame('http://[::1]/', (string) $uri);
+        self::assertSame((string) $uri, (string) new Uri((string) $uri));
+
+        $uri = (new Uri())->withHost('[0:0::1]');
+        self::assertSame('[::1]', $uri->getHost());
+
+        $uri = Uri::fromParts(['scheme' => 'http', 'host' => '[0:0::1]']);
+        self::assertSame('[::1]', $uri->getHost());
     }
 
     /**

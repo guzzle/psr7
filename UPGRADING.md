@@ -307,6 +307,43 @@ curl rejects them too, except encoded DEL (`%7F`), which it decodes and forwards
 to name resolution. Other percent-encoded octets, including UTF-8 data such as
 `a%C3%A9b`, remain accepted and are normalized to uppercase hex.
 
+IPv6 hosts are now canonicalized to their RFC 5952 form when a URI is
+constructed, so `getHost()`, `getAuthority()`, and `(string) $uri` return the
+canonical spelling and synthesized `Host` headers use it. Leading zeros are
+suppressed, hexadecimal fields are lowercase, and the longest run of two or
+more zero fields is collapsed with `::`. Embedded dotted-decimal notation
+follows the rendering policy of BIND-derived `inet_ntop()` implementations and
+curl 8.11 and newer: exactly the IPv4-mapped (`::ffff:0:0/96`) and deprecated
+IPv4-compatible (`::/96`) layouts use it, while other embedded-IPv4 forms,
+including translated (NAT64) well-known prefixes such as `64:ff9b::/96`
+(RFC 6052), serialize in pure hexadecimal fields.
+
+```php
+// 2.x preserved the spelling as given
+(string) new Uri('http://[0:0:0:0:0:0:0:1]/'); // http://[0:0:0:0:0:0:0:1]/
+
+// 3.0
+(string) new Uri('http://[0:0:0:0:0:0:0:1]/');          // http://[::1]/
+(string) new Uri('http://[::FFFF:7F00:1]/');            // http://[::ffff:127.0.0.1]/
+(string) new Uri('http://[2001:db8:3:4::192.0.2.33]/'); // http://[2001:db8:3:4::c000:221]/
+```
+
+Applications that persist URI strings, for example as cache keys, will observe
+the new canonical form for previously non-canonical IPv6 spellings. Equivalent
+spellings of the same address now compare as same-origin in
+`UriComparator::isCrossOrigin()`, which canonicalizes bracketed IPv6 literals
+from any PSR-7 implementation before comparing hosts, and as equivalent in
+`UriNormalizer::isEquivalent()`. The new
+`UriNormalizer::CANONICALIZE_IPV6_HOST` flag, included in the default
+`UriNormalizer::PRESERVING_NORMALIZATIONS`, requests the canonical host from
+other PSR-7 implementations through `withHost()` and keeps the result only
+when the returned `getHost()` exactly matches the requested spelling; a
+nonexact result leaves that step unchanged while other selected normalizations
+still apply, and setter exceptions propagate. `UriComparator` does not share
+this limitation, since it canonicalizes the extracted host text directly. The
+public helper `Rfc3986::canonicalizeIpv6()` exposes the underlying
+transformation.
+
 #### Request Host Synchronization
 
 `Request::withUri()` now applies PSR-7 Host header synchronization before using

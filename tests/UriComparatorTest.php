@@ -41,12 +41,71 @@ class UriComparatorTest extends TestCase
             ['https://example.com/123', 'https://www.example.com/', true],
             ['https://example.com/123', 'https://example.com:444/', true],
             ['https://example.com:443/123', 'https://example.com:444/', true],
+            ['http://[::1]/123', 'http://[0:0:0:0:0:0:0:1]/', false],
+            ['http://[::1]/123', 'http://[::2]/', true],
             ['custom://example.com/', 'custom://example.com:80/', true],
             ['custom://example.com/', 'custom://example.com/other', false],
             ['ftp://example.com/', 'ftp://example.com:80/', true],
             ['ws://example.com/', 'ws://example.com:80/', true],
             ['wss://example.com/', 'wss://example.com:443/', true],
         ];
+    }
+
+    public function testForeignNonCanonicalIpv6HostIsSameOrigin(): void
+    {
+        $foreign = $this->createMock(UriInterface::class);
+        $foreign->method('getHost')->willReturn('[0:0:0:0:0:0:0:1]');
+        $foreign->method('getScheme')->willReturn('http');
+        $foreign->method('getPort')->willReturn(null);
+
+        self::assertFalse(UriComparator::isCrossOrigin($foreign, new Uri('http://[::1]/')));
+        self::assertFalse(UriComparator::isCrossOrigin(new Uri('http://[::1]/'), $foreign));
+    }
+
+    public function testForeignUppercaseIpv6HostIsSameOrigin(): void
+    {
+        $foreign = $this->createMock(UriInterface::class);
+        $foreign->method('getHost')->willReturn('[FE80::1]');
+        $foreign->method('getScheme')->willReturn('http');
+        $foreign->method('getPort')->willReturn(null);
+
+        self::assertFalse(UriComparator::isCrossOrigin($foreign, new Uri('http://[fe80::1]/')));
+    }
+
+    public function testForeignIpv6HostWithZoneIdComparesTextually(): void
+    {
+        $foreign = $this->createMock(UriInterface::class);
+        $foreign->method('getHost')->willReturn('[fe80::1%25eth0]');
+        $foreign->method('getScheme')->willReturn('http');
+        $foreign->method('getPort')->willReturn(null);
+
+        self::assertTrue(UriComparator::isCrossOrigin($foreign, new Uri('http://[fe80::1]/')));
+    }
+
+    public function testForeignIpv6HostWithZeroPaddedDottedOctetsComparesTextually(): void
+    {
+        $foreign = $this->createMock(UriInterface::class);
+        $foreign->method('getHost')->willReturn('[::ffff:192.168.001.001]');
+        $foreign->method('getScheme')->willReturn('http');
+        $foreign->method('getPort')->willReturn(null);
+
+        self::assertTrue(UriComparator::isCrossOrigin($foreign, new Uri('http://[::ffff:192.168.1.1]/')));
+        self::assertTrue(UriComparator::isCrossOrigin(new Uri('http://[::ffff:192.168.1.1]/'), $foreign));
+    }
+
+    public function testForeignIpvFutureHostsCompareCaselessly(): void
+    {
+        $original = $this->createMock(UriInterface::class);
+        $original->method('getHost')->willReturn('[v1.ab]');
+        $original->method('getScheme')->willReturn('http');
+        $original->method('getPort')->willReturn(null);
+
+        $modified = $this->createMock(UriInterface::class);
+        $modified->method('getHost')->willReturn('[V1.AB]');
+        $modified->method('getScheme')->willReturn('http');
+        $modified->method('getPort')->willReturn(null);
+
+        self::assertFalse(UriComparator::isCrossOrigin($original, $modified));
     }
 
     public function testNonHttpSchemeMissingPortDoesNotUseSchemeDefault(): void

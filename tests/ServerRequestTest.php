@@ -489,6 +489,10 @@ class ServerRequestTest extends TestCase
                 'https://[::1]:8000/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => '[::1]:8000']),
             ],
+            'IPv6 host with non-canonical spelling' => [
+                'https://[::1]:8000/blog/article.php?id=10&user=foo',
+                array_merge($server, ['HTTP_HOST' => '[::0:1]:8000']),
+            ],
             'Invalid host' => [
                 'https://www.example.org/blog/article.php?id=10&user=foo',
                 array_merge($server, ['HTTP_HOST' => 'a:b']),
