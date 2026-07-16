@@ -459,6 +459,15 @@ class MessageTest extends TestCase
         self::assertSame('https://[::1]', (string) $request->getUri());
     }
 
+    public function testParsesOptionsAsteriskFormRequestTargetWithNonCanonicalIpv6Host(): void
+    {
+        $request = Psr7\Message::parseRequest("OPTIONS * HTTP/1.1\r\nHost: [0:0::1]:443\r\n\r\n");
+
+        self::assertSame('*', $request->getRequestTarget());
+        self::assertSame('[0:0::1]:443', $request->getHeaderLine('Host'));
+        self::assertSame('https://[::1]', (string) $request->getUri());
+    }
+
     public function testParsesOptionsAsteriskFormRequestTargetWithoutHost(): void
     {
         $req = "OPTIONS * HTTP/1.1\r\n\r\n";

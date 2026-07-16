@@ -25,7 +25,8 @@ final class UriNormalizer
         self::CONVERT_EMPTY_PATH |
         self::REMOVE_DEFAULT_HOST |
         self::REMOVE_DEFAULT_PORT |
-        self::REMOVE_DOT_SEGMENTS;
+        self::REMOVE_DOT_SEGMENTS |
+        self::CANONICALIZE_IPV6_HOST;
 
     /**
      * All letters within a percent-encoding triplet (e.g., "%3A") are
@@ -114,6 +115,23 @@ final class UriNormalizer
     public const SORT_QUERY_PARAMETERS = 128;
 
     /**
+     * Canonicalizes IPv6 hosts to their RFC 5952 form.
+     *
+     * IPv6 addresses allow leading zeros and multiple placements of the `::`
+     * elision, so the same address has many textual spellings. The canonical
+     * form is required for IPv6 literals in URIs by RFC 5952 Section 6 and
+     * never changes what the URI refers to. Native `Uri` instances already
+     * guarantee canonical output; for other implementations, the canonical
+     * host is requested through `withHost()` and the result is kept only when
+     * the returned `getHost()` exactly matches the requested spelling,
+     * otherwise this step leaves the URI unchanged while other selected
+     * normalizations still apply, and setter exceptions propagate.
+     *
+     * Example: http://[::0:0a]/ → http://[::a]/
+     */
+    public const CANONICALIZE_IPV6_HOST = 256;
+
+    /**
      * Returns a normalized URI.
      *
      * The scheme and host component are already normalized to lowercase per
@@ -183,6 +201,10 @@ final class UriNormalizer
             $uri = $uri->withQuery(implode('&', $queryKeyValues));
         }
 
+        if ($flags & self::CANONICALIZE_IPV6_HOST) {
+            $uri = self::canonicalizeIpv6Host($uri);
+        }
+
         return $uri;
     }
 
@@ -247,6 +269,32 @@ final class UriNormalizer
         }
 
         return $normalized;
+    }
+
+    private static function canonicalizeIpv6Host(UriInterface $uri): UriInterface
+    {
+        $host = $uri->getHost();
+        if (!str_starts_with($host, '[') || !str_ends_with($host, ']')) {
+            return $uri;
+        }
+
+        // Foreign UriInterface implementations may carry IPvFuture literals,
+        // IPv6 zone identifiers, uppercase text, or invalid spellings;
+        // tryCanonicalizeIpv6() canonicalizes only what is unambiguously an
+        // IPv6 address and leaves everything else untouched.
+        $canonical = Rfc3986::tryCanonicalizeIpv6(substr($host, 1, -1));
+        if ($canonical === null || '['.$canonical.']' === $host) {
+            return $uri;
+        }
+
+        $candidate = $uri->withHost('['.$canonical.']');
+        // Normalization must never corrupt a component, so keep the original
+        // host when the implementation does not retain the canonical form.
+        if ($candidate->getHost() !== '['.$canonical.']') {
+            return $uri;
+        }
+
+        return $candidate;
     }
 
     private function __construct()

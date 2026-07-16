@@ -157,6 +157,7 @@ class Rfc3986Test extends TestCase
         yield 'IPv6 uncompressed' => ['[2001:db8:0:0:0:0:0:1]', true];
         yield 'IPv4-mapped IPv6 literal' => ['[::ffff:192.0.2.1]', true];
         yield 'IPv6 with general ls32 IPv4 form' => ['[2001:db8::192.168.0.1]', true];
+        yield 'IPv6 v4-mapped tail with zero-padded octets' => ['[::ffff:192.168.001.001]', false];
         yield 'IPv6 with percent-encoded zone id' => ['[fe80::1%25eth0]', false];
         yield 'IPv6 with raw zone id' => ['[fe80::1%eth0]', false];
         yield 'IPv6 with trailing garbage inside brackets' => ['[::1extra]', false];
@@ -243,5 +244,84 @@ class Rfc3986Test extends TestCase
         yield 'utf8 e-acute' => ["\xC3\xA9", false];
         yield 'arabic-indic digits' => ["\xD9\xA8\xD9\xA0", false];
         yield 'fullwidth digits' => ["\xEF\xBC\x91\xEF\xBC\x92\xEF\xBC\x93", false];
+    }
+
+    /**
+     * @dataProvider canonicalIpv6Provider
+     */
+    public function testCanonicalizeIpv6(string $address, string $expected): void
+    {
+        self::assertSame($expected, Rfc3986::canonicalizeIpv6($address));
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: string}>
+     */
+    public static function canonicalIpv6Provider(): iterable
+    {
+        // RFC 5952 section 4.1: leading zeros are suppressed; section 4.3:
+        // hexadecimal digits are lowercase.
+        yield 'leading zeros and uppercase hex' => ['::0:0A', '::a'];
+        yield 'already canonical loopback' => ['::1', '::1'];
+        yield 'unspecified address' => ['::', '::'];
+
+        // RFC 5952 section 4.2: the longest run of two or more zero fields is
+        // collapsed with "::"; the leftmost run wins a tie; a single zero
+        // field is never collapsed.
+        yield 'full form collapses to loopback' => ['0:0:0:0:0:0:0:1', '::1'];
+        yield 'longest zero run wins' => ['1:0:0:1:0:0:0:1', '1:0:0:1::1'];
+        yield 'leftmost zero run wins a tie' => ['1:0:0:1:0:0:1:1', '1::1:0:0:1:1'];
+        yield 'single zero field is not collapsed' => ['1:0:1:1:1:1:1:1', '1:0:1:1:1:1:1:1'];
+
+        // RFC 5952 section 5: IPv4-mapped and IPv4-compatible addresses use
+        // embedded dotted-decimal notation; other embedded IPv4 text is
+        // rewritten to hexadecimal fields.
+        yield 'v4-mapped from pure hex' => ['::ffff:7f00:1', '::ffff:127.0.0.1'];
+        yield 'v4-mapped stays dotted' => ['::ffff:127.0.0.1', '::ffff:127.0.0.1'];
+        yield 'v4-compatible from pure hex' => ['::102:304', '::1.2.3.4'];
+        yield 'v4-compatible low bytes collapse' => ['::0.0.0.7', '::7'];
+        yield 'embedded v4 after hextets becomes hex' => ['2001:db8:3:4::192.0.2.33', '2001:db8:3:4::c000:221'];
+        yield 'full form with dotted tail becomes hex' => ['1:2:3:4:5:6:1.2.3.4', '1:2:3:4:5:6:102:304'];
+        yield 'compression covering a single field' => ['1:2:3:4:5:6:7::', '1:2:3:4:5:6:7:0'];
+    }
+
+    /**
+     * @dataProvider invalidIpv6Provider
+     */
+    public function testCanonicalizeIpv6RejectsInvalidAddresses(string $address): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Rfc3986::canonicalizeIpv6($address);
+    }
+
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function invalidIpv6Provider(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'colons only' => [':::'];
+        yield 'plain IPv4 address' => ['1.2.3.4'];
+        yield 'bracketed address' => ['[::1]'];
+        yield 'reg-name' => ['example.com'];
+        yield 'percent-encoded zone id' => ['fe80::1%25eth0'];
+        yield 'raw zone id' => ['fe80::1%eth0'];
+        yield 'too many groups' => ['1:2:3:4:5:6:7:8:9'];
+        yield 'trailing space' => ['::1 '];
+        yield 'trailing newline' => ["::1\n"];
+
+        // Platform inet_pton() implementations disagree on these spellings
+        // (Apple libc and OpenBSD accept them, glibc and musl reject them); the
+        // platform-independent validation rejects them everywhere.
+        yield 'v4-mapped tail with zero-padded octets' => ['::ffff:192.168.001.001'];
+        yield 'v4-compatible tail with zero-padded octets' => ['::192.168.001.001'];
+        yield 'general dotted tail with zero-padded octet' => ['2001:db8::192.168.0.001'];
+        yield 'dotted tail with zero-padded first octet' => ['::01.2.3.4'];
+        yield 'dotted tail with zero-padded last octet' => ['::1.2.3.04'];
+
+        yield 'dotted tail not in final position' => ['::1.2.3.4:5'];
+        yield 'dotted tail overflowing eight fields' => ['1:2:3:4:5:6:7:1.2.3.4'];
+        yield 'compression covering zero fields' => ['1:2:3:4:5:6:7:8::'];
     }
 }
