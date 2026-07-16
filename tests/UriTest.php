@@ -611,6 +611,9 @@ class UriTest extends TestCase
             ['imap', 143, true],
             ['pop', 110, true],
             ['ldap', 389, true],
+            ['ws', 80, true],
+            ['ws', 8080, false],
+            ['wss', 443, true],
         ];
     }
 
@@ -1159,6 +1162,29 @@ class UriTest extends TestCase
         self::assertSame('example.com', $uri->getAuthority());
 
         $uri = (new Uri('http://example.com'))->withPort(80);
+        self::assertNull($uri->getPort());
+        self::assertSame('example.com', $uri->getAuthority());
+    }
+
+    public function testPortIsNullIfStandardPortForWebSocketScheme(): void
+    {
+        // WSS standard port
+        $uri = new Uri('wss://example.com:443/chat');
+        self::assertNull($uri->getPort());
+        self::assertSame('example.com', $uri->getAuthority());
+        self::assertSame('wss://example.com/chat', (string) $uri);
+
+        $uri = (new Uri('wss://example.com'))->withPort(443);
+        self::assertNull($uri->getPort());
+        self::assertSame('example.com', $uri->getAuthority());
+
+        // WS standard port
+        $uri = new Uri('ws://example.com:80/chat');
+        self::assertNull($uri->getPort());
+        self::assertSame('example.com', $uri->getAuthority());
+        self::assertSame('ws://example.com/chat', (string) $uri);
+
+        $uri = (new Uri('ws://example.com'))->withPort(80);
         self::assertNull($uri->getPort());
         self::assertSame('example.com', $uri->getAuthority());
     }

@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop throwing from `UriResolver::relativize()` when an equal-path target's last path segment contains a colon
 - Harden URI host validation (delimiters, backslashes, IPv6, embedded ports); require schemes to start with a letter
 - Validate `Uri::fromParts()` ports instead of casting them
+- Treat ports 80 and 443 as defaults for the `ws` and `wss` schemes
+- Use the `ws` and `wss` default ports in `UriComparator::isCrossOrigin()` port comparisons
 - Redact all non-empty URI userinfo in `Utils::redactUserInfo()`
 - Rebuild server request URIs from `$_SERVER` by `REQUEST_METHOD`, using target authority before `SERVER_PORT`
 - Remove userinfo from absolute-form `REQUEST_URI` targets in `ServerRequest::fromGlobals()`

@@ -35,6 +35,8 @@ class Uri implements UriInterface, \JsonSerializable
         'imap' => 143,
         'pop' => 110,
         'ldap' => 389,
+        'ws' => 80,
+        'wss' => 443,
     ];
 
     private const QUERY_SEPARATORS_REPLACEMENT = ['=' => '%3D', '&' => '%26', '+' => '%2B'];

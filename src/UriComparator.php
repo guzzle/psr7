@@ -25,8 +25,8 @@ final class UriComparator
      * same-origin. IPvFuture literals and bracketed values that cannot be
      * parsed as an IPv6 address, such as those carrying zone identifiers,
      * still compare as case-insensitive text. Missing ports use the default
-     * port for `http` or `https`. Other schemes do not receive implicit
-     * default ports.
+     * port for `http`, `https`, `ws`, or `wss`. Other schemes do not receive
+     * implicit default ports.
      *
      * This helper only compares URI origins. It does not implement redirect
      * handling or credential policy.
@@ -78,11 +78,11 @@ final class UriComparator
             return $port;
         }
 
-        if ('http' === $uri->getScheme()) {
+        if (\in_array($uri->getScheme(), ['http', 'ws'], true)) {
             return 80;
         }
 
-        if ('https' === $uri->getScheme()) {
+        if (\in_array($uri->getScheme(), ['https', 'wss'], true)) {
             return 443;
         }
 

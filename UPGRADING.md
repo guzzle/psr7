@@ -821,6 +821,59 @@ use GuzzleHttp\Psr7\UriNormalizer;
 (string) UriNormalizer::normalize(new Uri('http://%75ser@ex%61mple.com/'));
 ```
 
+#### URI Ports and Authority Handling
+
+Several 3.0 changes affect how URI ports are accepted, validated, and rendered.
+Each is described in its own section above:
+
+- `UriInterface::withPort()` now requires `int|null`; see "Native PSR-7
+  Parameter Types".
+- `Uri::fromParts()` validates ports instead of casting them, and `withHost()`
+  rejects embedded `host:port` values; see "URI Host and Scheme Validation".
+- A generic `Uri` can represent ports 0 through 65535. Inbound HTTP authority
+  parsing is stricter: `Message::parseRequest()` rejects zero-valued ports but
+  accepts nonzero leading-zero ports, normalizing the reconstructed URI while
+  preserving the raw `Host` or request-target text; see "HTTP Start-line
+  Parsing" and "URI Host and Scheme Validation".
+- Server globals reject a zero-valued `HTTP_HOST` and validate `SERVER_PORT`
+  when fallback authority reconstruction needs it. A recognized absolute-form
+  or CONNECT `REQUEST_URI` authority takes precedence and can still produce a
+  URI with port zero; see "URI Host and Scheme Validation".
+- Synthesized `Host` headers now include any non-default URI port; see "Request
+  Modification Changes" and "Request Host Synchronization".
+
+`Uri` now knows the default ports of the `ws` and `wss` schemes, 80 and 443 per
+RFC 6455. An explicit default port on a `ws` or `wss` URI is removed when the
+URI is constructed or modified, `Uri::isDefaultPort()` returns `true` for such
+URIs, and `UriNormalizer::normalize()` with the `REMOVE_DEFAULT_PORT` flag
+removes the port from other `UriInterface` implementations as well. In 2.x,
+these ports were preserved.
+
+```php
+use GuzzleHttp\Psr7\Uri;
+
+// 2.x: ws://example.com:80/chat
+// 3.0: ws://example.com/chat
+(string) new Uri('ws://example.com:80/chat');
+
+// 2.x: 443
+// 3.0: null
+(new Uri('wss://example.com:443'))->getPort();
+```
+
+Because a native `Uri` never carries a default `ws` or `wss` port, the `Host`
+header synchronized from such a request URI omits the port. `Request` and
+`Message` `Host` synthesis and `Utils::modifyRequest()` still append an explicit
+default port that a `ws` or `wss` URI from another `UriInterface` implementation
+reports.
+
+`UriComparator::isCrossOrigin()` now applies these default ports when comparing
+effective ports, so two `ws` or `wss` URIs that differ only by an explicit
+default port, such as `ws://example.com/` and `ws://example.com:80/`, are
+same-origin no matter which `UriInterface` implementation supplies them. In 2.x,
+such pairs were considered cross-origin. Schemes other than `http`, `https`,
+`ws`, and `wss` still receive no implicit default port.
+
 1.x to 2.0
 ----------
 
