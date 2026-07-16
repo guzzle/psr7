@@ -11,6 +11,7 @@ use Psr\Http\Message\UriInterface;
 
 /**
  * @covers \GuzzleHttp\Psr7\Uri
+ * @covers \GuzzleHttp\Psr7\UriParser
  */
 class UriTest extends TestCase
 {
@@ -195,6 +196,7 @@ class UriTest extends TestCase
     public function testRejectsIpv6UriWithTrailingNewline(): void
     {
         $this->expectException(MalformedUriException::class);
+        $this->expectExceptionMessage('Unable to parse URI: http://[::1]\\n');
 
         new Uri("http://[::1]\n");
     }
@@ -434,6 +436,14 @@ class UriTest extends TestCase
         Uri::fromParts(['scheme' => "ht\ntp", 'host' => 'example.com']);
     }
 
+    public function testInvalidSchemeDiagnosticEscapesControlBytes(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid scheme: "ht\\ntp"');
+
+        (new Uri())->withScheme("ht\ntp");
+    }
+
     /**
      * @dataProvider getInvalidHostsWithControlCharacters
      */
@@ -442,6 +452,22 @@ class UriTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         (new Uri())->withHost($host);
+    }
+
+    public function testInvalidHostDiagnosticEscapesControlBytes(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid host: "example.com\\r\\nx-injected: yes"');
+
+        (new Uri())->withHost("example.com\r\nX-Injected: yes");
+    }
+
+    public function testInvalidStringPortDiagnosticEscapesControlBytes(): void
+    {
+        $this->expectException(MalformedUriException::class);
+        $this->expectExceptionMessage('Invalid port: 80\\n. Must be between 0 and 65535');
+
+        Uri::fromParts(['port' => "80\n"]);
     }
 
     public static function getInvalidHostsWithControlCharacters(): iterable

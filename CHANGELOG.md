@@ -97,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Report header parameter PCRE failures explicitly in `Header::parse()`
 - Escape control bytes in invalid header names and values in exception messages
 - Escape control bytes in malformed response start-lines in exception messages
+- Escape control bytes in malformed URI component diagnostics
 
 ### Removed
 
