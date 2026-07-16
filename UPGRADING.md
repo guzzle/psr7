@@ -787,6 +787,40 @@ Guzzle PSR-7 stream implementations no longer support native PHP `serialize()`
 or `unserialize()`. Persist stream contents explicitly and recreate streams with
 `Utils::streamFor()` when needed.
 
+#### URI Normalization of Userinfo and Host
+
+`UriNormalizer::CAPITALIZE_PERCENT_ENCODING` and
+`UriNormalizer::DECODE_UNRESERVED_CHARACTERS` now also apply to the userinfo and
+host components. In 2.x, these normalizations only rewrote the path, query, and
+fragment.
+
+Since the host is case-insensitive and PSR-7 requires it to be lowercase, octets
+decoded in the host are lowercased. Reserved percent-encoded octets such as
+`%3A` are never decoded, so component boundaries cannot change, and these two
+flags never modify bracketed IP-literal hosts, which only the separate
+`UriNormalizer::CANONICALIZE_IPV6_HOST` normalization may canonicalize. Both
+flags are part of `UriNormalizer::PRESERVING_NORMALIZATIONS`, so the output of
+`UriNormalizer::normalize()` and the result of `UriNormalizer::isEquivalent()`
+can change for URIs whose userinfo or host contains percent-encoded octets.
+Custom `UriInterface` implementations now receive `withUserInfo()` or
+`withHost()` calls from the normalizer when a normalization changes those
+components; unchanged components are never rewritten. The rewrite is kept only
+when the value returned by the implementation matches the normalized form, and
+a userinfo with an empty user segment is never rewritten. If a setter returns a
+different representation, that rewrite is discarded, while other selected
+normalizations still apply, and setter exceptions propagate. No percent-encoding
+normalization is applied to a component with malformed percent syntax, such as a
+`%` not followed by two hexadecimal digits.
+
+```php
+use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\UriNormalizer;
+
+// 2.x: http://%75ser@ex%61mple.com/
+// 3.0: http://user@example.com/
+(string) UriNormalizer::normalize(new Uri('http://%75ser@ex%61mple.com/'));
+```
+
 1.x to 2.0
 ----------
 

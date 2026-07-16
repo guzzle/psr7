@@ -6,6 +6,7 @@ namespace GuzzleHttp\Tests\Psr7;
 
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\UriNormalizer;
+use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\UriInterface;
 
@@ -29,6 +30,54 @@ class UriNormalizerTest extends TestCase
 
         self::assertInstanceOf(UriInterface::class, $normalizedUri);
         self::assertSame("/$expectEncoding?$expectEncoding#$expectEncoding", (string) $normalizedUri);
+    }
+
+    public function testCapitalizePercentEncodingInUserInfo(): void
+    {
+        $uri = new Uri('http://us%2fer:pa%3ass@example.com/');
+
+        self::assertSame('us%2fer:pa%3ass', $uri->getUserInfo(), 'Not normalized automatically beforehand');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://us%2Fer:pa%3Ass@example.com/', (string) $normalizedUri);
+    }
+
+    public function testCapitalizePercentEncodingInForeignHost(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getUserInfo')->willReturn('');
+        $uri->expects(self::any())->method('getHost')->willReturn('ex%c3%a9.example');
+        $uri->expects(self::once())->method('withHost')->with('ex%C3%A9.example')->willReturn(new Uri('http://ex%C3%A9.example'));
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://ex%C3%A9.example', (string) $normalizedUri);
+    }
+
+    public function testCapitalizePercentEncodingSkipsUnchangedForeignHost(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getUserInfo')->willReturn('');
+        $uri->expects(self::any())->method('getHost')->willReturn('ex%C3%A9.example');
+        $uri->expects(self::never())->method('withHost');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+    }
+
+    public function testCapitalizePercentEncodingPreservesLowercasingForeignHost(): void
+    {
+        $uri = new UriNormalizerForeignUri('', 'ex%c3%a9.example');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('ex%c3%a9.example', $normalizedUri->getHost());
+        self::assertSame($uri, $normalizedUri, 'The original representation is returned untouched');
     }
 
     /**
@@ -60,6 +109,153 @@ class UriNormalizerTest extends TestCase
         return array_map(function ($char) {
             return [(string) $char];
         }, $unreservedChars);
+    }
+
+    public function testDecodeUnreservedCharactersInUserInfo(): void
+    {
+        $uri = new Uri('http://%75ser:pa%73s@example.com/');
+
+        self::assertSame('%75ser:pa%73s', $uri->getUserInfo(), 'Not normalized automatically beforehand');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://user:pass@example.com/', (string) $normalizedUri);
+    }
+
+    public function testDecodeUnreservedCharactersInHost(): void
+    {
+        $uri = new Uri('http://ex%41mple%2Ecom/');
+
+        self::assertSame('ex%41mple%2Ecom', $uri->getHost(), 'Not normalized automatically beforehand');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://example.com/', (string) $normalizedUri);
+    }
+
+    public function testDecodeUnreservedCharactersKeepsReservedOctetsInUserInfo(): void
+    {
+        $uri = new Uri('http://user:pa%3Ass@example.com/');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://user:pa%3Ass@example.com/', (string) $normalizedUri);
+    }
+
+    public function testDecodeUnreservedCharactersInForeignUserInfo(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getUserInfo')->willReturn('us%65r:p%61ss');
+        $uri->expects(self::once())->method('withUserInfo')->with('user', 'pass')->willReturn(new Uri('http://user:pass@example.com'));
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://user:pass@example.com', (string) $normalizedUri);
+    }
+
+    public function testDecodeUnreservedCharactersLowercasesDecodedForeignHostOctets(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getUserInfo')->willReturn('');
+        $uri->expects(self::any())->method('getHost')->willReturn('ex%41mple%2ecom');
+        $uri->expects(self::once())->method('withHost')->with('example.com')->willReturn(new Uri('http://example.com'));
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://example.com', (string) $normalizedUri);
+    }
+
+    public function testDecodeUnreservedCharactersNormalizesLowercasingForeignHost(): void
+    {
+        $uri = new UriNormalizerForeignUri('', 'example%2Ecom');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('example.com', $normalizedUri->getHost());
+    }
+
+    public function testDecodeUnreservedCharactersPreservesForeignUserInfoWithEmptyUser(): void
+    {
+        $uri = new UriNormalizerForeignUri(':p%61ss', 'example.com');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame(':p%61ss', $normalizedUri->getUserInfo());
+    }
+
+    public function testDecodeUnreservedCharactersLeavesMalformedForeignHostUntouched(): void
+    {
+        $uri = new UriNormalizerForeignUri('', 'example%6%31com');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+        $twiceNormalizedUri = UriNormalizer::normalize($normalizedUri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertSame('example%6%31com', $normalizedUri->getHost());
+        self::assertSame('example%6%31com', $twiceNormalizedUri->getHost());
+    }
+
+    public function testDecodeUnreservedCharactersDoesNotCallSettersForMalformedComponents(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getUserInfo')->willReturn('user:%6%31');
+        $uri->expects(self::any())->method('getHost')->willReturn('example%6%31com');
+        $uri->expects(self::any())->method('getPath')->willReturn('');
+        $uri->expects(self::any())->method('getQuery')->willReturn('');
+        $uri->expects(self::any())->method('getFragment')->willReturn('');
+        $uri->expects(self::never())->method('withUserInfo');
+        $uri->expects(self::never())->method('withHost');
+
+        UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+    }
+
+    public function testMalformedForeignUserInfoDoesNotBlockHostNormalization(): void
+    {
+        $uri = new UriNormalizerForeignUri('user:%6%31', 'example%2Ecom');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertSame('user:%6%31', $normalizedUri->getUserInfo());
+        self::assertSame('example.com', $normalizedUri->getHost());
+    }
+
+    public function testNormalizePreservesUserInfoWithEmptyUser(): void
+    {
+        $uri = new Uri('http://:p%61ss@h/');
+
+        self::assertSame(':p%61ss', $uri->getUserInfo(), 'Not normalized automatically beforehand');
+
+        $normalizedUri = UriNormalizer::normalize($uri);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://:p%61ss@h/', (string) $normalizedUri);
+    }
+
+    public function testDecodeUnreservedCharactersSkipsForeignIpLiteralHosts(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->expects(self::any())->method('getUserInfo')->willReturn('');
+        $uri->expects(self::any())->method('getHost')->willReturn('[fe80::1%25%65th0]');
+        $uri->expects(self::never())->method('withHost');
+
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+    }
+
+    public function testPercentEncodingNormalizationsAreIdempotent(): void
+    {
+        $uri = new Uri('http://us%65r:pa%3a%73s@ex%61mple.com/p%61th');
+        $normalizedUri = UriNormalizer::normalize($uri);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('http://user:pa%3Ass@example.com/path', (string) $normalizedUri);
+        self::assertSame('http://user:pa%3Ass@example.com/path', (string) UriNormalizer::normalize($normalizedUri));
     }
 
     /**
@@ -384,6 +580,9 @@ class UriNormalizerTest extends TestCase
             ['http://[::0:1]/', 'http://[::1]/', true],
             ['http://[0:0:0:0:0:0:0:1]/', 'http://[::1]/', true],
             ['http://[::1]/', 'http://[::2]/', false],
+            ['http://example%2Ecom/', 'http://example.com/', true],
+            ['http://%75ser@example.com/', 'http://user@example.com/', true],
+            ['http://user:pa%3Ass@example.com/', 'http://user:pass@example.com/', false],
             ['https://example.org/', 'http://example.org/', false],
             ['https://example.org/', '//example.org/', false],
             ['//example.org/', '//example.org/', true],
@@ -401,5 +600,111 @@ class UriNormalizerTest extends TestCase
 
         self::assertFalse(UriNormalizer::isEquivalent($uri1, $uri2));
         self::assertTrue(UriNormalizer::isEquivalent($uri1, $uri2, UriNormalizer::PRESERVING_NORMALIZATIONS | UriNormalizer::REMOVE_DUPLICATE_SLASHES));
+    }
+}
+
+/**
+ * A URI test double whose withUserInfo() removes the userinfo when the user
+ * is empty and whose withHost() lowercases its whole argument, mirroring
+ * behavior found in other PSR-7 implementations.
+ */
+final class UriNormalizerForeignUri implements UriInterface
+{
+    /** @var string */
+    private $userInfo;
+
+    /** @var string */
+    private $host;
+
+    public function __construct(string $userInfo, string $host)
+    {
+        $this->userInfo = $userInfo;
+        $this->host = $host;
+    }
+
+    public function getScheme(): string
+    {
+        return 'http';
+    }
+
+    public function getAuthority(): string
+    {
+        return ($this->userInfo === '' ? '' : $this->userInfo.'@').$this->host;
+    }
+
+    public function getUserInfo(): string
+    {
+        return $this->userInfo;
+    }
+
+    public function getHost(): string
+    {
+        return $this->host;
+    }
+
+    public function getPort(): ?int
+    {
+        return null;
+    }
+
+    public function getPath(): string
+    {
+        return '/';
+    }
+
+    public function getQuery(): string
+    {
+        return '';
+    }
+
+    public function getFragment(): string
+    {
+        return '';
+    }
+
+    public function withScheme(string $scheme): UriInterface
+    {
+        return $this;
+    }
+
+    public function withUserInfo(string $user, ?string $password = null): UriInterface
+    {
+        $new = clone $this;
+        $new->userInfo = $user === '' ? '' : $user.($password === null ? '' : ':'.$password);
+
+        return $new;
+    }
+
+    public function withHost(string $host): UriInterface
+    {
+        $new = clone $this;
+        $new->host = Utils::asciiToLower($host);
+
+        return $new;
+    }
+
+    public function withPort(?int $port): UriInterface
+    {
+        return $this;
+    }
+
+    public function withPath(string $path): UriInterface
+    {
+        return $this;
+    }
+
+    public function withQuery(string $query): UriInterface
+    {
+        return $this;
+    }
+
+    public function withFragment(string $fragment): UriInterface
+    {
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        return 'http://'.$this->getAuthority().$this->getPath();
     }
 }

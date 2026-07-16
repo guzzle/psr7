@@ -322,7 +322,16 @@ The following normalizations are available:
 - `UriNormalizer::CAPITALIZE_PERCENT_ENCODING`
 
     All letters within a percent-encoding triplet (e.g., "%3A") are
-    case-insensitive, and should be capitalized.
+    case-insensitive, and should be capitalized. This applies to the userinfo,
+    host, path, query, and fragment components. Bracketed IP-literal hosts are
+    skipped as a legacy tolerance for nonstandard values other implementations
+    may carry; zone-identifier text was briefly valid URI syntax under RFC 6874,
+    which RFC 9844 obsoleted and reverted. The userinfo and host are only
+    rewritten when the value returned by the implementation matches the
+    normalized form, and a userinfo with an empty user segment is never
+    rewritten. No percent-encoding normalization is applied to a component that
+    contains malformed percent syntax, such as a `%` not followed by two
+    hexadecimal digits.
 
     Example: `http://example.org/a%c2%b1b` → `http://example.org/a%C2%B1b`
 
@@ -333,6 +342,17 @@ The following normalizations are available:
     (%30–%39), hyphen (%2D), period (%2E), underscore (%5F), or tilde (%7E)
     should not be created by URI producers and, when found in a URI, should be
     decoded to their corresponding unreserved characters by URI normalizers.
+    This applies to the userinfo, host, path, query, and fragment components.
+    Since the host is case-insensitive and PSR-7 requires it to be lowercase,
+    octets decoded in the host are lowercased (e.g., "%41" becomes "a").
+    Bracketed IP-literal hosts are skipped as a legacy tolerance for nonstandard
+    values other implementations may carry; zone-identifier text was briefly
+    valid URI syntax under RFC 6874, which RFC 9844 obsoleted and reverted. The
+    userinfo and host are only rewritten when the value returned by the
+    implementation matches the normalized form, and a userinfo with an empty
+    user segment is never rewritten. No percent-encoding normalization is
+    applied to a component that contains malformed percent syntax, such as a `%`
+    not followed by two hexadecimal digits.
 
     Example: `http://example.org/%7Eusern%61me/` → `http://example.org/~username/`
 
