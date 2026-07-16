@@ -105,12 +105,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `ralouphie/getallheaders` dependency
 - Removed deprecated `Header::normalize()` method
 
-## 2.13.0 - Upcoming
+## 2.13.0 - 2026-07-16
 
 ### Added
 
-- Add locale-independent Utils::asciiToLower and Utils::asciiToUpper helpers
-- Add locale-independent Utils::asciiUcFirst, caselessEquals, and caselessContains helpers
+- Add `Utils::` `asciiToLower`, `asciiToUpper`, `asciiUcFirst`, `caselessEquals`, `caselessContains`
 
 ### Changed
 
