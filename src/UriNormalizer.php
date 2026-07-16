@@ -30,7 +30,16 @@ final class UriNormalizer
 
     /**
      * All letters within a percent-encoding triplet (e.g., "%3A") are
-     * case-insensitive, and should be capitalized.
+     * case-insensitive, and should be capitalized. This applies to the
+     * userinfo, host, path, query, and fragment components. Bracketed
+     * IP-literal hosts are skipped as a legacy tolerance for nonstandard values
+     * other implementations may carry; zone-identifier text was briefly valid
+     * URI syntax under RFC 6874, which RFC 9844 obsoleted and reverted. The
+     * userinfo and host are only rewritten when the value returned by the
+     * implementation matches the normalized form, and a userinfo with an empty
+     * user segment is never rewritten. No percent-encoding normalization is
+     * applied to a component that contains malformed percent syntax, such as a
+     * `%` not followed by two hexadecimal digits.
      *
      * Example: http://example.org/a%c2%b1b → http://example.org/a%C2%B1b
      */
@@ -43,7 +52,18 @@ final class UriNormalizer
      * and %61–%7A), DIGIT (%30–%39), hyphen (%2D), period (%2E), underscore
      * (%5F), or tilde (%7E) should not be created by URI producers and, when
      * found in a URI, should be decoded to their corresponding unreserved
-     * characters by URI normalizers.
+     * characters by URI normalizers. This applies to the userinfo, host, path,
+     * query, and fragment components. Since the host is case-insensitive and
+     * PSR-7 requires it to be lowercase, octets decoded in the host are
+     * lowercased (e.g., "%41" becomes "a"). Bracketed IP-literal hosts are
+     * skipped as a legacy tolerance for nonstandard values other
+     * implementations may carry; zone-identifier text was briefly valid URI
+     * syntax under RFC 6874, which RFC 9844 obsoleted and reverted. The
+     * userinfo and host are only rewritten when the value returned by the
+     * implementation matches the normalized form, and a userinfo with an empty
+     * user segment is never rewritten. No percent-encoding normalization is
+     * applied to a component that contains malformed percent syntax, such as a
+     * `%` not followed by two hexadecimal digits.
      *
      * Example: http://example.org/%7Eusern%61me/ → http://example.org/~username/
      */
@@ -237,6 +257,9 @@ final class UriNormalizer
             return Utils::asciiToUpper($match[0]);
         };
 
+        $uri = self::withNormalizedUserInfo($uri, $regex, $callback);
+        $uri = self::withNormalizedHost($uri, $regex, $callback);
+
         return $uri
             ->withPath(self::normalizePercentEncodingInComponent(Uri::rawPath($uri), $regex, $callback))
             ->withQuery(self::normalizePercentEncodingInComponent($uri->getQuery(), $regex, $callback))
@@ -251,6 +274,16 @@ final class UriNormalizer
             return rawurldecode($match[0]);
         };
 
+        // The host is case-insensitive and PSR-7 requires it to be lowercase,
+        // so decoded ALPHA octets (e.g. "%41") must land lowercase even for
+        // implementations whose withHost() does not normalize the case.
+        $hostCallback = function (array $match): string {
+            return Utils::asciiToLower(rawurldecode($match[0]));
+        };
+
+        $uri = self::withNormalizedUserInfo($uri, $regex, $callback);
+        $uri = self::withNormalizedHost($uri, $regex, $hostCallback);
+
         return $uri
             ->withPath(self::normalizePercentEncodingInComponent(Uri::rawPath($uri), $regex, $callback))
             ->withQuery(self::normalizePercentEncodingInComponent($uri->getQuery(), $regex, $callback))
@@ -260,8 +293,97 @@ final class UriNormalizer
     /**
      * @param callable(array): string $callback
      */
+    private static function withNormalizedUserInfo(UriInterface $uri, string $regex, callable $callback): UriInterface
+    {
+        $userInfo = $uri->getUserInfo();
+
+        if (!str_contains($userInfo, '%')) {
+            return $uri;
+        }
+
+        $normalized = self::normalizePercentEncodingInComponent($userInfo, $regex, $callback);
+
+        if ($normalized === $userInfo) {
+            return $uri;
+        }
+
+        // Normalization cannot create a colon: decoding is confined to
+        // unreserved characters and capitalization keeps octets encoded. So
+        // splitting on the first colon preserves the user/password boundary.
+        $parts = explode(':', $normalized, 2);
+
+        // PSR-7 defines withUserInfo('') as removing the userinfo, so a
+        // userinfo with an empty user segment (e.g. ":pass") cannot be
+        // expressed through the setter and is preserved as-is instead.
+        if ($parts[0] === '') {
+            return $uri;
+        }
+
+        $candidate = $uri->withUserInfo($parts[0], $parts[1] ?? null);
+
+        // Normalization must never lose or corrupt information, so verify the
+        // representation the setter returned and leave the component untouched
+        // when the implementation cannot represent the normalized form.
+        if ($candidate->getUserInfo() !== $normalized) {
+            return $uri;
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * @param callable(array): string $callback
+     */
+    private static function withNormalizedHost(UriInterface $uri, string $regex, callable $callback): UriInterface
+    {
+        $host = $uri->getHost();
+
+        // Bracketed IP-literal hosts are skipped as a legacy tolerance for
+        // nonstandard values other implementations may carry, such as a zone
+        // identifier in "[fe80::1%25eth0]"; that text was briefly valid URI
+        // syntax under RFC 6874, which RFC 9844 obsoleted and reverted.
+        if (str_starts_with($host, '[') || !str_contains($host, '%')) {
+            return $uri;
+        }
+
+        $normalized = self::normalizePercentEncodingInComponent($host, $regex, $callback);
+
+        if ($normalized === $host) {
+            return $uri;
+        }
+
+        $candidate = $uri->withHost($normalized);
+
+        // Normalization must never lose or corrupt information, so verify the
+        // representation the setter returned and leave the component untouched
+        // when the implementation cannot represent the normalized form.
+        if ($candidate->getHost() !== $normalized) {
+            return $uri;
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * @param callable(array): string $callback
+     */
     private static function normalizePercentEncodingInComponent(string $component, string $regex, callable $callback): string
     {
+        // Decoding a valid triplet that follows a dangling "%" would complete
+        // the malformed sequence into a new valid triplet ("example%6%31com"
+        // becomes "example%61com"), turning malformed text valid and breaking
+        // idempotence, so a component containing malformed percent syntax is
+        // returned unchanged.
+        $malformed = preg_match('/%(?!'.Rfc3986::HEX_OCTET.')/', $component);
+
+        if ($malformed === false) {
+            throw new \RuntimeException('Unable to scan URI component percent-encoding: '.preg_last_error_msg());
+        }
+
+        if ($malformed === 1) {
+            return $component;
+        }
+
         $normalized = preg_replace_callback($regex, $callback, $component);
 
         if ($normalized === null) {

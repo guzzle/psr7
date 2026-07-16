@@ -90,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Canonicalize IPv6 hosts to RFC 5952 form in `Uri` construction, `fromParts()`, and `withHost()`
 - Canonicalize bracketed IPv6 hosts in `UriComparator::isCrossOrigin()`
 - Reject malformed percent-sequences and percent-encoded bytes forbidden by the URI host policy
+- Extend `CAPITALIZE_PERCENT_ENCODING` and `DECODE_UNRESERVED_CHARACTERS` to userinfo and host
 - Trim header list elements with only spaces, horizontal tabs, and line terminators in `Header::splitList()`
 - Report header parameter PCRE failures explicitly in `Header::parse()`
 
