@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \GuzzleHttp\Psr7\ServerRequest
+ * @covers \GuzzleHttp\Psr7\UploadedFileNormalizer
  */
 class ServerRequestTest extends TestCase
 {
@@ -295,6 +296,28 @@ class ServerRequestTest extends TestCase
                             '/tmp/php/hp9hskjhf',
                             123,
                             UPLOAD_ERR_OK
+                        ),
+                    ],
+                ],
+            ],
+            'Nested files ignore metadata without a matching temporary file' => [
+                [
+                    'file' => [
+                        'tmp_name' => [0 => '/tmp/php/hp9hskjhf'],
+                        'error' => [0 => UPLOAD_ERR_OK, 1 => UPLOAD_ERR_NO_FILE],
+                        'size' => [0 => 123, 1 => 0],
+                        'name' => [0 => 'MyFile.txt', 1 => ''],
+                        'type' => [0 => 'text/plain', 1 => ''],
+                    ],
+                ],
+                [
+                    'file' => [
+                        0 => new UploadedFile(
+                            '/tmp/php/hp9hskjhf',
+                            123,
+                            UPLOAD_ERR_OK,
+                            'MyFile.txt',
+                            'text/plain'
                         ),
                     ],
                 ],
