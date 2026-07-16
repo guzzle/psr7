@@ -186,6 +186,9 @@ URI hosts containing URI delimiters, backslashes, embedded ports passed to
 malformed host forms are no longer accepted. URI schemes containing whitespace
 or control characters are also no longer accepted.
 
+Exception messages for malformed raw URIs, hosts, schemes, and string ports now
+render control bytes with C-style escapes instead of including raw bytes.
+
 If you previously passed a host and port together to `withHost()`, split them
 between `withHost()` and `withPort()`:
 
