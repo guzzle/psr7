@@ -109,18 +109,6 @@ parameters:
 			path: src/LimitStream.php
 
 		-
-			message: '#^PHPDoc tag @var with type array\<array\> is not subtype of native type list\<array\<string\>\>\.$#'
-			identifier: varTag.nativeType
-			count: 1
-			path: src/Message.php
-
-		-
-			message: '#^Variable \$headerLines in PHPDoc tag @var does not match assigned variable \$count\.$#'
-			identifier: varTag.differentVariable
-			count: 1
-			path: src/Message.php
-
-		-
 			message: '#^Call to function is_object\(\) with object will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1

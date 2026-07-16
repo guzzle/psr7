@@ -465,6 +465,8 @@ start-line fields more strictly. Malformed request methods, request targets
 containing whitespace or control characters, malformed protocol versions,
 invalid response status codes, invalid response spacing, and reason phrases
 containing invalid control characters now throw `InvalidArgumentException`.
+Exception messages for malformed response start lines render control bytes with
+C-style escapes instead of including raw bytes.
 
 `Request` and `Response` constructors and mutators apply the same validation to
 protocol versions, request targets, status codes, and reason phrases. If you

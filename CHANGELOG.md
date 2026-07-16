@@ -96,6 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trim header list elements with only spaces, horizontal tabs, and line terminators in `Header::splitList()`
 - Report header parameter PCRE failures explicitly in `Header::parse()`
 - Escape control bytes in invalid header names and values in exception messages
+- Escape control bytes in malformed response start-lines in exception messages
 
 ### Removed
 
