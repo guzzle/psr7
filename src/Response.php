@@ -152,7 +152,7 @@ class Response implements ResponseInterface
 
     private function assertReasonPhrase(string $reasonPhrase): void
     {
-        if (!preg_match('/^[\x09\x20-\x7E\x80-\xFF]*$/D', $reasonPhrase)) {
+        if (!Rfc9112::isValidReasonPhrase($reasonPhrase)) {
             throw new \InvalidArgumentException('Reason phrase must not contain invalid control characters.');
         }
     }

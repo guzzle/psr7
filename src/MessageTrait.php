@@ -232,16 +232,14 @@ trait MessageTrait
      */
     private function assertHeader(string $header): void
     {
-        if (!preg_match('/^[a-zA-Z0-9\'`#$%&*+.^_|~!-]+$/D', $header)) {
-            throw new \InvalidArgumentException(
-                sprintf('"%s" is not valid header name.', $header)
-            );
+        if (!Rfc9110::isToken($header)) {
+            throw new \InvalidArgumentException(sprintf('"%s" is not valid header name.', \addcslashes($header, "\0..\37\177")));
         }
     }
 
     private function assertProtocolVersion(string $version): void
     {
-        if (!preg_match('/^\d+(?:\.\d+)?$/D', $version)) {
+        if (!Rfc9112::isValidProtocolVersion($version)) {
             throw new \InvalidArgumentException('Protocol version must be a valid HTTP version number.');
         }
     }
@@ -270,10 +268,8 @@ trait MessageTrait
         // sending folded headers is likely very rare. Line folding is a fairly
         // obscure feature of HTTP/1.1 and thus not accepting folding is not
         // likely to break any legitimate use case.
-        if (!preg_match('/^[\x20\x09\x21-\x7E\x80-\xFF]*$/D', $value)) {
-            throw new \InvalidArgumentException(
-                sprintf('"%s" is not valid header value.', $value)
-            );
+        if (!Rfc9110::isFieldValue($value)) {
+            throw new \InvalidArgumentException(sprintf('"%s" is not valid header value.', \addcslashes($value, "\0..\37\177")));
         }
     }
 }

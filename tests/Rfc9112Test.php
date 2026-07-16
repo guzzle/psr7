@@ -7,8 +7,72 @@ namespace GuzzleHttp\Tests\Psr7;
 use GuzzleHttp\Psr7\Rfc9112;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @covers \GuzzleHttp\Psr7\Rfc9112
+ */
 class Rfc9112Test extends TestCase
 {
+    /**
+     * @dataProvider protocolVersionProvider
+     */
+    public function testIsValidProtocolVersion(string $version, bool $expected): void
+    {
+        self::assertSame($expected, Rfc9112::isValidProtocolVersion($version));
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: bool}>
+     */
+    public static function protocolVersionProvider(): iterable
+    {
+        yield 'integer' => ['1', true];
+        yield 'major and minor' => ['1.1', true];
+        yield 'multiple digits' => ['100.200', true];
+        yield 'empty' => ['', false];
+        yield 'prefix' => ['HTTP/1.1', false];
+        yield 'missing minor' => ['1.', false];
+        yield 'missing major' => ['.1', false];
+        yield 'multiple dots' => ['1.1.1', false];
+        yield 'trailing newline' => ["1.1\n", false];
+        yield 'high byte' => ["1.\xFF", false];
+    }
+
+    public function testIsValidRequestTargetClassifiesEveryByte(): void
+    {
+        for ($byte = 0; $byte <= 0xFF; ++$byte) {
+            $value = chr($byte);
+            $expected = $byte >= 0x21 && $byte !== 0x7F;
+
+            self::assertSame(
+                $expected,
+                Rfc9112::isValidRequestTarget($value),
+                sprintf('Unexpected request target result for byte 0x%02X', $byte)
+            );
+        }
+
+        self::assertFalse(Rfc9112::isValidRequestTarget(''));
+        self::assertTrue(Rfc9112::isValidRequestTarget('/path?query=value'));
+        self::assertFalse(Rfc9112::isValidRequestTarget("/path\n"));
+    }
+
+    public function testIsValidReasonPhraseClassifiesEveryByte(): void
+    {
+        for ($byte = 0; $byte <= 0xFF; ++$byte) {
+            $value = chr($byte);
+            $expected = $byte === 0x09 || ($byte >= 0x20 && $byte !== 0x7F);
+
+            self::assertSame(
+                $expected,
+                Rfc9112::isValidReasonPhrase($value),
+                sprintf('Unexpected reason phrase result for byte 0x%02X', $byte)
+            );
+        }
+
+        self::assertTrue(Rfc9112::isValidReasonPhrase(''));
+        self::assertTrue(Rfc9112::isValidReasonPhrase("OK \t\x80"));
+        self::assertFalse(Rfc9112::isValidReasonPhrase("OK\r\n"));
+    }
+
     /**
      * @dataProvider absoluteFormProvider
      */

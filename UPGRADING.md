@@ -47,6 +47,9 @@ $response = $response->withHeader('Empty-Value', '');
 
 Use `withoutHeader()` to remove a header.
 
+Exception messages for rejected message and multipart header names and values
+now render control bytes with C-style escapes instead of including raw bytes.
+
 #### Request Method Casing
 
 Request methods passed explicitly to `Request`, `ServerRequest`, `withMethod()`,
