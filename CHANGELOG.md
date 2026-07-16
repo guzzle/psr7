@@ -115,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Use locale-independent ASCII case folding everywhere case is normalized
+- Trigger a runtime deprecation for previously deprecated functionality in 2.3.0
 
 ## 2.12.5 - 2026-07-13
 
