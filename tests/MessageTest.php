@@ -8,6 +8,10 @@ use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\FnStream;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @covers \GuzzleHttp\Psr7\Message
+ * @covers \GuzzleHttp\Psr7\MessageParser
+ */
 class MessageTest extends TestCase
 {
     public function testConvertsRequestsToStrings(): void
@@ -146,6 +150,21 @@ class MessageTest extends TestCase
         $this->expectException(\RuntimeException::class);
 
         Psr7\Message::rewindBody($res);
+    }
+
+    public function testParseMessagePreservesRawMessageShape(): void
+    {
+        $parsed = Psr7\Message::parseMessage(
+            "\r\nGET /raw HTTP/1.1\nX-Thing: one\nx-thing: two\nEmpty:\n\nbody\n\nrest"
+        );
+
+        self::assertSame('GET /raw HTTP/1.1', $parsed['start-line']);
+        self::assertSame([
+            'X-Thing' => ['one'],
+            'x-thing' => ['two'],
+            'Empty' => [''],
+        ], $parsed['headers']);
+        self::assertSame("body\n\nrest", $parsed['body']);
     }
 
     public function testParsesRequestMessages(): void
@@ -808,6 +827,14 @@ class MessageTest extends TestCase
         yield 'bare carriage return in reason' => ["HTTP/1.1 200 OK\rX-Injected: yes"];
         yield 'reason nul' => ["HTTP/1.1 200 OK\0"];
         yield 'reason delete' => ["HTTP/1.1 200 OK\x7F"];
+    }
+
+    public function testParseResponseEscapesControlsInInvalidStartLineDiagnostic(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid response string: HTTP/1.1 200 OK\\000');
+
+        Psr7\Message::parseResponse("HTTP/1.1 200 OK\0\r\n\r\n");
     }
 
     public function testMessageBodySummaryWithSmallBody(): void
