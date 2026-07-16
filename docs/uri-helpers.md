@@ -228,8 +228,8 @@ canonicalized to their RFC 5952 form from any PSR-7 implementation before
 comparison, so equivalent spellings of the same address are same-origin.
 IPvFuture literals and bracketed values that cannot be parsed as an IPv6
 address, such as those carrying zone identifiers, still compare as
-case-insensitive text. Missing ports use the default port for `http` or
-`https`. Other schemes do not receive implicit default ports.
+case-insensitive text. Missing ports use the default port for `http`, `https`,
+`ws`, or `wss`. Other schemes do not receive implicit default ports.
 
 This helper only compares URI origins. It does not implement redirect handling
 or credential policy.

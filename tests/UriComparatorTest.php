@@ -46,8 +46,8 @@ class UriComparatorTest extends TestCase
             ['custom://example.com/', 'custom://example.com:80/', true],
             ['custom://example.com/', 'custom://example.com/other', false],
             ['ftp://example.com/', 'ftp://example.com:80/', true],
-            ['ws://example.com/', 'ws://example.com:80/', true],
-            ['wss://example.com/', 'wss://example.com:443/', true],
+            ['ws://example.com/', 'ws://example.com:80/', false],
+            ['wss://example.com/', 'wss://example.com:443/', false],
         ];
     }
 
@@ -121,5 +121,35 @@ class UriComparatorTest extends TestCase
         $modified->method('getPort')->willReturn(21);
 
         self::assertTrue(UriComparator::isCrossOrigin($original, $modified));
+    }
+
+    public function testWsSchemeMissingPortUsesSchemeDefault(): void
+    {
+        $original = $this->createMock(UriInterface::class);
+        $original->method('getHost')->willReturn('example.com');
+        $original->method('getScheme')->willReturn('ws');
+        $original->method('getPort')->willReturn(null);
+
+        $modified = $this->createMock(UriInterface::class);
+        $modified->method('getHost')->willReturn('example.com');
+        $modified->method('getScheme')->willReturn('ws');
+        $modified->method('getPort')->willReturn(80);
+
+        self::assertFalse(UriComparator::isCrossOrigin($original, $modified));
+    }
+
+    public function testWssSchemeMissingPortUsesSchemeDefault(): void
+    {
+        $original = $this->createMock(UriInterface::class);
+        $original->method('getHost')->willReturn('example.com');
+        $original->method('getScheme')->willReturn('wss');
+        $original->method('getPort')->willReturn(null);
+
+        $modified = $this->createMock(UriInterface::class);
+        $modified->method('getHost')->willReturn('example.com');
+        $modified->method('getScheme')->willReturn('wss');
+        $modified->method('getPort')->willReturn(443);
+
+        self::assertFalse(UriComparator::isCrossOrigin($original, $modified));
     }
 }
