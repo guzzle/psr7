@@ -13,19 +13,6 @@ final class Message
 {
     private const DEFAULT_BODY_SUMMARY_TRUNCATE_AT = 120;
 
-    /**
-     * Method token (tchar+) for use in a regex.
-     *
-     * @see https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.2
-     */
-    private const REQUEST_METHOD_TOKEN = '[!#$%&\'*+.^_`|~0-9A-Za-z-]+';
-
-    /**
-     * Request-target bytes accepted by the start-line parser (no CTL, SP, or
-     * DEL), for use in a regex.
-     */
-    private const REQUEST_TARGET_CHARS = '[^\x00-\x20\x7F]+';
-
     private function __construct()
     {
     }
@@ -251,7 +238,7 @@ final class Message
         [$startLine, $rawHeaders] = $headerParts;
 
         $versionMatch = preg_match(
-            '/(?:^HTTP\/|^'.self::REQUEST_METHOD_TOKEN.' '.self::REQUEST_TARGET_CHARS.' HTTP\/)(\d+(?:\.\d+)?)/i',
+            '/(?:^HTTP\/|^'.Rfc9110::TOKEN_PATTERN.' '.Rfc9112::REQUEST_TARGET_PATTERN.' HTTP\/)('.Rfc9112::PROTOCOL_VERSION_PATTERN.')/i',
             $startLine,
             $matches
         );
@@ -441,7 +428,7 @@ final class Message
         $data = self::parseMessage($message);
         $matches = [];
         $matched = preg_match(
-            '/^(?P<method>'.self::REQUEST_METHOD_TOKEN.') (?P<target>'.self::REQUEST_TARGET_CHARS.') HTTP\/(?P<version>\d+(?:\.\d+)?)$/D',
+            '/^(?P<method>'.Rfc9110::TOKEN_PATTERN.') (?P<target>'.Rfc9112::REQUEST_TARGET_PATTERN.') HTTP\/(?P<version>'.Rfc9112::PROTOCOL_VERSION_PATTERN.')$/D',
             $data['start-line'],
             $matches
         );
@@ -570,7 +557,11 @@ final class Message
         // According to https://datatracker.ietf.org/doc/html/rfc9112#section-4
         // the space between status-code and reason-phrase is required. But
         // browsers accept responses without space and reason as well.
-        $matched = preg_match('/^HTTP\/(?P<version>\d+(?:\.\d+)?) (?P<status>[1-5][0-9]{2})(?: (?P<reason>[\x09\x20-\x7E\x80-\xFF]*))?$/D', $data['start-line'], $matches);
+        $matched = preg_match(
+            '/^HTTP\/(?P<version>'.Rfc9112::PROTOCOL_VERSION_PATTERN.') (?P<status>[1-5][0-9]{2})(?: (?P<reason>'.Rfc9110::FIELD_VALUE_PATTERN.'))?$/D',
+            $data['start-line'],
+            $matches
+        );
 
         if ($matched === false) {
             throw new \RuntimeException('Unable to parse response start line: '.preg_last_error_msg());

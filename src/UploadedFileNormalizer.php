@@ -77,9 +77,7 @@ final class UploadedFileNormalizer
     private static function assertFileSpec(array $value): void
     {
         if (!isset($value['tmp_name'], $value['size'], $value['error'])) {
-            throw new InvalidArgumentException(
-                'Invalid file specification; expected keys "tmp_name", "size", and "error".'
-            );
+            throw new InvalidArgumentException('Invalid file specification; expected keys "tmp_name", "size", and "error".');
         }
     }
 
@@ -99,9 +97,7 @@ final class UploadedFileNormalizer
 
         foreach (array_keys($files['tmp_name']) as $key) {
             if (!array_key_exists($key, $files['size']) || !array_key_exists($key, $files['error'])) {
-                throw new InvalidArgumentException(
-                    'Invalid nested file specification; expected "tmp_name", "size", and "error" arrays to have matching keys.'
-                );
+                throw new InvalidArgumentException('Invalid nested file specification; expected "tmp_name", "size", and "error" arrays to have matching keys.');
             }
 
             $spec = [
@@ -121,18 +117,13 @@ final class UploadedFileNormalizer
     {
         foreach (['tmp_name', 'size', 'error'] as $key) {
             if (!isset($files[$key]) || !is_array($files[$key])) {
-                throw new InvalidArgumentException(
-                    'Invalid nested file specification; expected keys "tmp_name", "size", and "error" to be arrays.'
-                );
+                throw new InvalidArgumentException('Invalid nested file specification; expected keys "tmp_name", "size", and "error" to be arrays.');
             }
         }
 
         foreach (['name', 'type'] as $key) {
             if (isset($files[$key]) && !is_array($files[$key])) {
-                throw new InvalidArgumentException(sprintf(
-                    'Invalid nested file specification; expected key "%s" to be an array when present.',
-                    $key
-                ));
+                throw new InvalidArgumentException(sprintf('Invalid nested file specification; expected key "%s" to be an array when present.', $key));
             }
         }
     }

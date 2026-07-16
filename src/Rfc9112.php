@@ -9,6 +9,17 @@ namespace GuzzleHttp\Psr7;
  */
 final class Rfc9112
 {
+    /**
+     * An HTTP protocol version for use in a regular expression.
+     */
+    public const PROTOCOL_VERSION_PATTERN = '\d+(?:\.\d+)?';
+
+    /**
+     * The request-target bytes accepted by the HTTP/1 start-line grammar for
+     * use in a regular expression.
+     */
+    public const REQUEST_TARGET_PATTERN = '[^\x00-\x20\x7F]+';
+
     private function __construct()
     {
     }
@@ -24,6 +35,21 @@ final class Rfc9112
      */
     public const HEADER_REGEX = "(^([^()<>@,;:\\\"/[\]?={}\x01-\x20\x7F]++):[ \t]*+((?:[ \t]*+[\x21-\x7E\x80-\xFF]++)*+)[ \t]*+\r?\n)m";
     public const HEADER_FOLD_REGEX = "(\r?\n[ \t]++)";
+
+    public static function isValidProtocolVersion(string $version): bool
+    {
+        return preg_match('/^'.self::PROTOCOL_VERSION_PATTERN.'$/D', $version) === 1;
+    }
+
+    public static function isValidRequestTarget(string $target): bool
+    {
+        return preg_match('/^'.self::REQUEST_TARGET_PATTERN.'$/D', $target) === 1;
+    }
+
+    public static function isValidReasonPhrase(string $reasonPhrase): bool
+    {
+        return Rfc9110::isFieldValue($reasonPhrase);
+    }
 
     /**
      * @return array{0: string, 1: int|null}|null

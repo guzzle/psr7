@@ -170,7 +170,7 @@ class Request implements RequestInterface
 
     private function assertMethod(string $method): void
     {
-        if (!preg_match('/^[!#$%&\'*+.^_`|~0-9A-Za-z-]+$/D', $method)) {
+        if (!Rfc9110::isToken($method)) {
             throw new InvalidArgumentException('Method must be a valid HTTP token.');
         }
     }
@@ -192,13 +192,7 @@ class Request implements RequestInterface
 
     private static function assertRequestTarget(string $requestTarget): void
     {
-        $hasInvalidChars = preg_match('/[\x00-\x20\x7F]/', $requestTarget);
-
-        if ($hasInvalidChars === false) {
-            throw new \RuntimeException('Unable to validate request target: '.preg_last_error_msg());
-        }
-
-        if ($requestTarget === '' || $hasInvalidChars === 1) {
+        if (!Rfc9112::isValidRequestTarget($requestTarget)) {
             throw new InvalidArgumentException(
                 'Invalid request target provided; cannot be empty or contain whitespace or control characters'
             );

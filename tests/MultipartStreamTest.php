@@ -1131,10 +1131,10 @@ class MultipartStreamTest extends TestCase
     /**
      * @dataProvider invalidCustomPartHeaderNameProvider
      */
-    public function testRejectsInvalidCustomPartHeaderNames(string $header): void
+    public function testRejectsInvalidCustomPartHeaderNames(string $header, string $message): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('is not valid multipart part header name.');
+        $this->expectExceptionMessage($message);
 
         new MultipartStream([
             [
@@ -1147,19 +1147,19 @@ class MultipartStreamTest extends TestCase
 
     public static function invalidCustomPartHeaderNameProvider(): iterable
     {
-        yield 'empty' => [''];
-        yield 'space' => ['Bad Header'];
-        yield 'carriage return' => ["Bad\rHeader"];
-        yield 'line feed' => ["Bad\nHeader"];
+        yield 'empty' => ['', '"" is not valid multipart part header name.'];
+        yield 'space' => ['Bad Header', '"Bad Header" is not valid multipart part header name.'];
+        yield 'carriage return' => ["Bad\rHeader", '"Bad\\rHeader" is not valid multipart part header name.'];
+        yield 'line feed' => ["Bad\nHeader", '"Bad\\nHeader" is not valid multipart part header name.'];
     }
 
     /**
      * @dataProvider invalidCustomPartHeaderValueProvider
      */
-    public function testRejectsInvalidCustomPartHeaderValues(string $value): void
+    public function testRejectsInvalidCustomPartHeaderValues(string $value, string $message): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('is not valid multipart part header value.');
+        $this->expectExceptionMessage($message);
 
         new MultipartStream([
             [
@@ -1172,9 +1172,18 @@ class MultipartStreamTest extends TestCase
 
     public static function invalidCustomPartHeaderValueProvider(): iterable
     {
-        yield 'carriage return' => ["ok\rX-Injected: yes"];
-        yield 'line feed' => ["ok\nX-Injected: yes"];
-        yield 'nul' => ["ok\0bad"];
+        yield 'carriage return' => [
+            "ok\rX-Injected: yes",
+            '"ok\\rX-Injected: yes" is not valid multipart part header value.',
+        ];
+        yield 'line feed' => [
+            "ok\nX-Injected: yes",
+            '"ok\\nX-Injected: yes" is not valid multipart part header value.',
+        ];
+        yield 'nul' => [
+            "ok\0bad",
+            '"ok\\000bad" is not valid multipart part header value.',
+        ];
     }
 
     public function testRejectsNonStringCustomPartHeaderValue(): void
