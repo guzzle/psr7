@@ -860,23 +860,6 @@ class UtilsTest extends TestCase
         }
     }
 
-    public function testTryGetContentsEscapesWrappedFailureMessage(): void
-    {
-        $previous = new \ErrorException("read\nfailed\xFF");
-        PhpStreamMock::$streamGetContentsThrowable = $previous;
-        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
-
-        try {
-            Psr7\Utils::tryGetContents($resource);
-            self::fail('Expected read exception.');
-        } catch (\RuntimeException $e) {
-            self::assertSame('Unable to read stream contents: read\\x0Afailed\\xFF', $e->getMessage());
-            self::assertSame($previous, $e->getPrevious());
-        } finally {
-            fclose($resource);
-        }
-    }
-
     public function testCreatesUriForValue(): void
     {
         self::assertInstanceOf('GuzzleHttp\Psr7\Uri', Psr7\Utils::uriFor('/foo'));

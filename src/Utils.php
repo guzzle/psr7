@@ -730,7 +730,7 @@ final class Utils
             /** @var resource $handle */
             $handle = fopen($filename, $mode);
         } catch (\Throwable $e) {
-            $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), DiagnosticValue::escape($e->getMessage())), 0, $e);
+            $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), $e->getMessage()), 0, $e);
         }
 
         restore_error_handler();
@@ -782,7 +782,7 @@ final class Utils
         } catch (\Throwable $e) {
             $ex = StreamTimeout::isResourceReadTimedOut($stream)
                 ? new TimeoutException('Unable to read stream contents: timed out', 0, $e)
-                : new \RuntimeException(sprintf('Unable to read stream contents: %s', DiagnosticValue::escape($e->getMessage())), 0, $e);
+                : new \RuntimeException(sprintf('Unable to read stream contents: %s', $e->getMessage()), 0, $e);
         }
 
         restore_error_handler();
