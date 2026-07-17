@@ -233,7 +233,7 @@ trait MessageTrait
     private function assertHeader(string $header): void
     {
         if (!Rfc9110::isToken($header)) {
-            throw new \InvalidArgumentException(sprintf('"%s" is not valid header name.', \addcslashes($header, "\0..\37\177")));
+            throw new \InvalidArgumentException(sprintf('Invalid header name: %s', DiagnosticValue::escape($header)));
         }
     }
 
@@ -269,7 +269,7 @@ trait MessageTrait
         // obscure feature of HTTP/1.1 and thus not accepting folding is not
         // likely to break any legitimate use case.
         if (!Rfc9110::isFieldValue($value)) {
-            throw new \InvalidArgumentException(sprintf('"%s" is not valid header value.', \addcslashes($value, "\0..\37\177")));
+            throw new \InvalidArgumentException(sprintf('Invalid header value: %s', DiagnosticValue::escape($value)));
         }
     }
 }

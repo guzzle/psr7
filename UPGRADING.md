@@ -47,9 +47,6 @@ $response = $response->withHeader('Empty-Value', '');
 
 Use `withoutHeader()` to remove a header.
 
-Exception messages for rejected message and multipart header names and values
-now render control bytes with C-style escapes instead of including raw bytes.
-
 #### Request Method Casing
 
 Request methods passed explicitly to `Request`, `ServerRequest`, `withMethod()`,
@@ -185,9 +182,6 @@ URI hosts containing URI delimiters, backslashes, embedded ports passed to
 `withHost()`, malformed IP-literal brackets, unbracketed IPv6, or other
 malformed host forms are no longer accepted. URI schemes containing whitespace
 or control characters are also no longer accepted.
-
-Exception messages for malformed raw URIs, hosts, schemes, and string ports now
-render control bytes with C-style escapes instead of including raw bytes.
 
 If you previously passed a host and port together to `withHost()`, split them
 between `withHost()` and `withPort()`:
@@ -468,8 +462,6 @@ start-line fields more strictly. Malformed request methods, request targets
 containing whitespace or control characters, malformed protocol versions,
 invalid response status codes, invalid response spacing, and reason phrases
 containing invalid control characters now throw `InvalidArgumentException`.
-Exception messages for malformed response start lines render control bytes with
-C-style escapes instead of including raw bytes.
 
 `Request` and `Response` constructors and mutators apply the same validation to
 protocol versions, request targets, status codes, and reason phrases. If you

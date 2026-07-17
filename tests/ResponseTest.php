@@ -337,7 +337,7 @@ class ResponseTest extends TestCase
     public static function invalidHeaderProvider(): iterable
     {
         return [
-            ['', '', '"" is not valid header name'],
+            ['', '', 'Invalid header name: '],
             ['foo', [], 'Header value must be a non-empty array or string.'],
             ['foo', false, 'Header value must be a string or array of strings but bool provided.'],
             ['foo', new \stdClass(),  'Header value must be a string or array of strings but stdClass provided.'],
@@ -363,15 +363,17 @@ class ResponseTest extends TestCase
     public static function invalidWithHeaderProvider(): iterable
     {
         yield from self::invalidHeaderProvider();
-        yield ['', 'foo', '"" is not valid header name.'];
-        yield ["Content-Type\r\n\r\n", 'foo', '"Content-Type\\r\\n\\r\\n" is not valid header name.'];
-        yield ["Content-Type\r\n", 'foo', '"Content-Type\\r\\n" is not valid header name.'];
-        yield ["Content-Type\n", 'foo', '"Content-Type\\n" is not valid header name.'];
-        yield ["\r\nContent-Type", 'foo', '"\\r\\nContent-Type" is not valid header name.'];
-        yield ["\nContent-Type", 'foo', '"\\nContent-Type" is not valid header name.'];
-        yield ["\n", 'foo', '"\\n" is not valid header name.'];
-        yield ["\r\n", 'foo', '"\\r\\n" is not valid header name.'];
-        yield ["\t", 'foo', '"\\t" is not valid header name.'];
+        yield ['', 'foo', 'Invalid header name: '];
+        yield ["Content-Type\r\n\r\n", 'foo', 'Invalid header name: Content-Type\\x0D\\x0A\\x0D\\x0A'];
+        yield ["Content-Type\r\n", 'foo', 'Invalid header name: Content-Type\\x0D\\x0A'];
+        yield ["Content-Type\n", 'foo', 'Invalid header name: Content-Type\\x0A'];
+        yield ["\r\nContent-Type", 'foo', 'Invalid header name: \\x0D\\x0AContent-Type'];
+        yield ["\nContent-Type", 'foo', 'Invalid header name: \\x0AContent-Type'];
+        yield ["\n", 'foo', 'Invalid header name: \\x0A'];
+        yield ["\r\n", 'foo', 'Invalid header name: \\x0D\\x0A'];
+        yield ["\t", 'foo', 'Invalid header name: \\x09'];
+        yield ["\xC2\x9B", 'foo', 'Invalid header name: \\x9B'];
+        yield ["\xFF", 'foo', 'Invalid header name: \\xFF'];
     }
 
     /**

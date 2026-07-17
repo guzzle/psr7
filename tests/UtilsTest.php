@@ -763,15 +763,23 @@ class UtilsTest extends TestCase
     public function testThrowsExceptionNotWarning(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unable to open "/path/to/does/not/exist" using mode "r"');
+        $this->expectExceptionMessage('Unable to open /path/to/does/not/exist using mode r');
 
         Psr7\Utils::tryFopen('/path/to/does/not/exist', 'r');
+    }
+
+    public function testTryFopenEscapesFilenameInException(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to open /path/to/does\\x0Anot-exist using mode r');
+
+        Psr7\Utils::tryFopen("/path/to/does\nnot-exist", 'r');
     }
 
     public function testThrowsExceptionNotValueError(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unable to open "" using mode "r"');
+        $this->expectExceptionMessage('Unable to open  using mode r');
 
         Psr7\Utils::tryFopen('', 'r');
     }
@@ -846,6 +854,23 @@ class UtilsTest extends TestCase
             self::fail('Expected timeout exception.');
         } catch (Psr7\Exception\TimeoutException $e) {
             self::assertSame('Unable to read stream contents: timed out', $e->getMessage());
+            self::assertSame($previous, $e->getPrevious());
+        } finally {
+            fclose($resource);
+        }
+    }
+
+    public function testTryGetContentsEscapesWrappedFailureMessage(): void
+    {
+        $previous = new \ErrorException("read\nfailed\xFF");
+        PhpStreamMock::$streamGetContentsThrowable = $previous;
+        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
+
+        try {
+            Psr7\Utils::tryGetContents($resource);
+            self::fail('Expected read exception.');
+        } catch (\RuntimeException $e) {
+            self::assertSame('Unable to read stream contents: read\\x0Afailed\\xFF', $e->getMessage());
             self::assertSame($previous, $e->getPrevious());
         } finally {
             fclose($resource);
@@ -1865,6 +1890,10 @@ class UtilsTest extends TestCase
             'set_headers value bool' => [
                 ['set_headers' => ['X-Test' => false]],
                 'Utils::modifyRequest() change "set_headers.X-Test" must be string|non-empty-array<array-key, string>; bool provided.',
+            ],
+            'set_headers control in key' => [
+                ['set_headers' => ["X\nTest" => false]],
+                'Utils::modifyRequest() change "set_headers.X\\x0ATest" must be string|non-empty-array<array-key, string>; bool provided.',
             ],
             'set_headers value empty array' => [
                 ['set_headers' => ['X-Test' => []]],

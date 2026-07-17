@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `DiagnosticValue::escape()` to escape controls and malformed UTF-8 in diagnostics
 - Add `GuzzleHttp\Psr7\Exception\TimeoutException` for timed-out stream operations
 - Add `GuzzleHttp\Psr7\Utils::redactUserInfoInString()` to redact the userinfo of a raw URI string within text
 - Promote `GuzzleHttp\Psr7\Rfc3986` to public API with `isValid*()` predicates and `canonicalizeIpv6()`
@@ -95,9 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extend `CAPITALIZE_PERCENT_ENCODING` and `DECODE_UNRESERVED_CHARACTERS` to userinfo and host
 - Trim header list elements with only spaces, horizontal tabs, and line terminators in `Header::splitList()`
 - Report header parameter PCRE failures explicitly in `Header::parse()`
-- Escape control bytes in invalid header names and values in exception messages
-- Escape control bytes in malformed response start-lines in exception messages
-- Escape control bytes in malformed URI component diagnostics
+- Escape controls and malformed UTF-8 consistently in generated exception messages
 
 ### Removed
 

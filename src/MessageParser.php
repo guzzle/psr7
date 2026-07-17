@@ -349,7 +349,7 @@ final class MessageParser
         }
 
         if ($matched === 0) {
-            throw new \InvalidArgumentException('Invalid response string: '.\addcslashes($data['start-line'], "\0..\37\177"));
+            throw new \InvalidArgumentException(\sprintf('Invalid response string: %s', DiagnosticValue::escape($data['start-line'])));
         }
 
         return new Response(
