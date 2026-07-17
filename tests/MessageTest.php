@@ -832,7 +832,7 @@ class MessageTest extends TestCase
     public function testParseResponseEscapesControlsInInvalidStartLineDiagnostic(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid response string: HTTP/1.1 200 OK\\000');
+        $this->expectExceptionMessage('Invalid response string: HTTP/1.1 200 OK\\x00');
 
         Psr7\Message::parseResponse("HTTP/1.1 200 OK\0\r\n\r\n");
     }

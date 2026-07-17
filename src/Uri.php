@@ -67,7 +67,7 @@ class Uri implements UriInterface, \JsonSerializable
         if ($uri !== '') {
             $parts = UriParser::parse($uri);
             if ($parts === false) {
-                throw new MalformedUriException('Unable to parse URI: '.\addcslashes($uri, "\0..\37\177"));
+                throw new MalformedUriException(\sprintf('Unable to parse URI: %s', DiagnosticValue::escape($uri)));
             }
             try {
                 $this->applyParts($parts);
@@ -348,7 +348,7 @@ class Uri implements UriInterface, \JsonSerializable
     public static function assertValidHost(string $host): void
     {
         if (!Rfc3986::isValidHost($host)) {
-            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', \addcslashes($host, "\0..\37\177")));
+            throw new \InvalidArgumentException(sprintf('Invalid host: %s', DiagnosticValue::escape($host)));
         }
     }
 
@@ -600,7 +600,7 @@ class Uri implements UriInterface, \JsonSerializable
         $scheme = Utils::asciiToLower($scheme);
 
         if (!Rfc3986::isValidScheme($scheme)) {
-            throw new \InvalidArgumentException(sprintf('Invalid scheme: "%s"', \addcslashes($scheme, "\0..\37\177")));
+            throw new \InvalidArgumentException(sprintf('Invalid scheme: %s', DiagnosticValue::escape($scheme)));
         }
 
         return $scheme;
@@ -700,7 +700,7 @@ class Uri implements UriInterface, \JsonSerializable
     private static function describeInvalidPort($port): string
     {
         if (\is_string($port)) {
-            return \addcslashes($port, "\0..\37\177");
+            return DiagnosticValue::escape($port);
         }
 
         if (\is_int($port)) {

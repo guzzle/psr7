@@ -196,7 +196,7 @@ class UriTest extends TestCase
     public function testRejectsIpv6UriWithTrailingNewline(): void
     {
         $this->expectException(MalformedUriException::class);
-        $this->expectExceptionMessage('Unable to parse URI: http://[::1]\\n');
+        $this->expectExceptionMessage('Unable to parse URI: http://[::1]\\x0A');
 
         new Uri("http://[::1]\n");
     }
@@ -439,7 +439,7 @@ class UriTest extends TestCase
     public function testInvalidSchemeDiagnosticEscapesControlBytes(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid scheme: "ht\\ntp"');
+        $this->expectExceptionMessage('Invalid scheme: ht\\x0Atp');
 
         (new Uri())->withScheme("ht\ntp");
     }
@@ -457,7 +457,7 @@ class UriTest extends TestCase
     public function testInvalidHostDiagnosticEscapesControlBytes(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid host: "example.com\\r\\nx-injected: yes"');
+        $this->expectExceptionMessage('Invalid host: example.com\\x0D\\x0Ax-injected: yes');
 
         (new Uri())->withHost("example.com\r\nX-Injected: yes");
     }
@@ -465,7 +465,7 @@ class UriTest extends TestCase
     public function testInvalidStringPortDiagnosticEscapesControlBytes(): void
     {
         $this->expectException(MalformedUriException::class);
-        $this->expectExceptionMessage('Invalid port: 80\\n. Must be between 0 and 65535');
+        $this->expectExceptionMessage('Invalid port: 80\\x0A. Must be between 0 and 65535');
 
         Uri::fromParts(['port' => "80\n"]);
     }

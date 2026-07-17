@@ -473,12 +473,7 @@ class RequestTest extends TestCase
      */
     public function testContainsNotAllowedCharsOnHeaderField(string $header): void
     {
-        $this->expectExceptionMessage(
-            sprintf(
-                '"%s" is not valid header name',
-                $header
-            )
-        );
+        $this->expectExceptionMessage(sprintf('Invalid header name: %s', $header));
         $r = new Request(
             'GET',
             'http://foo.com/baz?bar=bam',
@@ -611,10 +606,7 @@ class RequestTest extends TestCase
     public function testContainsNotAllowedCharsOnHeaderValue(string $value): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(sprintf(
-            '"%s" is not valid header value',
-            \addcslashes($value, "\0..\37\177")
-        ));
+        $this->expectExceptionMessage(sprintf('Invalid header value: %s', Psr7\DiagnosticValue::escape($value)));
 
         $r = new Request(
             'GET',

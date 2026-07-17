@@ -266,7 +266,7 @@ class MultipartStreamTest extends TestCase
     public function testRejectsGeneratedContentDispositionNameWithNul(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('is not valid multipart part header value.');
+        $this->expectExceptionMessage('Invalid multipart part header value:');
 
         new MultipartStream([
             [
@@ -888,7 +888,7 @@ class MultipartStreamTest extends TestCase
     public function testRejectsGeneratedContentDispositionFilenameWithNul(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('is not valid multipart part header value.');
+        $this->expectExceptionMessage('Invalid multipart part header value:');
 
         new MultipartStream([
             [
@@ -1147,10 +1147,10 @@ class MultipartStreamTest extends TestCase
 
     public static function invalidCustomPartHeaderNameProvider(): iterable
     {
-        yield 'empty' => ['', '"" is not valid multipart part header name.'];
-        yield 'space' => ['Bad Header', '"Bad Header" is not valid multipart part header name.'];
-        yield 'carriage return' => ["Bad\rHeader", '"Bad\\rHeader" is not valid multipart part header name.'];
-        yield 'line feed' => ["Bad\nHeader", '"Bad\\nHeader" is not valid multipart part header name.'];
+        yield 'empty' => ['', 'Invalid multipart part header name: '];
+        yield 'space' => ['Bad Header', 'Invalid multipart part header name: Bad Header'];
+        yield 'carriage return' => ["Bad\rHeader", 'Invalid multipart part header name: Bad\\x0DHeader'];
+        yield 'line feed' => ["Bad\nHeader", 'Invalid multipart part header name: Bad\\x0AHeader'];
     }
 
     /**
@@ -1174,15 +1174,15 @@ class MultipartStreamTest extends TestCase
     {
         yield 'carriage return' => [
             "ok\rX-Injected: yes",
-            '"ok\\rX-Injected: yes" is not valid multipart part header value.',
+            'Invalid multipart part header value: ok\\x0DX-Injected: yes',
         ];
         yield 'line feed' => [
             "ok\nX-Injected: yes",
-            '"ok\\nX-Injected: yes" is not valid multipart part header value.',
+            'Invalid multipart part header value: ok\\x0AX-Injected: yes',
         ];
         yield 'nul' => [
             "ok\0bad",
-            '"ok\\000bad" is not valid multipart part header value.',
+            'Invalid multipart part header value: ok\\x00bad',
         ];
     }
 

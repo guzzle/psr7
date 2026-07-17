@@ -263,14 +263,14 @@ final class MultipartStream implements StreamInterface
     private static function validatePartHeaderName(string $name): void
     {
         if (!Rfc9110::isToken($name)) {
-            throw new \InvalidArgumentException(sprintf('"%s" is not valid multipart part header name.', \addcslashes($name, "\0..\37\177")));
+            throw new \InvalidArgumentException(sprintf('Invalid multipart part header name: %s', DiagnosticValue::escape($name)));
         }
     }
 
     private static function validatePartHeaderValue(string $value): void
     {
         if (!Rfc9110::isFieldValue($value)) {
-            throw new \InvalidArgumentException(sprintf('"%s" is not valid multipart part header value.', \addcslashes($value, "\0..\37\177")));
+            throw new \InvalidArgumentException(sprintf('Invalid multipart part header value: %s', DiagnosticValue::escape($value)));
         }
     }
 

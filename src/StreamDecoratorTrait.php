@@ -33,7 +33,7 @@ trait StreamDecoratorTrait
             return $this->stream;
         }
 
-        throw new \UnexpectedValueException("$name not found on class");
+        throw new \UnexpectedValueException(\sprintf('%s not found on class', DiagnosticValue::escape($name)));
     }
 
     public function __toString(): string

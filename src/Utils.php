@@ -485,12 +485,7 @@ final class Utils
      */
     private static function assertValidModifyRequestChange(string $key, string $expected, $value): void
     {
-        throw new \InvalidArgumentException(\sprintf(
-            'Utils::modifyRequest() change "%s" must be %s; %s provided.',
-            $key,
-            $expected,
-            \get_debug_type($value)
-        ));
+        throw new \InvalidArgumentException(\sprintf('Utils::modifyRequest() change "%s" must be %s; %s provided.', DiagnosticValue::escape($key), $expected, \get_debug_type($value)));
     }
 
     /**
@@ -726,12 +721,7 @@ final class Utils
     {
         $ex = null;
         set_error_handler(static function (int $errno, string $errstr) use ($filename, $mode, &$ex): bool {
-            $ex = new \RuntimeException(sprintf(
-                'Unable to open "%s" using mode "%s": %s',
-                $filename,
-                $mode,
-                $errstr
-            ));
+            $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), DiagnosticValue::escape($errstr)));
 
             return true;
         });
@@ -740,12 +730,7 @@ final class Utils
             /** @var resource $handle */
             $handle = fopen($filename, $mode);
         } catch (\Throwable $e) {
-            $ex = new \RuntimeException(sprintf(
-                'Unable to open "%s" using mode "%s": %s',
-                $filename,
-                $mode,
-                $e->getMessage()
-            ), 0, $e);
+            $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), DiagnosticValue::escape($e->getMessage())), 0, $e);
         }
 
         restore_error_handler();
@@ -776,10 +761,7 @@ final class Utils
     {
         $ex = null;
         set_error_handler(static function (int $errno, string $errstr) use (&$ex): bool {
-            $ex = new \RuntimeException(sprintf(
-                'Unable to read stream contents: %s',
-                $errstr
-            ));
+            $ex = new \RuntimeException(sprintf('Unable to read stream contents: %s', DiagnosticValue::escape($errstr)));
 
             return true;
         });
@@ -800,10 +782,7 @@ final class Utils
         } catch (\Throwable $e) {
             $ex = StreamTimeout::isResourceReadTimedOut($stream)
                 ? new TimeoutException('Unable to read stream contents: timed out', 0, $e)
-                : new \RuntimeException(sprintf(
-                    'Unable to read stream contents: %s',
-                    $e->getMessage()
-                ), 0, $e);
+                : new \RuntimeException(sprintf('Unable to read stream contents: %s', DiagnosticValue::escape($e->getMessage())), 0, $e);
         }
 
         restore_error_handler();

@@ -10,6 +10,19 @@ use PHPUnit\Framework\TestCase;
 
 class HttpFactoryTest extends TestCase
 {
+    public function testCreateStreamFromFileEscapesInvalidMode(): void
+    {
+        $factory = new HttpFactory();
+
+        try {
+            $factory->createStreamFromFile(__FILE__, "\n");
+            self::fail('Expected InvalidArgumentException was not thrown.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame('Invalid file opening mode: \\x0A', $e->getMessage());
+            self::assertInstanceOf(\RuntimeException::class, $e->getPrevious());
+        }
+    }
+
     public function testCreateUploadedFileRejectsInvalidInferredSize(): void
     {
         $factory = new HttpFactory();

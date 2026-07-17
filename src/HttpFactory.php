@@ -56,7 +56,7 @@ final class HttpFactory implements RequestFactoryInterface, ResponseFactoryInter
             $resource = Utils::tryFopen($file, $mode);
         } catch (\RuntimeException $e) {
             if ('' === $mode || false === \in_array($mode[0], ['r', 'w', 'a', 'x', 'c'], true)) {
-                throw new \InvalidArgumentException(sprintf('Invalid file opening mode "%s"', $mode), 0, $e);
+                throw new \InvalidArgumentException(sprintf('Invalid file opening mode: %s', DiagnosticValue::escape($mode)), 0, $e);
             }
 
             throw $e;
