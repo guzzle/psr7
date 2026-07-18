@@ -26,9 +26,11 @@ final class ServerRequestGlobalsFactory
      * @param (callable(): mixed)|null $headerProvider
      */
     public static function fromArrays(
+        #[\SensitiveParameter]
         array $server,
         array $query,
         array $post,
+        #[\SensitiveParameter]
         array $cookies,
         array $files,
         ?callable $headerProvider = null
@@ -54,8 +56,10 @@ final class ServerRequestGlobalsFactory
     /**
      * @param array<array-key, mixed> $server Typically the $_SERVER superglobal
      */
-    public static function getUriFromServerParams(array $server): UriInterface
-    {
+    public static function getUriFromServerParams(
+        #[\SensitiveParameter]
+        array $server
+    ): UriInterface {
         $method = self::getRequestMethodFromServer($server);
 
         return self::getUriAndRequestTargetFromServer($server, $method)[0];
@@ -67,8 +71,11 @@ final class ServerRequestGlobalsFactory
      *
      * @return array<array-key, string>
      */
-    private static function getAllHeaders(array $server, ?callable $headerProvider): array
-    {
+    private static function getAllHeaders(
+        #[\SensitiveParameter]
+        array $server,
+        ?callable $headerProvider
+    ): array {
         $headers = $headerProvider !== null ? $headerProvider() : false;
 
         if (!is_array($headers)) {
@@ -83,8 +90,10 @@ final class ServerRequestGlobalsFactory
      *
      * @return array<array-key, string>
      */
-    private static function normalizeHeaderValues(array $headers): array
-    {
+    private static function normalizeHeaderValues(
+        #[\SensitiveParameter]
+        array $headers
+    ): array {
         $normalized = [];
 
         foreach ($headers as $name => $value) {
@@ -251,8 +260,10 @@ final class ServerRequestGlobalsFactory
     /**
      * @param array<array-key, mixed> $server
      */
-    private static function getAuthorityUriFromServer(array $server): UriInterface
-    {
+    private static function getAuthorityUriFromServer(
+        #[\SensitiveParameter]
+        array $server
+    ): UriInterface {
         $uri = self::getUriWithSchemeFromServer($server);
 
         $hasPort = false;
@@ -299,8 +310,11 @@ final class ServerRequestGlobalsFactory
      *
      * @return array{0: UriInterface, 1: string|null}
      */
-    private static function getUriAndRequestTargetFromServer(array $server, string $method): array
-    {
+    private static function getUriAndRequestTargetFromServer(
+        #[\SensitiveParameter]
+        array $server,
+        string $method
+    ): array {
         $requestUri = self::getServerParam($server, 'REQUEST_URI');
         $queryString = self::getServerParam($server, 'QUERY_STRING');
 
@@ -351,8 +365,11 @@ final class ServerRequestGlobalsFactory
     /**
      * @return array{0: UriInterface, 1: string}|null
      */
-    private static function getAbsoluteFormUriAndRequestTarget(string $requestUri, ?string $queryString): ?array
-    {
+    private static function getAbsoluteFormUriAndRequestTarget(
+        #[\SensitiveParameter]
+        string $requestUri,
+        ?string $queryString
+    ): ?array {
         if (!Rfc9112::isAbsoluteFormRequestTarget($requestUri)) {
             return null;
         }

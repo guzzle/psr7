@@ -876,6 +876,17 @@ same-origin no matter which `UriInterface` implementation supplies them. In 2.x,
 such pairs were considered cross-origin. Schemes other than `http`, `https`,
 `ws`, and `wss` still receive no implicit default port.
 
+#### Sensitive Stack Trace Arguments
+
+Credential-bearing URI, server-global, Authorization-header, and cookie
+arguments are marked with `#[\SensitiveParameter]`. PHP 8.2 and later replace
+those arguments in stack traces with `SensitiveParameterValue`. PHP 7.4 through
+8.1 do not redact trace arguments.
+
+This does not redact logs, exception messages, object properties, wire traffic,
+captured variables, return values, user callbacks, or the separate executing
+object in an explicit backtrace.
+
 1.x to 2.0
 ----------
 

@@ -55,6 +55,7 @@ class ServerRequest extends Request implements ServerRequestInterface
         array $headers = [],
         $body = null,
         string $version = '1.1',
+        #[\SensitiveParameter]
         array $serverParams = []
     ) {
         $this->serverParams = $serverParams;
@@ -151,8 +152,10 @@ class ServerRequest extends Request implements ServerRequestInterface
         return $this->cookieParams;
     }
 
-    public function withCookieParams(array $cookies): ServerRequestInterface
-    {
+    public function withCookieParams(
+        #[\SensitiveParameter]
+        array $cookies
+    ): ServerRequestInterface {
         $new = clone $this;
         $new->cookieParams = $cookies;
 
