@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate the Host header synthesized by `Message::toString()` from the request URI
 - Include non-default URI ports in `Host` headers set by `Utils::modifyRequest()` URI changes
 - Accept `OPTIONS *` and `CONNECT` authority-form request targets in `Message::parseRequest()`
+- Hide credential-bearing URI, server, and cookie arguments in stack traces on PHP 8.2+
 - Reject malformed HTTP request/response start-lines
 - Unfold obsolete HTTP/1.0 line folding for all valid request method tokens
 - Reject empty and control-character request targets in `Request::withRequestTarget()`

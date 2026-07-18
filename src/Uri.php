@@ -62,8 +62,10 @@ class Uri implements UriInterface, \JsonSerializable
     /** @var string Uri fragment. */
     private string $fragment = '';
 
-    public function __construct(string $uri = '')
-    {
+    public function __construct(
+        #[\SensitiveParameter]
+        string $uri = ''
+    ) {
         if ($uri !== '') {
             $parts = UriParser::parse($uri);
             if ($parts === false) {
@@ -325,8 +327,10 @@ class Uri implements UriInterface, \JsonSerializable
      *
      * @throws MalformedUriException If the components do not form a valid URI.
      */
-    public static function fromParts(array $parts): UriInterface
-    {
+    public static function fromParts(
+        #[\SensitiveParameter]
+        array $parts
+    ): UriInterface {
         $uri = new self();
         try {
             $uri->applyParts($parts);
@@ -460,8 +464,11 @@ class Uri implements UriInterface, \JsonSerializable
         return $new;
     }
 
-    public function withUserInfo(string $user, ?string $password = null): UriInterface
-    {
+    public function withUserInfo(
+        string $user,
+        #[\SensitiveParameter]
+        ?string $password = null
+    ): UriInterface {
         $info = $this->filterUserInfoComponent($user);
         if ($password !== null) {
             $info .= ':'.$this->filterUserInfoComponent($password);
@@ -562,8 +569,10 @@ class Uri implements UriInterface, \JsonSerializable
      *
      * @param array $parts Array of parse_url parts to apply.
      */
-    private function applyParts(array $parts): void
-    {
+    private function applyParts(
+        #[\SensitiveParameter]
+        array $parts
+    ): void {
         $this->scheme = isset($parts['scheme'])
             ? $this->filterScheme($parts['scheme'])
             : '';
@@ -609,8 +618,10 @@ class Uri implements UriInterface, \JsonSerializable
     /**
      * @throws \InvalidArgumentException If the user info is invalid.
      */
-    private function filterUserInfoComponent(string $component): string
-    {
+    private function filterUserInfoComponent(
+        #[\SensitiveParameter]
+        string $component
+    ): string {
         return $this->filterComponent(
             '/(?:[^%'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.']++|%(?!'.Rfc3986::HEX_OCTET.'))/',
             $component,
@@ -802,8 +813,12 @@ class Uri implements UriInterface, \JsonSerializable
         );
     }
 
-    private function filterComponent(string $pattern, string $component, string $context): string
-    {
+    private function filterComponent(
+        string $pattern,
+        #[\SensitiveParameter]
+        string $component,
+        string $context
+    ): string {
         $filtered = preg_replace_callback($pattern, [$this, 'rawurlencodeMatchZero'], $component);
 
         if ($filtered === null) {

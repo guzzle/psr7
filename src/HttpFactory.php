@@ -70,8 +70,12 @@ final class HttpFactory implements RequestFactoryInterface, ResponseFactoryInter
         return Utils::streamFor($resource);
     }
 
-    public function createServerRequest(string $method, $uri, array $serverParams = []): ServerRequestInterface
-    {
+    public function createServerRequest(
+        string $method,
+        $uri,
+        #[\SensitiveParameter]
+        array $serverParams = []
+    ): ServerRequestInterface {
         if (empty($method)) {
             if (!empty($serverParams['REQUEST_METHOD'])) {
                 $method = $serverParams['REQUEST_METHOD'];

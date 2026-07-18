@@ -524,8 +524,10 @@ final class Utils
      * into logs and diagnostics. A URI without userinfo is returned
      * unchanged.
      */
-    public static function redactUserInfo(UriInterface $uri): UriInterface
-    {
+    public static function redactUserInfo(
+        #[\SensitiveParameter]
+        UriInterface $uri
+    ): UriInterface {
         return $uri->getUserInfo() === '' ? $uri : $uri->withUserInfo('***');
     }
 
