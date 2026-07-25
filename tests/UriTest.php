@@ -302,6 +302,41 @@ class UriTest extends TestCase
         (new Uri())->withHost($host);
     }
 
+    /**
+     * @dataProvider getIpv4HostSpellings
+     */
+    public function testIpv4HostSpellingIsPreserved(string $host): void
+    {
+        $uri = (new Uri())->withHost($host);
+
+        self::assertSame($host, $uri->getHost());
+        self::assertSame($host, $uri->getAuthority());
+        self::assertSame('//'.$host, (string) $uri);
+    }
+
+    /**
+     * @dataProvider getIpv4HostSpellings
+     */
+    public function testParsedIpv4HostSpellingIsPreserved(string $host): void
+    {
+        $uri = new Uri('http://'.$host.'/path');
+
+        self::assertSame($host, $uri->getHost());
+        self::assertSame($host, $uri->getAuthority());
+        self::assertSame('http://'.$host.'/path', (string) $uri);
+    }
+
+    public static function getIpv4HostSpellings(): iterable
+    {
+        yield 'dotted quad' => ['127.0.0.1'];
+        yield 'two part' => ['127.1'];
+        yield 'decimal' => ['2130706433'];
+        yield 'hexadecimal' => ['0x7f000001'];
+        yield 'octal' => ['0177.0.0.1'];
+        yield 'zero padded octets' => ['127.000.000.001'];
+        yield 'zero padded final octet' => ['127.0.0.01'];
+    }
+
     public static function getInvalidHostsWithControlCharacters(): iterable
     {
         for ($i = 0; $i <= 0x20; ++$i) {
