@@ -102,6 +102,11 @@ IDNA is treated as a client concern. Consumers that need DNS IDNs must perform
 the conversion themselves, for example via Guzzle's `idn_conversion` request
 option.
 
+Validity here is a statement about URI syntax only. It does not imply that the
+host resolves, or that a client will connect to the name exactly as written.
+Consumers that need a particular address must resolve the host themselves and
+check the addresses returned, rather than the spelling.
+
 ### `GuzzleHttp\Psr7\Rfc3986::isValidPort`
 
 `public static function isValidPort(string $port): bool`
