@@ -102,6 +102,14 @@ IDNA is treated as a client concern. Consumers that need DNS IDNs must perform
 the conversion themselves, for example via Guzzle's `idn_conversion` request
 option.
 
+Validity here is a statement about URI syntax only. It does not imply that the
+host resolves or that a client will interpret it exactly as written. A PSR-7 URI
+object does not know which resolver or transport will consume it, so it cannot
+establish destination identity. Consumers that restrict the destination must
+enforce that policy at the client or transport boundary and ensure the
+connection uses an approved address; checking the spelling or a separate DNS
+lookup is insufficient.
+
 ### `GuzzleHttp\Psr7\Rfc3986::isValidPort`
 
 `public static function isValidPort(string $port): bool`
