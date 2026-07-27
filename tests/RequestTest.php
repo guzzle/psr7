@@ -605,16 +605,22 @@ class RequestTest extends TestCase
      */
     public function testContainsNotAllowedCharsOnHeaderValue(string $value): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(sprintf('Invalid header value: %s', Psr7\DiagnosticValue::escape($value)));
+        $reason = strpbrk($value, "\r\n") !== false
+            ? 'must not contain CR or LF characters'
+            : 'contains an invalid control character';
 
-        $r = new Request(
-            'GET',
-            'http://foo.com/baz?bar=bam',
-            [
-                'testing' => $value,
-            ]
-        );
+        try {
+            new Request(
+                'GET',
+                'http://foo.com/baz?bar=bam',
+                [
+                    'testing' => $value,
+                ]
+            );
+            self::fail('Expected an invalid header value exception.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame(sprintf('Header "testing" %s.', $reason), $e->getMessage());
+        }
     }
 
     public static function provideHeaderValuesContainingNotAllowedChars(): iterable

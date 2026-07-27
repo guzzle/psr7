@@ -703,6 +703,57 @@ class UtilsTest extends TestCase
         yield 'empty userinfo' => ['http://@localhost', 'http://@localhost', 'http://@localhost'];
     }
 
+    /**
+     * @dataProvider redactUriForMessageProvider
+     */
+    public function testRedactUriForMessage(string $expected, string $uri): void
+    {
+        self::assertSame($expected, Psr7\Utils::redactUriForMessage(new Psr7\Uri($uri)));
+    }
+
+    public static function redactUriForMessageProvider(): iterable
+    {
+        yield 'credentials and sensitive components' => [
+            'https://***@example.com:8443/path',
+            'https://user:pass@example.com:8443/path?token=secret#private',
+        ];
+        yield 'username only' => [
+            'https://***@0x7f000001/path',
+            'https://token@0x7f000001/path?secret',
+        ];
+        yield 'no credentials' => [
+            'https://example.com/path',
+            'https://example.com/path?token=secret#private',
+        ];
+    }
+
+    public function testRedactUriForMessageFallsBackWhenComponentAccessThrows(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('__toString')->willReturn('https://user:pass@example.com/path?token=secret');
+        $uri->method('getUserInfo')->willThrowException(new \RuntimeException('failed'));
+
+        self::assertSame('https://***@example.com/path', Psr7\Utils::redactUriForMessage($uri));
+    }
+
+    /**
+     * @dataProvider redactUriStringForMessageProvider
+     */
+    public function testRedactUriStringForMessage(string $expected, string $uri): void
+    {
+        self::assertSame($expected, Psr7\Utils::redactUriStringForMessage($uri));
+    }
+
+    public static function redactUriStringForMessageProvider(): iterable
+    {
+        yield 'malformed port and credentials' => [
+            'https://***@example.com:bad/path',
+            'https://user:pass@example.com:bad/path?token=secret#private',
+        ];
+        yield 'relative reference' => ['/path', '/path?token=secret#private'];
+        yield 'diagnostic control escaping' => ['http://[::1]\\x0A', "http://[::1]\n"];
+    }
+
     public function testCalculatesHash(): void
     {
         $s = Psr7\Utils::streamFor('foobazbar');

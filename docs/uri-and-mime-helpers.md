@@ -32,6 +32,28 @@ userinfo.
 A URI that does not parse has no trustworthy authority boundary, so everything
 between any scheme and its last `@` is redacted as a safe-side fallback.
 
+## `GuzzleHttp\Psr7\Utils::redactUriForMessage`
+
+`public static function redactUriForMessage(UriInterface $uri): string`
+
+Formats a URI for automatic diagnostics.
+
+The whole userinfo component is replaced by "***", and the query and
+fragment are removed. The scheme, host, port, and path are preserved.
+The returned string is diagnostic-escaped and the formatter never
+throws.
+
+## `GuzzleHttp\Psr7\Utils::redactUriStringForMessage`
+
+`public static function redactUriStringForMessage(string $uri): string`
+
+Formats a raw URI for automatic diagnostics, including malformed input.
+
+The whole userinfo component is replaced by "***", and the query and
+fragment are removed. The scheme, host, port, and path are preserved
+where their boundaries can be determined safely. The returned string is
+diagnostic-escaped and the formatter never throws.
+
 ## `GuzzleHttp\Psr7\Utils::uriFor`
 
 `public static function uriFor(string|UriInterface $uri): UriInterface`

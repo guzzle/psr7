@@ -266,7 +266,9 @@ class MultipartStreamTest extends TestCase
     public function testRejectsGeneratedContentDispositionNameWithNul(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid multipart part header value:');
+        $this->expectExceptionMessage(
+            'Multipart part header "Content-Disposition" contains an invalid control character.'
+        );
 
         new MultipartStream([
             [
@@ -888,7 +890,9 @@ class MultipartStreamTest extends TestCase
     public function testRejectsGeneratedContentDispositionFilenameWithNul(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid multipart part header value:');
+        $this->expectExceptionMessage(
+            'Multipart part header "Content-Disposition" contains an invalid control character.'
+        );
 
         new MultipartStream([
             [
@@ -1158,31 +1162,33 @@ class MultipartStreamTest extends TestCase
      */
     public function testRejectsInvalidCustomPartHeaderValues(string $value, string $message): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage($message);
-
-        new MultipartStream([
-            [
-                'name' => 'field',
-                'contents' => 'body',
-                'headers' => ['X-Test' => $value],
-            ],
-        ], 'boundary');
+        try {
+            new MultipartStream([
+                [
+                    'name' => 'field',
+                    'contents' => 'body',
+                    'headers' => ['X-Test' => $value],
+                ],
+            ], 'boundary');
+            self::fail('Expected an invalid multipart part header value exception.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame($message, $e->getMessage());
+        }
     }
 
     public static function invalidCustomPartHeaderValueProvider(): iterable
     {
         yield 'carriage return' => [
             "ok\rX-Injected: yes",
-            'Invalid multipart part header value: ok\\x0DX-Injected: yes',
+            'Multipart part header "X-Test" must not contain CR or LF characters.',
         ];
         yield 'line feed' => [
             "ok\nX-Injected: yes",
-            'Invalid multipart part header value: ok\\x0AX-Injected: yes',
+            'Multipart part header "X-Test" must not contain CR or LF characters.',
         ];
         yield 'nul' => [
             "ok\0bad",
-            'Invalid multipart part header value: ok\\x00bad',
+            'Multipart part header "X-Test" contains an invalid control character.',
         ];
     }
 
