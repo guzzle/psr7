@@ -1,16 +1,6 @@
 Guzzle PSR-7 Upgrade Guide
 ==========================
 
-3.0 to 3.1
-----------
-
-#### Automatic Diagnostic Redaction
-
-Exceptions for rejected ordinary and multipart header values now identify the
-header and validation category without copying the rejected value. Malformed
-URI exceptions replace userinfo, omit the query and fragment, and retain the
-scheme, host, port, and path where those components can be determined safely.
-
 2.x to 3.0
 ----------
 
