@@ -266,9 +266,7 @@ class MultipartStreamTest extends TestCase
     public function testRejectsGeneratedContentDispositionNameWithNul(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Multipart part header "Content-Disposition" contains an invalid control character.'
-        );
+        $this->expectExceptionMessage('Multipart part header "Content-Disposition" contains an invalid control character.');
 
         new MultipartStream([
             [
@@ -890,9 +888,7 @@ class MultipartStreamTest extends TestCase
     public function testRejectsGeneratedContentDispositionFilenameWithNul(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Multipart part header "Content-Disposition" contains an invalid control character.'
-        );
+        $this->expectExceptionMessage('Multipart part header "Content-Disposition" contains an invalid control character.');
 
         new MultipartStream([
             [

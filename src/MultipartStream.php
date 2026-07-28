@@ -274,11 +274,7 @@ final class MultipartStream implements StreamInterface
                 ? 'must not contain CR or LF characters'
                 : 'contains an invalid control character';
 
-            throw new \InvalidArgumentException(sprintf(
-                'Multipart part header "%s" %s.',
-                DiagnosticValue::escape($name),
-                $reason
-            ));
+            throw new \InvalidArgumentException(sprintf('Multipart part header "%s" %s.', DiagnosticValue::escape($name), $reason));
         }
     }
 

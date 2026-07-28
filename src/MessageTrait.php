@@ -273,11 +273,7 @@ trait MessageTrait
                 ? 'must not contain CR or LF characters'
                 : 'contains an invalid control character';
 
-            throw new \InvalidArgumentException(sprintf(
-                'Header "%s" %s.',
-                DiagnosticValue::escape($header),
-                $reason
-            ));
+            throw new \InvalidArgumentException(sprintf('Header "%s" %s.', DiagnosticValue::escape($header), $reason));
         }
     }
 }
