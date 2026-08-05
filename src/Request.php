@@ -150,7 +150,7 @@ class Request implements RequestInterface
             $host .= ':'.$port;
         }
 
-        $this->assertValue($host);
+        $this->assertValue('Host', $host);
 
         return $host;
     }

@@ -201,6 +201,14 @@ class UriTest extends TestCase
         new Uri("http://[::1]\n");
     }
 
+    public function testMalformedUriDiagnosticOmitsSensitiveComponents(): void
+    {
+        $this->expectException(MalformedUriException::class);
+        $this->expectExceptionMessage('Unable to parse URI: https://***@example.com:bad/path');
+
+        new Uri('https://user:pass@example.com:bad/path?token=secret#private');
+    }
+
     public function testRejectsIpv6UriWithInvalidSuffix(): void
     {
         $this->expectException(MalformedUriException::class);

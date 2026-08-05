@@ -78,7 +78,7 @@ trait MessageTrait
     public function withHeader(string $name, $value): MessageInterface
     {
         $this->assertHeader($name);
-        $value = $this->normalizeHeaderValue($value);
+        $value = $this->normalizeHeaderValue($name, $value);
         $normalized = Utils::asciiToLower($name);
 
         $new = clone $this;
@@ -97,7 +97,7 @@ trait MessageTrait
     public function withAddedHeader(string $name, $value): MessageInterface
     {
         $this->assertHeader($name);
-        $value = $this->normalizeHeaderValue($value);
+        $value = $this->normalizeHeaderValue($name, $value);
         $normalized = Utils::asciiToLower($name);
 
         $new = clone $this;
@@ -166,7 +166,7 @@ trait MessageTrait
             $header = (string) $header;
 
             $this->assertHeader($header);
-            $value = $this->normalizeHeaderValue($value);
+            $value = $this->normalizeHeaderValue($header, $value);
             $normalized = Utils::asciiToLower($header);
             if (isset($this->headerNames[$normalized])) {
                 $header = $this->headerNames[$normalized];
@@ -183,17 +183,17 @@ trait MessageTrait
      *
      * @return string[]
      */
-    private function normalizeHeaderValue($value): array
+    private function normalizeHeaderValue(string $header, $value): array
     {
         if (is_array($value) && $value === []) {
             throw new \InvalidArgumentException('Header value must be a non-empty array or string.');
         }
 
         if (!is_array($value)) {
-            return $this->trimAndValidateHeaderValues([$value]);
+            return $this->trimAndValidateHeaderValues($header, [$value]);
         }
 
-        return $this->trimAndValidateHeaderValues($value);
+        return $this->trimAndValidateHeaderValues($header, $value);
     }
 
     /**
@@ -210,9 +210,9 @@ trait MessageTrait
      *
      * @see https://datatracker.ietf.org/doc/html/rfc9110#section-5.5
      */
-    private function trimAndValidateHeaderValues(array $values): array
+    private function trimAndValidateHeaderValues(string $header, array $values): array
     {
-        return array_map(function ($value): string {
+        return array_map(function ($value) use ($header): string {
             if (!is_string($value)) {
                 throw new \InvalidArgumentException(sprintf(
                     'Header value must be a string or array of strings but %s provided.',
@@ -221,7 +221,7 @@ trait MessageTrait
             }
 
             $trimmed = trim($value, " \t");
-            $this->assertValue($trimmed);
+            $this->assertValue($header, $trimmed);
 
             return $trimmed;
         }, array_values($values));
@@ -254,7 +254,7 @@ trait MessageTrait
      * obs-text       = %x80-FF
      * obs-fold       = CRLF 1*( SP / HTAB )
      */
-    private function assertValue(string $value): void
+    private function assertValue(string $header, string $value): void
     {
         // The regular expression intentionally does not support the obs-fold
         // production, because as per RFC 9112#5.2:
@@ -269,7 +269,11 @@ trait MessageTrait
         // obscure feature of HTTP/1.1 and thus not accepting folding is not
         // likely to break any legitimate use case.
         if (!Rfc9110::isFieldValue($value)) {
-            throw new \InvalidArgumentException(sprintf('Invalid header value: %s', DiagnosticValue::escape($value)));
+            $reason = strpbrk($value, "\r\n") !== false
+                ? 'must not contain CR or LF characters'
+                : 'contains an invalid control character';
+
+            throw new \InvalidArgumentException(sprintf('Header "%s" %s.', DiagnosticValue::escape($header), $reason));
         }
     }
 }

@@ -72,7 +72,7 @@ final class MultipartStream implements StreamInterface
             $key = (string) $key;
 
             self::validatePartHeaderName($key);
-            self::validatePartHeaderValue($value);
+            self::validatePartHeaderValue($key, $value);
 
             $str .= "{$key}: {$value}\r\n";
         }
@@ -252,7 +252,7 @@ final class MultipartStream implements StreamInterface
                 throw new \InvalidArgumentException('Multipart part header value must be a string.');
             }
 
-            self::validatePartHeaderValue($value);
+            self::validatePartHeaderValue($key, $value);
 
             $normalized[$key] = $value;
         }
@@ -267,10 +267,14 @@ final class MultipartStream implements StreamInterface
         }
     }
 
-    private static function validatePartHeaderValue(string $value): void
+    private static function validatePartHeaderValue(string $name, string $value): void
     {
         if (!Rfc9110::isFieldValue($value)) {
-            throw new \InvalidArgumentException(sprintf('Invalid multipart part header value: %s', DiagnosticValue::escape($value)));
+            $reason = strpbrk($value, "\r\n") !== false
+                ? 'must not contain CR or LF characters'
+                : 'contains an invalid control character';
+
+            throw new \InvalidArgumentException(sprintf('Multipart part header "%s" %s.', DiagnosticValue::escape($name), $reason));
         }
     }
 

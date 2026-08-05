@@ -584,6 +584,56 @@ final class Utils
     }
 
     /**
+     * Formats a URI for automatic diagnostics.
+     *
+     * The whole userinfo component is replaced by "***", and the query and
+     * fragment are removed. The scheme, host, port, and path are preserved.
+     * The returned string is diagnostic-escaped and the formatter never
+     * throws.
+     */
+    public static function redactUriForMessage(
+        #[\SensitiveParameter]
+        UriInterface $uri
+    ): string {
+        try {
+            $raw = (string) $uri;
+        } catch (\Throwable $e) {
+            return '[unavailable URI]';
+        }
+
+        try {
+            if ($uri->getUserInfo() !== '') {
+                $uri = $uri->withUserInfo('***');
+            }
+
+            return DiagnosticValue::escape((string) $uri->withQuery('')->withFragment(''));
+        } catch (\Throwable $e) {
+            return self::redactUriStringForMessage($raw);
+        }
+    }
+
+    /**
+     * Formats a raw URI for automatic diagnostics, including malformed input.
+     *
+     * The whole userinfo component is replaced by "***", and the query and
+     * fragment are removed. The scheme, host, port, and path are preserved
+     * where their boundaries can be determined safely. The returned string is
+     * diagnostic-escaped and the formatter never throws.
+     */
+    public static function redactUriStringForMessage(
+        #[\SensitiveParameter]
+        string $uri
+    ): string {
+        try {
+            $uri = self::redactUserInfoInString($uri, $uri);
+
+            return DiagnosticValue::escape(\substr($uri, 0, \strcspn($uri, '?#')));
+        } catch (\Throwable $e) {
+            return '[unavailable URI]';
+        }
+    }
+
+    /**
      * Create a new stream based on the input type.
      *
      * Options are provided as an associative array that can contain the
