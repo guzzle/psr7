@@ -471,6 +471,17 @@ class UriNormalizerTest extends TestCase
         self::assertSame('file:foo/bar', (string) $normalizedUri);
     }
 
+    public function testNormalizePreservesColonInFirstSegmentFromExtendedInstances(): void
+    {
+        $uri = new class('git@example.com:user/repo') extends Uri {
+        };
+
+        $normalizedUri = UriNormalizer::normalize($uri);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('git@example.com:user/repo', (string) $normalizedUri);
+    }
+
     public function testSortQueryParameters(): void
     {
         $uri = new Uri('?lang=en&article=fred');
