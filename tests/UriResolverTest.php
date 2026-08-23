@@ -65,6 +65,14 @@ class UriResolverTest extends TestCase
         self::assertSame('https://other.example/b?x=y#fragment', (string) $targetUri);
     }
 
+    public function testResolveKeepsColonInFirstSegmentOfSchemeLessReferenceImplementation(): void
+    {
+        $referenceUri = self::customUri('git@example.com:user/repo');
+        $targetUri = UriResolver::resolve(new Uri('https://example.com/a/b'), $referenceUri);
+
+        self::assertSame('https://example.com/a/git@example.com:user/repo', (string) $targetUri);
+    }
+
     public function testResolvePreservesBaseUriImplementationWhenReferenceInheritsAuthority(): void
     {
         $baseUri = self::customUri('https://example.com/a/b/c?old=1#old');
@@ -300,6 +308,10 @@ class UriResolverTest extends TestCase
             ['/a/',              './with:colon',  '/a/with:colon'],
             ['/a/',              'b/with:colon',  '/a/b/with:colon'],
             ['/a/',              './:b/',         '/a/:b/'],
+            // a colon in the first segment from merging or dot-segment removal gets the "./" prefix
+            ['',                 './b:',          './b:'],
+            ['a',                '../b:c',        './b:c'],
+            ['x',                'b%41:',         './b%41:'],
             // relative path references
             ['a',               'a/b',            'a/b'],
             ['',                 '',              ''],

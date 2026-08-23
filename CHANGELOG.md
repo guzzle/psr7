@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Omit rejected header values and sensitive URI components from automatic exception messages
 
+## 3.0.1 - Upcoming
+
+### Fixed
+
+- Prefix relative paths that begin with a colon segment with `./` instead of throwing
+- Apply the `/.` prefix for authority-less `//` paths to percent-encoding normalizations as well
+- Keep colon-leading first path segments when reading the paths of scheme-less non-native URIs
+
 ## 3.0.0 - 2026-07-20
 
 ### Added

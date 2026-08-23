@@ -412,6 +412,54 @@ class UriNormalizerTest extends TestCase
         self::assertSame('urn:/.//x', (string) $normalizedUri);
     }
 
+    public function testDecodeUnreservedCharactersGuardsColonInFirstSegmentOfRelativePathReference(): void
+    {
+        $uri = new Uri('a%41:');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        // "aA:" would be parsed as the scheme "aa", so the path needs the "./" prefix
+        self::assertSame('./aA:', (string) $normalizedUri);
+        // the "./" prefix is stable under repeated normalization
+        self::assertSame('./aA:', (string) UriNormalizer::normalize($normalizedUri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS));
+    }
+
+    public function testCapitalizePercentEncodingGuardsColonInFirstSegmentOfRelativePathReference(): void
+    {
+        $uri = new Uri('a%4a:');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('./a%4A:', (string) $normalizedUri);
+    }
+
+    public function testRemoveDuplicateSlashesGuardsColonInFirstSegmentOfRelativePathReference(): void
+    {
+        $uri = new Uri('a%41://c');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DUPLICATE_SLASHES);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('./a%41:/c', (string) $normalizedUri);
+    }
+
+    public function testPercentEncodingNormalizationsDoNotGuardUnchangedRelativePathReference(): void
+    {
+        $uri = new Uri('a_b:c');
+
+        self::assertSame('a_b:c', (string) UriNormalizer::normalize($uri));
+        // dot-segment and duplicate-slash removal always guard the path they write
+        self::assertSame('./a_b:c', (string) UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DUPLICATE_SLASHES));
+    }
+
+    public function testDecodeUnreservedCharactersGuardsPathOfAuthorityLessUri(): void
+    {
+        $uri = new Uri('file:////%7e');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('file:///.//~', (string) $normalizedUri);
+    }
+
     public function testNormalizePreservesRootlessFileUriFromExtendedInstances(): void
     {
         $uri = new class('file:foo/bar') extends Uri {
@@ -421,6 +469,17 @@ class UriNormalizerTest extends TestCase
 
         self::assertInstanceOf(UriInterface::class, $normalizedUri);
         self::assertSame('file:foo/bar', (string) $normalizedUri);
+    }
+
+    public function testNormalizePreservesColonInFirstSegmentFromExtendedInstances(): void
+    {
+        $uri = new class('git@example.com:user/repo') extends Uri {
+        };
+
+        $normalizedUri = UriNormalizer::normalize($uri);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('git@example.com:user/repo', (string) $normalizedUri);
     }
 
     public function testSortQueryParameters(): void
@@ -575,6 +634,8 @@ class UriNormalizerTest extends TestCase
             ['http://example.org/..//a', 'http://example.org//a', true],
             ['http://example.org/..//a', 'http://example.org/a', false],
             ['urn:/..//x', 'urn:/.//x', true],
+            ['a%41:', './aA:', true],
+            ['a%41:', 'aA:', false],
             ['http:/a/..//b', 'http:/%61/..//b', true],
             ['http://example.org/path#fr%61g%c2%b1', 'http://example.org/path#frag%C2%B1', true],
             ['http://[::0:1]/', 'http://[::1]/', true],

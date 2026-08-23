@@ -411,7 +411,10 @@ class Uri implements UriInterface, \JsonSerializable
      * components, including the leading slash the string form adds to a
      * rootless path when an authority is present; for subclasses and other
      * implementations the path is split from the string form per RFC 3986
-     * Appendix B, without validating or decoding any other component.
+     * Appendix B, without validating or decoding any other component. The
+     * scheme is only split off when the instance reports one, as a relative
+     * reference can begin with a segment containing a colon that the Appendix
+     * B expression would otherwise read as a scheme.
      *
      * @throws \RuntimeException If the path cannot be split from the string form.
      *
@@ -429,7 +432,10 @@ class Uri implements UriInterface, \JsonSerializable
             return $uri->path;
         }
 
-        $count = preg_match('%^(?:[^:/?#]+:)?(?://[^/?#]*)?([^?#]*)%', (string) $uri, $matches);
+        $pattern = $uri->getScheme() === ''
+            ? '%^(?://[^/?#]*)?([^?#]*)%'
+            : '%^(?:[^:/?#]+:)?(?://[^/?#]*)?([^?#]*)%';
+        $count = preg_match($pattern, (string) $uri, $matches);
 
         if ($count === false) {
             throw new \RuntimeException('Unable to read the URI path: '.preg_last_error_msg());

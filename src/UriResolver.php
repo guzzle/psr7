@@ -65,8 +65,8 @@ final class UriResolver
     }
 
     /**
-     * Returns the path, prefixed with "/." when it would otherwise start the
-     * URI's string form with an authority-like "//".
+     * Returns the path, prefixed with "/." or "./" when the URI could not
+     * otherwise hold it.
      *
      * A URI without an authority cannot hold a path beginning with "//" (RFC
      * 3986 Section 3.3), but removeDotSegments() can produce one. The "/."
@@ -76,28 +76,47 @@ final class UriResolver
      * written, so the path cannot be mistaken for an authority and the prefix
      * is not added.
      *
+     * A relative-path reference cannot begin with a segment containing a colon
+     * (RFC 3986 Section 4.2), as it would be mistaken for a scheme name, but
+     * reference resolution and percent-encoding normalization can produce one.
+     * The "./" prefix the RFC prescribes resolves back to the same path.
+     *
      * @see https://url.spec.whatwg.org/#url-serializing
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.2
      *
      * @internal
      */
     public static function guardedPath(UriInterface $uri, string $path): string
     {
-        if (!str_starts_with($path, '//') || $uri->getAuthority() !== '') {
+        if ($uri->getAuthority() !== '') {
             return $path;
         }
 
-        if ($uri instanceof Uri && ($uri->getScheme() === 'http' || $uri->getScheme() === 'https')) {
-            return $path;
+        if (str_starts_with($path, '//')) {
+            if ($uri instanceof Uri && ($uri->getScheme() === 'http' || $uri->getScheme() === 'https')) {
+                return $path;
+            }
+
+            return '/.'.$path;
         }
 
-        return '/.'.$path;
+        if ($uri->getScheme() === '' && str_contains(explode('/', $path, 2)[0], ':')) {
+            return './'.$path;
+        }
+
+        return $path;
     }
 
     /**
      * Converts the relative URI into a new URI that is resolved against the
      * base URI.
      *
+     * When the resolved path is a relative-path reference whose first segment
+     * contains a colon, which would be mistaken for a scheme name (RFC 3986
+     * Section 4.2), it is prefixed with `./`, e.g. `./a:b`.
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.2
      */
     public static function resolve(UriInterface $base, UriInterface $rel): UriInterface
     {
