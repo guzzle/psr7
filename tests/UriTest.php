@@ -780,6 +780,17 @@ class UriTest extends TestCase
         self::assertSame(Uri::rawPath(new Uri('//example.com/foo')), Uri::rawPath($rootlessUri));
     }
 
+    public function testRawPathKeepsColonInFirstSegmentOfSchemeLessExtendedInstances(): void
+    {
+        $extendedUri = new class('git@example.com:user/repo') extends Uri {
+        };
+
+        self::assertSame('', $extendedUri->getScheme());
+        // the RFC 3986 Appendix B expression alone would read "git@example.com" as the scheme
+        self::assertSame('git@example.com:user/repo', Uri::rawPath($extendedUri));
+        self::assertSame(Uri::rawPath(new Uri('git@example.com:user/repo')), Uri::rawPath($extendedUri));
+    }
+
     public function testAddAndRemoveQueryValues(): void
     {
         $uri = new Uri();

@@ -65,6 +65,14 @@ class UriResolverTest extends TestCase
         self::assertSame('https://other.example/b?x=y#fragment', (string) $targetUri);
     }
 
+    public function testResolveKeepsColonInFirstSegmentOfSchemeLessReferenceImplementation(): void
+    {
+        $referenceUri = self::customUri('git@example.com:user/repo');
+        $targetUri = UriResolver::resolve(new Uri('https://example.com/a/b'), $referenceUri);
+
+        self::assertSame('https://example.com/a/git@example.com:user/repo', (string) $targetUri);
+    }
+
     public function testResolvePreservesBaseUriImplementationWhenReferenceInheritsAuthority(): void
     {
         $baseUri = self::customUri('https://example.com/a/b/c?old=1#old');
