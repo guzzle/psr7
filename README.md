@@ -800,6 +800,10 @@ browsers do when resolving a link in a website based on the current request URI.
 
 Converts the relative URI into a new URI that is resolved against the base URI.
 
+When the resolved path is a relative-path reference whose first segment contains a colon, which would be mistaken for a
+scheme name ([RFC 3986 Section 4.2](https://datatracker.ietf.org/doc/html/rfc3986#section-4.2)), it is prefixed with
+`./`, e.g. `./a:b`.
+
 ### `GuzzleHttp\Psr7\UriResolver::removeDotSegments`
 
 `public static function removeDotSegments(string $path): string`
@@ -839,7 +843,14 @@ echo UriResolver::relativize($base, new Uri('http://example.org/a/b/'));   // pr
 
 Returns a normalized URI. The scheme and host component are already normalized to lowercase per PSR-7 UriInterface.
 This methods adds additional normalizations that can be configured with the `$flags` parameter which is a bitmask
-of normalizations to apply. The following normalizations are available:
+of normalizations to apply.
+
+When a normalization rewrites the path of a relative-path reference so that its first segment contains a colon, which
+would be mistaken for a scheme name ([RFC 3986 Section 4.2](https://datatracker.ietf.org/doc/html/rfc3986#section-4.2)),
+the path is prefixed with `./` instead of throwing, e.g. `a%41:` becomes `./aA:` as `aA:` would be an absolute URI
+with the scheme `aa`.
+
+The following normalizations are available:
 
 - `UriNormalizer::PRESERVING_NORMALIZATIONS`
 

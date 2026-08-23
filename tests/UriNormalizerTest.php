@@ -149,6 +149,44 @@ class UriNormalizerTest extends TestCase
         self::assertSame('http://example.org//a/c/d.html', (string) $normalizedUri);
     }
 
+    public function testDecodeUnreservedCharactersGuardsColonInFirstSegmentOfRelativePathReference(): void
+    {
+        $uri = new Uri('a%41:');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        // "aA:" would be parsed as the scheme "aa", so the path needs the "./" prefix
+        self::assertSame('./aA:', (string) $normalizedUri);
+        // the "./" prefix is stable under repeated normalization
+        self::assertSame('./aA:', (string) UriNormalizer::normalize($normalizedUri, UriNormalizer::DECODE_UNRESERVED_CHARACTERS));
+    }
+
+    public function testCapitalizePercentEncodingGuardsColonInFirstSegmentOfRelativePathReference(): void
+    {
+        $uri = new Uri('a%4a:');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('./a%4A:', (string) $normalizedUri);
+    }
+
+    public function testRemoveDuplicateSlashesGuardsColonInFirstSegmentOfRelativePathReference(): void
+    {
+        $uri = new Uri('a%41://c');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DUPLICATE_SLASHES);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        self::assertSame('./a%41:/c', (string) $normalizedUri);
+    }
+
+    public function testUnchangedPathOfRelativePathReferenceIsNotGuarded(): void
+    {
+        $uri = new Uri('a_b:c');
+
+        self::assertSame('a_b:c', (string) UriNormalizer::normalize($uri));
+        self::assertSame('a_b:c', (string) UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DUPLICATE_SLASHES));
+    }
+
     public function testPreservingNormalizationsRetainDuplicateSlashes(): void
     {
         $uri = new Uri('http://example.org//a%c2%b1b/./p%61th');
@@ -195,6 +233,8 @@ class UriNormalizerTest extends TestCase
             ['http://example.org:80', 'http://example.org/', true],
             ['http://example.org/../a/.././p%61th?%7a=%5e', 'http://example.org/path?z=%5E', true],
             ['http://example.org/path#fr%61g%c2%b1', 'http://example.org/path#frag%C2%B1', true],
+            ['a%41:', './aA:', true],
+            ['a%41:', 'aA:', false],
             ['https://example.org/', 'http://example.org/', false],
             ['https://example.org/', '//example.org/', false],
             ['//example.org/', '//example.org/', true],
