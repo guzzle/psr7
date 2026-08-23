@@ -300,6 +300,10 @@ class UriResolverTest extends TestCase
             ['/a/',              './with:colon',  '/a/with:colon'],
             ['/a/',              'b/with:colon',  '/a/b/with:colon'],
             ['/a/',              './:b/',         '/a/:b/'],
+            // a colon in the first segment from merging or dot-segment removal gets the "./" prefix
+            ['',                 './b:',          './b:'],
+            ['a',                '../b:c',        './b:c'],
+            ['x',                'b%41:',         './b%41:'],
             // relative path references
             ['a',               'a/b',            'a/b'],
             ['',                 '',              ''],
