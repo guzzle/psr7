@@ -388,7 +388,11 @@ The following normalizations are available:
     `file:///myfile`, and `file://localhost/myfile` are equivalent according to
     RFC 3986.
 
-    Example: `file://localhost/myfile` → `file:///myfile`
+    When removing the host leaves a URI without an authority whose path begins
+    with `//`, the path is serialized with a `/.` prefix.
+
+    Example: `file://localhost/myfile` → `file:///myfile`,
+    `file://localhost//x` → `file:///.//x`
 
 - `UriNormalizer::REMOVE_DEFAULT_PORT`
 

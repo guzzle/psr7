@@ -296,6 +296,28 @@ class UriNormalizerTest extends TestCase
         self::assertSame('file:', (string) $normalizedUri);
     }
 
+    public function testRemoveDefaultHostGuardsStrandedPathOfFileUri(): void
+    {
+        $uri = new Uri('file://localhost//x');
+        $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::REMOVE_DEFAULT_HOST);
+
+        self::assertInstanceOf(UriInterface::class, $normalizedUri);
+        // the path cannot begin with "//" once the authority is gone
+        self::assertSame('file:///.//x', (string) $normalizedUri);
+        // the "/." prefix is stable under repeated normalization
+        self::assertSame('file:///.//x', (string) UriNormalizer::normalize($normalizedUri, UriNormalizer::REMOVE_DEFAULT_HOST));
+        self::assertSame('file:///.//x', (string) UriNormalizer::normalize($uri));
+    }
+
+    public function testRemoveDefaultHostKeepsAuthorityWithUserInfoOrPort(): void
+    {
+        $userInfoUri = new Uri('file://user@localhost//x');
+        $portUri = new Uri('file://localhost:21//x');
+
+        self::assertSame('file://user@//x', (string) UriNormalizer::normalize($userInfoUri, UriNormalizer::REMOVE_DEFAULT_HOST));
+        self::assertSame('file://:21//x', (string) UriNormalizer::normalize($portUri, UriNormalizer::REMOVE_DEFAULT_HOST));
+    }
+
     public function testRemoveDefaultPort(): void
     {
         $uri = $this->createMock(UriInterface::class);
@@ -651,6 +673,8 @@ class UriNormalizerTest extends TestCase
             ['file:///myfile', 'file://localhost/myfile', true],
             ['file:foo', 'file:bar', false],
             ['file:foo', 'file://foo', false],
+            ['file://localhost//x', 'file:////x', true],
+            ['file://localhost//x', 'file:///x', false],
         ];
     }
 
