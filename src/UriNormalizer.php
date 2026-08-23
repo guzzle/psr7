@@ -86,7 +86,11 @@ final class UriNormalizer
      * second format in the Uri class. See
      * `GuzzleHttp\Psr7\Uri::composeComponents`.
      *
+     * When removing the host leaves a URI without an authority whose path
+     * begins with `//`, the path is serialized with a `/.` prefix.
+     *
      * Example: file://localhost/myfile → file:///myfile
+     * Example: file://localhost//x → file:///.//x
      */
     public const REMOVE_DEFAULT_HOST = 8;
 
@@ -195,6 +199,14 @@ final class UriNormalizer
         }
 
         if ($flags & self::REMOVE_DEFAULT_HOST && $uri->getScheme() === 'file' && $uri->getHost() === 'localhost') {
+            if ($uri->getUserInfo() === '' && $uri->getPort() === null) {
+                $path = Uri::rawPath($uri);
+                if (str_starts_with($path, '//')) {
+                    // "/." keeps a "//" path unambiguous once the authority is gone
+                    $uri = $uri->withPath('/.'.$path);
+                }
+            }
+
             $uri = $uri->withHost('');
         }
 
