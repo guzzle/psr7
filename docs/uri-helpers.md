@@ -256,6 +256,10 @@ the current request URI.
 
 Converts the relative URI into a new URI that is resolved against the base URI.
 
+When the resolved path is a relative-path reference whose first segment contains
+a colon, which would be mistaken for a scheme name (RFC 3986 Section 4.2), it is
+prefixed with `./`, e.g. `./a:b`.
+
 ### `GuzzleHttp\Psr7\UriResolver::removeDotSegments`
 
 `public static function removeDotSegments(string $path): string`
@@ -320,6 +324,13 @@ component as `getQuery()`, `getFragment()` etc. always return a string. This
 means the URIs `/?#` and `/` are treated equivalent which is not necessarily
 true according to RFC 3986. But that difference is highly uncommon in reality.
 So this potential normalization is implied in PSR-7 as well.
+
+A path the URI cannot hold, such as a `//`-leading path without an authority or
+a relative-path reference whose first segment contains a colon, is prefixed with
+`/.` or `./` respectively instead of throwing, as `UriResolver::resolve()` does.
+The percent-encoding normalizations only do so where they rewrote the path. For
+example, decoding `a%41:` yields `./aA:`, since `aA:` would be an absolute URI
+with the scheme `aa`.
 
 The following normalizations are available:
 
