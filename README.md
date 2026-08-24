@@ -25,7 +25,7 @@ composer require guzzlehttp/psr7
 | Version | Status              | PHP Version  |
 |---------|---------------------|--------------|
 | 1.x     | EOL (2024-06-30)    | >=5.4,<8.2   |
-| 2.x     | Latest              | >=7.2.5,<8.6 |
+| 2.x     | Latest              | >=7.2.5,<8.7 |
 
 See [UPGRADING.md](UPGRADING.md) for notes on upgrading from 1.x to 2.0.
 
