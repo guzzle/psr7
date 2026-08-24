@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add PHP 8.6 to the supported and tested versions
+- Add support for PHP 8.6
 
 ### Fixed
 
