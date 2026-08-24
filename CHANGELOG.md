@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Omit rejected header values and sensitive URI components from automatic exception messages
 
-## 3.0.1 - Upcoming
+## 3.0.1 - 2026-08-24
 
 ### Fixed
 
