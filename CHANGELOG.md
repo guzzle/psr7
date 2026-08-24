@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 2.13.1 - Upcoming
 
+### Added
+
+- Add support for PHP 8.6
+
 ### Fixed
 
 - Prefix relative paths that begin with a colon segment with `./` instead of throwing
