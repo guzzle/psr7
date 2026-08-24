@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add `Utils::redactUriForMessage()` and `Utils::redactUriStringForMessage()` for URI diagnostics
+- Add PHP 8.6 to the supported and tested versions
 
 ### Changed
 
