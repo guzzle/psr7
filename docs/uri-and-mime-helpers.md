@@ -1,11 +1,14 @@
 # URI and MIME Helpers
 
+Userinfo redaction helpers are exposed on `UriRedactor`. Their `Utils`
+counterparts remain as deprecated compatibility delegates.
+
 This page covers small helper methods for redacting URI user info, converting
 values into URI objects, and resolving MIME types from filenames or extensions.
 For URI resolution, normalization, and comparison helpers, see
 [URI Helpers](uri-helpers.md).
 
-## `GuzzleHttp\Psr7\Utils::redactUserInfo`
+## `GuzzleHttp\Psr7\UriRedactor::redactUserInfo`
 
 `public static function redactUserInfo(UriInterface $uri): UriInterface`
 
@@ -15,7 +18,7 @@ Returns the URI with the whole userinfo component replaced by `***` when one
 is present, so neither the username nor the password survives into logs and
 diagnostics. A URI without userinfo is returned unchanged.
 
-## `GuzzleHttp\Psr7\Utils::redactUserInfoInString`
+## `GuzzleHttp\Psr7\UriRedactor::redactUserInfoInString`
 
 `public static function redactUserInfoInString(string $subject, string $uri): string`
 

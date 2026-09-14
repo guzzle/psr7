@@ -1,5 +1,8 @@
 # Message Helpers
 
+`RequestModifier::apply()` is the request-mutation helper.
+`Utils::modifyRequest()` remains as a deprecated compatibility delegate.
+
 This page covers static helper methods for converting, parsing, summarizing,
 rewinding, and cloning PSR-7 messages. For conceptual request and response
 behavior, start with [PSR-7 Messages](psr-7-messages.md).
@@ -77,9 +80,9 @@ the returned request via `withRequestTarget()`.
 
 Parses a response message string into a response object.
 
-## `GuzzleHttp\Psr7\Utils::modifyRequest`
+## `GuzzleHttp\Psr7\RequestModifier::apply`
 
-`public static function modifyRequest(RequestInterface $request, array $changes): RequestInterface`
+`public static function apply(RequestInterface $request, array $changes): RequestInterface`
 
 Clone and modify a request with the given changes.
 
@@ -94,7 +97,8 @@ The changes can be one of:
 - remove_headers: (array) Remove the given headers. Values may be strings or
   integers.
 - body: (mixed) Sets the given body. Present non-null values are converted with
-  `GuzzleHttp\Psr7\Utils::streamFor()`, including resources, streams, iterators,
+  `GuzzleHttp\Psr7\Streams::streamFor()`, including resources, streams,
+  iterators,
   callable arrays, closures, invokable objects, and stringable objects. String
   inputs remain literal bodies.
 - uri: (UriInterface) Set the URI. When the URI contains a host, the Host header

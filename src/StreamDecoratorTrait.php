@@ -47,7 +47,7 @@ trait StreamDecoratorTrait
 
     public function getContents(): string
     {
-        return Utils::copyToString($this);
+        return Streams::copyToString($this);
     }
 
     /**

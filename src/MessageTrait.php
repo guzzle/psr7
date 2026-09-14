@@ -134,7 +134,7 @@ trait MessageTrait
     public function getBody(): StreamInterface
     {
         if (!$this->stream) {
-            $this->stream = Utils::streamFor('');
+            $this->stream = Streams::streamFor('');
         }
 
         return $this->stream;

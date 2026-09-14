@@ -82,7 +82,7 @@ class Stream implements StreamInterface
             throw new \RuntimeException('Cannot read from non-readable stream');
         }
 
-        return Utils::tryGetContents($this->stream);
+        return Streams::tryGetContents($this->stream);
     }
 
     public function close(): void

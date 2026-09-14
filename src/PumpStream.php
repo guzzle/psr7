@@ -69,7 +69,7 @@ final class PumpStream implements StreamInterface
 
     public function __toString(): string
     {
-        return Utils::copyToString($this);
+        return Streams::copyToString($this);
     }
 
     public function close(): void
@@ -151,7 +151,7 @@ final class PumpStream implements StreamInterface
 
     public function getContents(): string
     {
-        return Utils::copyToString($this);
+        return Streams::copyToString($this);
     }
 
     /**

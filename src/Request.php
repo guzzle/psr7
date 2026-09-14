@@ -54,7 +54,7 @@ class Request implements RequestInterface
         }
 
         if ($body !== '' && $body !== null) {
-            $this->stream = Utils::streamFor($body);
+            $this->stream = Streams::streamFor($body);
         }
     }
 

@@ -28,11 +28,11 @@ composer require guzzlehttp/psr7
 ```php
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Utils;
+use GuzzleHttp\Psr7\Streams;
 
 $request = new Request('GET', 'https://example.com/api');
 $response = new Response(200, ['Content-Type' => 'text/plain'], 'OK');
-$stream = Utils::streamFor('request or response body');
+$stream = Streams::streamFor('request or response body');
 
 echo $request->getMethod();
 echo $response->getStatusCode();

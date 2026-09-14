@@ -47,13 +47,13 @@ final class HttpFactory implements RequestFactoryInterface, ResponseFactoryInter
 
     public function createStream(string $content = ''): StreamInterface
     {
-        return Utils::streamFor($content);
+        return Streams::streamFor($content);
     }
 
     public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
     {
         try {
-            $resource = Utils::tryFopen($file, $mode);
+            $resource = Streams::tryFopen($file, $mode);
         } catch (\RuntimeException $e) {
             if ('' === $mode || false === \in_array($mode[0], ['r', 'w', 'a', 'x', 'c'], true)) {
                 throw new \InvalidArgumentException(sprintf('Invalid file opening mode: %s', DiagnosticValue::escape($mode)), 0, $e);
@@ -62,12 +62,12 @@ final class HttpFactory implements RequestFactoryInterface, ResponseFactoryInter
             throw $e;
         }
 
-        return Utils::streamFor($resource);
+        return Streams::streamFor($resource);
     }
 
     public function createStreamFromResource($resource): StreamInterface
     {
-        return Utils::streamFor($resource);
+        return Streams::streamFor($resource);
     }
 
     public function createServerRequest(

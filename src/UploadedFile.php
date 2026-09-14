@@ -153,7 +153,7 @@ class UploadedFile implements UploadedFileInterface
                 $stream->rewind();
             }
 
-            Utils::copyToStream(
+            Streams::copyToStream(
                 $stream,
                 new LazyOpenStream($targetPath, 'w')
             );

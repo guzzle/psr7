@@ -228,9 +228,9 @@ Uploaded files are represented by `Psr\Http\Message\UploadedFileInterface` insta
 
 ```php
 use GuzzleHttp\Psr7\UploadedFile;
-use GuzzleHttp\Psr7\Utils;
+use GuzzleHttp\Psr7\Streams;
 
-$stream = Utils::streamFor('file contents');
+$stream = Streams::streamFor('file contents');
 $upload = new UploadedFile($stream, $stream->getSize(), UPLOAD_ERR_OK, 'example.txt', 'text/plain');
 
 echo $upload->getClientFilename();

@@ -1,10 +1,14 @@
 # Stream Helpers
 
-This page covers `GuzzleHttp\Psr7\Utils` helper methods for creating, copying,
-hashing, reading, and safely opening PSR-7 streams. For stream implementations
+Stream helpers are exposed on `GuzzleHttp\Psr7\Streams`. The matching methods
+on `Utils` remain as deprecated compatibility delegates.
+
+This page covers `GuzzleHttp\Psr7\Streams` helper methods for creating,
+copying, hashing, reading, and safely opening PSR-7 streams. For stream
+implementations
 and decorators, see [Streams and Decorators](streams-and-decorators.md).
 
-## `GuzzleHttp\Psr7\Utils::copyToStream`
+## `GuzzleHttp\Psr7\Streams::copyToStream`
 
 `public static function copyToStream(StreamInterface $source, StreamInterface $dest, int $maxLen = -1): int`
 
@@ -22,7 +26,7 @@ Throws `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout
 metadata can be detected after a source read or destination write cannot make
 progress.
 
-## `GuzzleHttp\Psr7\Utils::copyToString`
+## `GuzzleHttp\Psr7\Streams::copyToString`
 
 `public static function copyToString(StreamInterface $stream, int $maxLen = -1): string`
 
@@ -32,7 +36,7 @@ been read.
 Throws `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout
 metadata can be detected after a stream read cannot make progress.
 
-## `GuzzleHttp\Psr7\Utils::hash`
+## `GuzzleHttp\Psr7\Streams::hash`
 
 `public static function hash(StreamInterface $stream, string $algo, bool $rawOutput = false): string`
 
@@ -44,7 +48,7 @@ This method reads the entire stream to calculate a rolling hash, based on PHP's
 Throws `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout
 metadata can be detected after a stream read cannot make progress.
 
-## `GuzzleHttp\Psr7\Utils::readLine`
+## `GuzzleHttp\Psr7\Streams::readLine`
 
 `public static function readLine(StreamInterface $stream, ?int $maxLength = null): string`
 
@@ -53,7 +57,7 @@ Read a line from the stream up to the maximum allowed buffer length.
 Throws `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout
 metadata can be detected after a stream read cannot make progress.
 
-## `GuzzleHttp\Psr7\Utils::streamFor`
+## `GuzzleHttp\Psr7\Streams::streamFor`
 
 `public static function streamFor(resource|string|null|StreamInterface|callable|\Iterator|\Stringable $resource = '', array $options = []): StreamInterface`
 
@@ -94,8 +98,8 @@ This method accepts the following `$resource` types:
   treated as string bodies, even when they name callable functions.
 
 ```php
-$stream = GuzzleHttp\Psr7\Utils::streamFor('foo');
-$stream = GuzzleHttp\Psr7\Utils::streamFor(fopen('/path/to/file', 'r'));
+$stream = GuzzleHttp\Psr7\Streams::streamFor('foo');
+$stream = GuzzleHttp\Psr7\Streams::streamFor(fopen('/path/to/file', 'r'));
 
 $generator = function ($bytes) {
     for ($i = 0; $i < $bytes; $i++) {
@@ -103,10 +107,10 @@ $generator = function ($bytes) {
     }
 };
 
-$stream = GuzzleHttp\Psr7\Utils::streamFor($generator(100));
+$stream = GuzzleHttp\Psr7\Streams::streamFor($generator(100));
 ```
 
-## `GuzzleHttp\Psr7\Utils::tryFopen`
+## `GuzzleHttp\Psr7\Streams::tryFopen`
 
 `public static function tryFopen(string $filename, string $mode): resource`
 
@@ -115,7 +119,7 @@ Safely opens a PHP stream resource using a filename.
 When `fopen()` fails, PHP normally raises a warning. This function adds an error
 handler that checks for errors and throws an exception instead.
 
-## `GuzzleHttp\Psr7\Utils::tryGetContents`
+## `GuzzleHttp\Psr7\Streams::tryGetContents`
 
 `public static function tryGetContents(resource $stream): string`
 

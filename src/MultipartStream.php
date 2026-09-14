@@ -25,7 +25,7 @@ final class MultipartStream implements StreamInterface
      * @param array       $elements Array of associative arrays, each containing a
      *                              required "name" key mapping to the form field,
      *                              name, a required "contents" key mapping to any
-     *                              non-array value accepted by Utils::streamFor()
+     *                              non-array value accepted by Streams::streamFor()
      *                              (non-string scalar field values are cast to
      *                              string), or an array for nested expansion.
      *                              Optional keys include "headers" (associative
@@ -95,7 +95,7 @@ final class MultipartStream implements StreamInterface
         }
 
         // Add the trailing boundary with CRLF
-        $stream->addStream(Utils::streamFor("--{$this->boundary}--\r\n"));
+        $stream->addStream(Streams::streamFor("--{$this->boundary}--\r\n"));
 
         return $stream;
     }
@@ -136,7 +136,7 @@ final class MultipartStream implements StreamInterface
 
             $contents = (string) $contents;
         }
-        $element['contents'] = Utils::streamFor($contents);
+        $element['contents'] = Streams::streamFor($contents);
 
         if (empty($element['filename'])) {
             $uri = $element['contents']->getMetadata('uri');
@@ -152,9 +152,9 @@ final class MultipartStream implements StreamInterface
             $element['headers'] ?? []
         );
 
-        $stream->addStream(Utils::streamFor($this->getHeaders($headers)));
+        $stream->addStream(Streams::streamFor($this->getHeaders($headers)));
         $stream->addStream($body);
-        $stream->addStream(Utils::streamFor("\r\n"));
+        $stream->addStream(Streams::streamFor("\r\n"));
     }
 
     /**

@@ -10,16 +10,19 @@ Streams expose their capabilities using `isReadable()`, `isWritable()`, and `isS
 
 ## Creating Streams
 
-Use `GuzzleHttp\Psr7\Utils::streamFor()` to create streams from common PHP values. It accepts strings, resources returned from `fopen()`, objects that implement `__toString()`, iterators, callable arrays, closures, invokable objects, and existing `Psr\Http\Message\StreamInterface` instances.
+Use `GuzzleHttp\Psr7\Streams::streamFor()` to create streams from common PHP
+values. It accepts strings, resources returned from `fopen()`, objects that
+implement `__toString()`, iterators, callable arrays, closures, invokable
+objects, and existing `Psr\Http\Message\StreamInterface` instances.
 
 Strings and `null` are stored in `php://temp` streams. PHP keeps `php://temp` data in memory until the stream exceeds 2 MB, then spills to a temporary file on disk. Non-string scalars such as integers, floats, and booleans are rejected; cast them to strings first.
 
 Callable sources receive a suggested read length, may return fewer or more bytes, and end the stream by returning `false` or `null`. Strings remain literal body contents, even when they name a callable.
 
 ```php
-use GuzzleHttp\Psr7\Utils;
+use GuzzleHttp\Psr7\Streams;
 
-$stream = Utils::streamFor('string data');
+$stream = Streams::streamFor('string data');
 echo $stream;
 // string data
 echo $stream->read(3);
@@ -35,7 +38,7 @@ var_export($stream->tell());
 You can create streams from iterators. The iterator can yield any number of bytes per iteration. Any excess bytes returned by the iterator that were not requested by a stream consumer will be buffered until a subsequent read.
 
 ```php
-use GuzzleHttp\Psr7\Utils;
+use GuzzleHttp\Psr7\Streams;
 
 $generator = function ($bytes) {
     for ($i = 0; $i < $bytes; $i++) {
@@ -43,7 +46,7 @@ $generator = function ($bytes) {
     }
 };
 
-$stream = Utils::streamFor($generator(1024));
+$stream = Streams::streamFor($generator(1024));
 echo $stream->read(3);
 // ...
 ```
@@ -53,10 +56,10 @@ echo $stream->read(3);
 Streams expose stream metadata through `getMetadata()`. This method provides the data returned by PHP's [stream_get_meta_data()](https://www.php.net/manual/en/function.stream-get-meta-data.php), and can optionally expose custom metadata.
 
 ```php
-use GuzzleHttp\Psr7\Utils;
+use GuzzleHttp\Psr7\Streams;
 
-$resource = Utils::tryFopen('/path/to/file', 'r');
-$stream = Utils::streamFor($resource);
+$resource = Streams::tryFopen('/path/to/file', 'r');
+$stream = Streams::streamFor($resource);
 
 echo $stream->getMetadata('uri');
 // /path/to/file
@@ -77,11 +80,11 @@ Reads from multiple streams, one after the other.
 ```php
 use GuzzleHttp\Psr7;
 
-$a = Psr7\Utils::streamFor('abc, ');
-$b = Psr7\Utils::streamFor('123.');
+$a = Psr7\Streams::streamFor('abc, ');
+$b = Psr7\Streams::streamFor('123.');
 $composed = new Psr7\AppendStream([$a, $b]);
 
-$composed->addStream(Psr7\Utils::streamFor(' Above all listen to me'));
+$composed->addStream(Psr7\Streams::streamFor(' Above all listen to me'));
 
 echo $composed; // abc, 123. Above all listen to me.
 ```
@@ -119,7 +122,7 @@ then on disk.
 ```php
 use GuzzleHttp\Psr7;
 
-$original = Psr7\Utils::streamFor(fopen('http://www.google.com', 'r'));
+$original = Psr7\Streams::streamFor(fopen('http://www.google.com', 'r'));
 $stream = new Psr7\CachingStream($original);
 
 $stream->read(1024);
@@ -150,7 +153,7 @@ stream becomes too full.
 use GuzzleHttp\Psr7;
 
 // Create an empty stream
-$stream = Psr7\Utils::streamFor();
+$stream = Psr7\Streams::streamFor();
 
 // Start dropping data when the stream has more than 10 bytes
 $dropping = new Psr7\DroppingStream($stream, 10);
@@ -173,7 +176,7 @@ to create a concrete class for a simple extension point.
 
 use GuzzleHttp\Psr7;
 
-$stream = Psr7\Utils::streamFor('hi');
+$stream = Psr7\Streams::streamFor('hi');
 $fnStream = Psr7\FnStream::decorate($stream, [
     'rewind' => function () use ($stream) {
         echo 'About to rewind - ';
@@ -228,7 +231,7 @@ chunks (e.g. Amazon S3's multipart upload API).
 ```php
 use GuzzleHttp\Psr7;
 
-$original = Psr7\Utils::streamFor(fopen('/tmp/test.txt', 'r+'));
+$original = Psr7\Streams::streamFor(fopen('/tmp/test.txt', 'r+'));
 echo $original->getSize();
 // >>> 1048576
 
@@ -249,7 +252,7 @@ A stream that returns bytes for a streaming multipart or multipart/form-data
 body when read.
 
 Each multipart element must contain a `name` and `contents` key. `contents` may
-be any non-array value accepted by `GuzzleHttp\Psr7\Utils::streamFor()`,
+be any non-array value accepted by `GuzzleHttp\Psr7\Streams::streamFor()`,
 including closures and invokable objects. Array contents are recursively
 expanded into nested form fields.
 
@@ -263,7 +266,7 @@ NoSeekStream wraps a stream and does not allow seeking.
 ```php
 use GuzzleHttp\Psr7;
 
-$original = Psr7\Utils::streamFor('foo');
+$original = Psr7\Streams::streamFor('foo');
 $noSeek = new Psr7\NoSeekStream($original);
 
 echo $noSeek->read(3);
@@ -348,7 +351,7 @@ This decorator could be added to any existing stream and used like so:
 ```php
 use GuzzleHttp\Psr7;
 
-$original = Psr7\Utils::streamFor('foo');
+$original = Psr7\Streams::streamFor('foo');
 
 $eofStream = new EofCallbackStream($original, function () {
     echo 'EOF!';
@@ -374,7 +377,7 @@ stream from a PSR-7 stream.
 ```php
 use GuzzleHttp\Psr7\StreamWrapper;
 
-$stream = GuzzleHttp\Psr7\Utils::streamFor('hello!');
+$stream = GuzzleHttp\Psr7\Streams::streamFor('hello!');
 $resource = StreamWrapper::getResource($stream);
 echo fread($resource, 6); // outputs hello!
 ```

@@ -43,7 +43,7 @@ final class CachingStream implements StreamInterface
         ?StreamInterface $target = null
     ) {
         $this->remoteStream = $stream;
-        $this->stream = $target ?: new Stream(Utils::tryFopen('php://temp', 'r+'));
+        $this->stream = $target ?: new Stream(Streams::tryFopen('php://temp', 'r+'));
     }
 
     public function getSize(): ?int
@@ -232,7 +232,7 @@ final class CachingStream implements StreamInterface
     private function cacheEntireStream(): int
     {
         $target = new FnStream(['write' => 'strlen']);
-        Utils::copyToStream($this, $target);
+        Streams::copyToStream($this, $target);
 
         return $this->tell();
     }
