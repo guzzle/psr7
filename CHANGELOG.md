@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `InflateStream` ignoring source read failures that follow decoded bytes
 - Fix `AppendStream` discarding bytes read before a timeout
 
-## 3.1.1 - Unreleased
+## 3.1.1 - 2026-10-18
 
 ### Fixed
 
