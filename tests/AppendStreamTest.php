@@ -305,6 +305,47 @@ class AppendStreamTest extends TestCase
         }
     }
 
+    public function testReadReturnsBytesReadBeforeCurrentStreamTimesOut(): void
+    {
+        $reads = ['foo', '', '', 'bar'];
+        $timedOut = false;
+        $stream = new Psr7\FnStream([
+            'isReadable' => function (): bool {
+                return true;
+            },
+            'isSeekable' => function (): bool {
+                return false;
+            },
+            'eof' => function () use (&$reads): bool {
+                return $reads === [];
+            },
+            'read' => function () use (&$reads, &$timedOut): string {
+                $data = array_shift($reads);
+                $timedOut = $data === '';
+
+                return $data;
+            },
+            'getMetadata' => function (?string $key = null) use (&$timedOut) {
+                return $key === 'timed_out' ? $timedOut : null;
+            },
+        ]);
+        $a = new AppendStream([$stream, Psr7\Utils::streamFor('baz')]);
+
+        self::assertSame('foo', $a->read(9));
+        self::assertSame(3, $a->tell());
+
+        try {
+            $a->read(9);
+            self::fail('Expected timeout exception');
+        } catch (Psr7\Exception\TimeoutException $e) {
+            self::assertSame('Unable to read from stream: timed out', $e->getMessage());
+        }
+
+        self::assertSame('barbaz', $a->read(9));
+        self::assertSame(9, $a->tell());
+        self::assertTrue($a->eof());
+    }
+
     public function testCanDetermineSizeFromMultipleStreams(): void
     {
         $a = new AppendStream([
