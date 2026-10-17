@@ -81,10 +81,10 @@ jobs:
         run: composer update --no-interaction --no-progress
 
       - name: Probe this branch
-        run: timeout 20 /usr/bin/time -v php experiment/hang-probe.php; echo "exit=$?"
+        run: /usr/bin/time -v timeout 20 php experiment/hang-probe.php || echo "exit=$?"
 
       - name: Probe 2.13
         run: |
           git fetch --depth=1 origin 2.13
           git checkout FETCH_HEAD -- src
-          timeout 20 /usr/bin/time -v php experiment/hang-probe.php; echo "exit=$?"
+          /usr/bin/time -v timeout 20 php experiment/hang-probe.php || echo "exit=$?"
