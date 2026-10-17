@@ -1,0 +1,58 @@
+name: Experiment
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  experiment:
+    name: PHP ${{ matrix.php }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-24.04']
+        php: ['7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']
+        include:
+          - os: 'windows-2022'
+            php: '7.4'
+          - os: 'windows-2022'
+            php: '8.0'
+          - os: 'windows-2022'
+            php: '8.1'
+          - os: 'windows-2022'
+            php: '8.4'
+          - os: 'windows-2022'
+            php: '8.5'
+          - os: 'macos-14'
+            php: '8.4'
+
+    env:
+      COMPOSER_ROOT_VERSION: '2.13.99'
+
+    steps:
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          ini-values: error_reporting=E_ALL
+          coverage: 'none'
+          extensions: mbstring, zlib, openssl
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: composer update --no-interaction --no-progress
+
+      - name: Install Guzzle 7.15
+        run: composer require --dev --no-interaction --no-progress -W guzzlehttp/guzzle:7.15.x-dev
+
+      - name: Run InflateStream tests
+        run: php vendor/bin/phpunit --filter InflateStreamTest
+
+      - name: Run experiment
+        if: always()
+        run: php experiment/run.php
