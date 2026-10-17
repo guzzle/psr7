@@ -172,7 +172,7 @@ if (class_exists(\GuzzleHttp\Handler\StreamHandler::class)) {
         }
         ++$port;
         $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__DIR__.'/server.php').' '.$port.' 1.0 '.escapeshellarg($scheme === 'https' ? $pem : '');
-        $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, null, ['bypass_shell' => true]);
         $line = trim((string) fgets($pipes[1]));
         if ($line !== 'listening') {
             $report($name, 'SERVER FAILED', $line.' '.stream_get_contents($pipes[2]));
