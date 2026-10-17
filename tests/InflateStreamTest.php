@@ -80,6 +80,176 @@ class InflateStreamTest extends TestCase
         self::assertSame('test', (string) $nonSeekableInflate);
     }
 
+    public function testReadReturnsDecodedBytesBeforeSourceReadFailures(): void
+    {
+        $failure = new \RuntimeException('Unable to read from stream');
+        $deflate = deflate_init(ZLIB_ENCODING_GZIP);
+        $chunks = [
+            deflate_add($deflate, 'foo', ZLIB_SYNC_FLUSH),
+            $failure,
+            $failure,
+            deflate_add($deflate, 'bar', ZLIB_FINISH),
+        ];
+        $stream = new InflateStream($this->getNonSeekableSource(
+            function () use (&$chunks): string {
+                $chunk = array_shift($chunks);
+
+                if ($chunk instanceof \Exception) {
+                    throw $chunk;
+                }
+
+                return $chunk ?? '';
+            },
+            function () use (&$chunks): bool {
+                return $chunks === [];
+            }
+        ));
+
+        self::assertSame('foo', $stream->read(1024));
+        self::assertFalse($stream->eof());
+        self::assertSame('', $stream->read(0));
+
+        try {
+            $stream->read(1024);
+            self::fail();
+        } catch (\RuntimeException $e) {
+            self::assertSame($failure, $e->getPrevious());
+        }
+
+        try {
+            $stream->read(1024);
+            self::fail();
+        } catch (\RuntimeException $e) {
+            self::assertSame($failure, $e->getPrevious());
+        }
+
+        self::assertSame('bar', $stream->read(1024));
+        self::assertTrue($stream->eof());
+    }
+
+    public function testReadReportsSourceReadFailureBeforeEof(): void
+    {
+        $chunk = deflate_add(deflate_init(ZLIB_ENCODING_GZIP), 'foo', ZLIB_SYNC_FLUSH);
+        $reads = 0;
+        $stream = new InflateStream($this->getNonSeekableSource(
+            function () use ($chunk, &$reads): string {
+                if (++$reads === 1) {
+                    return $chunk;
+                }
+
+                throw new \RuntimeException('Connection reset');
+            },
+            function () use (&$reads): bool {
+                return $reads > 1;
+            }
+        ));
+
+        self::assertSame('foo', $stream->read(1024));
+        self::assertFalse($stream->eof());
+
+        try {
+            $stream->read(1024);
+            self::fail();
+        } catch (\RuntimeException $e) {
+            self::assertSame('Connection reset', $e->getPrevious()->getMessage());
+        }
+
+        self::assertTrue($stream->eof());
+    }
+
+    public function testReadReturnsDecodedBytesBeforeSourceLogicException(): void
+    {
+        $failure = new \LogicException('Not supported');
+        $chunk = deflate_add(deflate_init(ZLIB_ENCODING_GZIP), 'foo', ZLIB_SYNC_FLUSH);
+        $reads = 0;
+        $stream = new InflateStream($this->getNonSeekableSource(
+            function () use ($chunk, $failure, &$reads): string {
+                if (++$reads === 1) {
+                    return $chunk;
+                }
+
+                throw $failure;
+            },
+            function (): bool {
+                return false;
+            }
+        ));
+
+        self::assertSame('foo', $stream->read(1024));
+
+        try {
+            $stream->read(1024);
+            self::fail();
+        } catch (\RuntimeException $e) {
+            self::assertSame($failure, $e->getPrevious());
+        }
+    }
+
+    public function testDetachedResourceReadsTheSourceDirectly(): void
+    {
+        if (\PHP_VERSION_ID < 70400) {
+            self::markTestSkipped('Reading a filtered resource whose source throws never returns before PHP 7.4.');
+        }
+
+        $failure = new \RuntimeException('Connection reset');
+        $resource = (new InflateStream($this->getNonSeekableSource(
+            function () use ($failure): string {
+                throw $failure;
+            },
+            function (): bool {
+                return false;
+            }
+        )))->detach();
+
+        try {
+            fread($resource, 1024);
+            self::fail();
+        } catch (\RuntimeException $e) {
+            self::assertSame($failure, $e);
+        }
+    }
+
+    public function testCloseReleasesTheSourceStream(): void
+    {
+        $handle = Psr7\Utils::tryFopen('php://temp', 'r+');
+        fwrite($handle, gzencode('test'));
+        rewind($handle);
+        $stream = new InflateStream(new Psr7\Stream($handle));
+
+        $stream->close();
+
+        self::assertFalse(is_resource($handle));
+    }
+
+    public function testClosingDetachedResourceReleasesTheSourceStream(): void
+    {
+        $handle = Psr7\Utils::tryFopen('php://temp', 'r+');
+        fwrite($handle, gzencode('test'));
+        rewind($handle);
+        $stream = new InflateStream(new Psr7\Stream($handle));
+
+        fclose($stream->detach());
+
+        self::assertFalse(is_resource($handle));
+    }
+
+    private function getNonSeekableSource(callable $read, callable $eof): Psr7\FnStream
+    {
+        return new Psr7\FnStream([
+            'read' => $read,
+            'eof' => $eof,
+            'isReadable' => function (): bool {
+                return true;
+            },
+            'isWritable' => function (): bool {
+                return false;
+            },
+            'isSeekable' => function (): bool {
+                return false;
+            },
+        ]);
+    }
+
     private function getGzipStringWithFilename($original_string)
     {
         $gzipped = bin2hex(gzencode($original_string));

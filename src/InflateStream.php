@@ -24,14 +24,74 @@ final class InflateStream implements StreamInterface
     /** @var StreamInterface */
     private $stream;
 
+    /** @var ReadFailureCapturingStream|null */
+    private $source;
+
     public function __construct(StreamInterface $stream)
     {
-        $resource = StreamWrapper::getResource($stream);
+        $this->source = new ReadFailureCapturingStream($stream);
+        $resource = StreamWrapper::getResource($this->source);
         // Specify window=15+32, so zlib will use header detection to both gzip (with header) and zlib data
         // See https://www.zlib.net/manual.html#Advanced definition of inflateInit2
         // "Add 32 to windowBits to enable zlib and gzip decoding with automatic header detection"
         // Default window size is 15.
         stream_filter_append($resource, 'zlib.inflate', STREAM_FILTER_READ, ['window' => 15 + 32]);
         $this->stream = $stream->isSeekable() ? new Stream($resource) : new NoSeekStream(new Stream($resource));
+    }
+
+    public function close(): void
+    {
+        $this->source = null;
+        $this->stream->close();
+    }
+
+    public function detach()
+    {
+        if ($this->source !== null) {
+            $this->source->stopCapturing();
+            $this->source = null;
+        }
+
+        return $this->stream->detach();
+    }
+
+    public function eof(): bool
+    {
+        return ($this->source === null || !$this->source->hasReadFailure()) && $this->stream->eof();
+    }
+
+    public function read($length): string
+    {
+        if (!\is_int($length)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to StreamInterface::read() is deprecated; guzzlehttp/psr7 3.0 requires int for $length.',
+                \get_debug_type($length)
+            );
+        }
+
+        if ($length <= 0 || $this->source === null) {
+            return $this->stream->read($length);
+        }
+
+        // A source failure that follows decoded bytes is reported by the next read.
+        $failure = $this->source->takeReadFailure();
+
+        if ($failure === null) {
+            $data = $this->stream->read($length);
+
+            if ($data !== '') {
+                return $data;
+            }
+
+            $failure = $this->source->takeReadFailure();
+        }
+
+        if ($failure !== null) {
+            throw new \RuntimeException('Unable to read from stream', 0, $failure);
+        }
+
+        return '';
     }
 }
