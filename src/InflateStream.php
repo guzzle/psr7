@@ -56,14 +56,22 @@ final class InflateStream implements StreamInterface
         }
 
         // A source failure that follows decoded bytes is reported by the next read.
-        if (!$this->source->hasReadFailure()) {
+        $failure = $this->source->takeReadFailure();
+
+        if ($failure === null) {
             $data = $this->stream->read($length);
 
-            if ($data !== '' || !$this->source->hasReadFailure()) {
+            if ($data !== '') {
                 return $data;
             }
+
+            $failure = $this->source->takeReadFailure();
         }
 
-        throw new \RuntimeException('Unable to read from stream', 0, $this->source->takeReadFailure());
+        if ($failure !== null) {
+            throw new \RuntimeException('Unable to read from stream', 0, $failure);
+        }
+
+        return '';
     }
 }
