@@ -121,7 +121,8 @@ class HeaderTest extends TestCase
 
     public function testParseReportsPcreFailures(): void
     {
-        $limit = \ini_set('pcre.backtrack_limit', '1');
+        // Only a zero limit fails regardless of the PCRE version and JIT.
+        $limit = \ini_set('pcre.backtrack_limit', '0');
 
         try {
             $this->expectException(\RuntimeException::class);
