@@ -68,6 +68,16 @@ var_export($stream->isSeekable());
 // true
 ```
 
+## Timeouts
+
+Reads throw `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout
+metadata can be detected after a read cannot make progress, such as on a socket
+with a read timeout.
+
+`getContents()`, `Utils::copyToString()`, and `Utils::readLine()` discard the
+bytes they read before a timeout, so calling them again does not return those
+bytes.
+
 ## AppendStream
 
 `GuzzleHttp\Psr7\AppendStream`
