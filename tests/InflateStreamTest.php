@@ -230,6 +230,86 @@ class InflateStreamTest extends TestCase
         Psr7\Utils::copyToString($stream);
     }
 
+    public function testReadReportsSourceReadTimeoutAfterDecodedBytes(): void
+    {
+        $timeout = new TimeoutException('Unable to read from stream: timed out');
+        $deflate = deflate_init(ZLIB_ENCODING_GZIP);
+        $chunks = [
+            deflate_add($deflate, 'foo', ZLIB_SYNC_FLUSH),
+            $timeout,
+            deflate_add($deflate, 'bar', ZLIB_FINISH),
+        ];
+
+        $source = new Psr7\FnStream([
+            'isReadable' => static fn (): bool => true,
+            'isWritable' => static fn (): bool => false,
+            'isSeekable' => static fn (): bool => false,
+            'eof' => static function () use (&$chunks): bool {
+                return $chunks === [];
+            },
+            'read' => static function (int $length) use (&$chunks): string {
+                $chunk = array_shift($chunks);
+
+                if ($chunk instanceof TimeoutException) {
+                    throw $chunk;
+                }
+
+                return $chunk ?? '';
+            },
+        ]);
+
+        $stream = new InflateStream($source);
+
+        self::assertSame('foo', $stream->read(1024));
+        self::assertFalse($stream->eof());
+
+        try {
+            $stream->read(1024);
+            self::fail('Expected the source read timeout to be reported');
+        } catch (TimeoutException $e) {
+            self::assertSame($timeout, $e->getPrevious());
+        }
+
+        self::assertSame('bar', $stream->read(1024));
+        self::assertTrue($stream->eof());
+    }
+
+    public function testReadReportsSourceReadFailureBeforeEof(): void
+    {
+        $chunk = deflate_add(deflate_init(ZLIB_ENCODING_GZIP), 'foo', ZLIB_SYNC_FLUSH);
+        $reads = 0;
+
+        $source = new Psr7\FnStream([
+            'isReadable' => static fn (): bool => true,
+            'isWritable' => static fn (): bool => false,
+            'isSeekable' => static fn (): bool => false,
+            'eof' => static function () use (&$reads): bool {
+                return $reads > 1;
+            },
+            'read' => static function (int $length) use ($chunk, &$reads): string {
+                if (++$reads === 1) {
+                    return $chunk;
+                }
+
+                throw new \RuntimeException('Connection reset');
+            },
+        ]);
+
+        $stream = new InflateStream($source);
+
+        self::assertSame('foo', $stream->read(1024));
+        self::assertFalse($stream->eof());
+
+        try {
+            $stream->read(1024);
+            self::fail('Expected the source read failure to be reported');
+        } catch (\RuntimeException $e) {
+            self::assertSame('Connection reset', $e->getPrevious()->getMessage());
+        }
+
+        self::assertTrue($stream->eof());
+    }
+
     private function getGzipStringWithFilename(string $original_string): string
     {
         $gzipped = bin2hex(gzencode($original_string));
