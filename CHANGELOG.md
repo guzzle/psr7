@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix `StreamWrapper` flushes reporting failure
 - Fix `CachingStream` skipping unread bytes after repeated writes
+- Fix `InflateStream` discarding decoded bytes when a source read fails
 
 ## 2.13.1 - 2026-08-24
 
