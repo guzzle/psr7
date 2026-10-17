@@ -218,6 +218,23 @@ class CachingStreamTest extends TestCase
         self::assertSame('tehiing', (string) $this->body);
     }
 
+    public function testRepeatedWritesSkipOnlyOverwrittenBytes(): void
+    {
+        $this->body->write('X');
+        $this->body->write('Y');
+        $this->body->seek(0);
+        self::assertSame('XYsting', (string) $this->body);
+    }
+
+    public function testRewritingPendingBytesDoesNotSkipMore(): void
+    {
+        $this->body->write('XYZ');
+        $this->body->seek(0);
+        $this->body->write('A');
+        $this->body->seek(0);
+        self::assertSame('AYZting', (string) $this->body);
+    }
+
     public function testDetachReturnsCompleteResourceWithoutPriorRead(): void
     {
         $body = new CachingStream(Psr7\Utils::streamFor('Hello world!'));
