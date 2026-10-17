@@ -111,6 +111,9 @@ final class Utils
      * Throws `TimeoutException` when PHP-style timeout metadata can be detected
      * after a source read or destination write cannot make progress.
      *
+     * When a source read times out, the bytes copied before it remain in the
+     * destination.
+     *
      * @param StreamInterface $source Stream to read from
      * @param StreamInterface $dest   Stream to write to
      * @param int             $maxLen Maximum number of bytes to read. Pass -1
@@ -182,6 +185,9 @@ final class Utils
      *
      * Throws `TimeoutException` when PHP-style timeout metadata can be detected
      * after a stream read cannot make progress.
+     *
+     * The bytes read before a timeout are discarded, so calling this method
+     * again does not return them.
      *
      * @param StreamInterface $stream Stream to read
      * @param int             $maxLen Maximum number of bytes to read. Pass -1
@@ -494,6 +500,9 @@ final class Utils
      * Throws `TimeoutException` when PHP-style timeout metadata can be detected
      * after a stream read cannot make progress.
      *
+     * The bytes read before a timeout are discarded, so calling this method
+     * again does not return them.
+     *
      * @param StreamInterface $stream    Stream to read from
      * @param int|null        $maxLength Maximum buffer length
      */
@@ -804,6 +813,9 @@ final class Utils
      *
      * Throws `TimeoutException` when PHP-style timeout metadata can be detected
      * after a stream read cannot make progress.
+     *
+     * The bytes read before a timeout are discarded, so calling this method
+     * again does not return them.
      *
      * @param resource $stream
      *
