@@ -22,6 +22,7 @@ class StreamWrapperTest extends TestCase
         self::assertSame('foo', fread($handle, 3));
         self::assertSame(3, ftell($handle));
         self::assertSame(3, fwrite($handle, 'bar'));
+        self::assertTrue(fflush($handle));
         self::assertSame(0, fseek($handle, 0));
         self::assertSame('foobar', fread($handle, 6));
         self::assertSame('', fread($handle, 1));
