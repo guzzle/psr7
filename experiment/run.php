@@ -150,7 +150,7 @@ foreach (['read' => true, 'getContents' => false] as $mode => $checked) {
     $report("socket-timeout-$mode", $got === EXPECTED ? 'OK' : 'DATA LOST', $events, $checked);
 }
 
-// 5. Guzzle 7.15 StreamHandler end to end, when Guzzle is installed.
+// 5. Guzzle StreamHandler end to end, when Guzzle is installed.
 if (class_exists(\GuzzleHttp\Handler\StreamHandler::class)) {
     $pem = null;
     if (function_exists('openssl_pkey_new')) {
@@ -163,16 +163,16 @@ if (class_exists(\GuzzleHttp\Handler\StreamHandler::class)) {
         }
     }
     $port = 18900;
-    foreach ([['http', 'gzip-cl'], ['http', 'chunked-gzip'], ['https', 'gzip-cl']] as $case) {
-        [$scheme, $path] = $case;
-        $name = "guzzle-$scheme-$path";
+    foreach ([['http', 'gzip-cl', 'timeout'], ['http', 'chunked-gzip', 'timeout'], ['https', 'gzip-cl', 'timeout'], ['http', 'gzip-cl', 'read_timeout'], ['https', 'gzip-cl', 'read_timeout']] as $case) {
+        [$scheme, $path, $option] = $case;
+        $name = "guzzle-$scheme-$path-$option";
         if ($scheme === 'https' && $pem === null) {
             $report($name, 'skipped', 'no openssl certificate', false);
             continue;
         }
         ++$port;
         $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__DIR__.'/server.php').' '.$port.' 1.0 '.escapeshellarg($scheme === 'https' ? $pem : '');
-        $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, null, ['bypass_shell' => true]);
         $line = trim((string) fgets($pipes[1]));
         if ($line !== 'listening') {
             $report($name, 'SERVER FAILED', $line.' '.stream_get_contents($pipes[2]));
@@ -182,14 +182,14 @@ if (class_exists(\GuzzleHttp\Handler\StreamHandler::class)) {
             $response = (new \GuzzleHttp\Handler\StreamHandler())(new Psr7\Request('GET', "$scheme://127.0.0.1:$port/$path"), [
                 'stream' => true,
                 'decode_content' => true,
-                'timeout' => 0.5,
+                $option => 0.5,
                 'verify' => false,
             ])->wait();
             $body = $response->getBody();
             if (!$body instanceof Psr7\InflateStream) {
                 $report($name, 'UNEXPECTED BODY', get_class($body));
             } else {
-                [$got, $events] = consume($body, 'read', 30);
+                [$got, $events] = consume($body, 'read', 100);
                 $report($name, $got === EXPECTED ? 'OK' : 'DATA LOST', $events);
             }
         } catch (\Throwable $e) {
