@@ -5,7 +5,7 @@ values into URI objects, and resolving MIME types from filenames or extensions.
 For URI resolution, normalization, and comparison helpers, see
 [URI Helpers](uri-helpers.md).
 
-## `GuzzleHttp\Psr7\Utils::redactUserInfo`
+## `GuzzleHttp\Psr7\UriRedactor::redactUserInfo`
 
 `public static function redactUserInfo(UriInterface $uri): UriInterface`
 
@@ -15,7 +15,7 @@ Returns the URI with the whole userinfo component replaced by `***` when one
 is present, so neither the username nor the password survives into logs and
 diagnostics. A URI without userinfo is returned unchanged.
 
-## `GuzzleHttp\Psr7\Utils::redactUserInfoInString`
+## `GuzzleHttp\Psr7\UriRedactor::redactUserInfoInString`
 
 `public static function redactUserInfoInString(string $subject, string $uri): string`
 
@@ -32,7 +32,7 @@ userinfo.
 A URI that does not parse has no trustworthy authority boundary, so everything
 between any scheme and its last `@` is redacted as a safe-side fallback.
 
-## `GuzzleHttp\Psr7\Utils::redactUriForMessage`
+## `GuzzleHttp\Psr7\UriRedactor::redactUriForMessage`
 
 `public static function redactUriForMessage(UriInterface $uri): string`
 
@@ -43,7 +43,7 @@ fragment are removed. The scheme, host, port, and path are preserved.
 The returned string is diagnostic-escaped and the formatter never
 throws.
 
-## `GuzzleHttp\Psr7\Utils::redactUriStringForMessage`
+## `GuzzleHttp\Psr7\UriRedactor::redactUriStringForMessage`
 
 `public static function redactUriStringForMessage(string $uri): string`
 

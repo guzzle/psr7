@@ -69,7 +69,7 @@ class Uri implements UriInterface, \JsonSerializable
         if ($uri !== '') {
             $parts = UriParser::parse($uri);
             if ($parts === false) {
-                throw new MalformedUriException(\sprintf('Unable to parse URI: %s', Utils::redactUriStringForMessage($uri)));
+                throw new MalformedUriException(\sprintf('Unable to parse URI: %s', UriRedactor::redactUriStringForMessage($uri)));
             }
             try {
                 $this->applyParts($parts);
