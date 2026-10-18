@@ -7,6 +7,8 @@ namespace GuzzleHttp\Tests\Psr7;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\FnStream;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * @covers \GuzzleHttp\Psr7\Message
@@ -835,6 +837,679 @@ class MessageTest extends TestCase
         $this->expectExceptionMessage('Invalid response string: HTTP/1.1 200 OK\\x00');
 
         Psr7\Message::parseResponse("HTTP/1.1 200 OK\0\r\n\r\n");
+    }
+
+    public function testCanModifyRequestWithUri(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, [
+            'uri' => new Psr7\Uri('http://www.foo.com'),
+        ]);
+        self::assertSame('http://www.foo.com', (string) $r2->getUri());
+        self::assertSame('www.foo.com', (string) $r2->getHeaderLine('host'));
+    }
+
+    public function testCanModifyRequestWithUriAndPort(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com:8000');
+        $r2 = Psr7\Message::modifyRequest($r1, [
+            'uri' => new Psr7\Uri('http://www.foo.com:8000'),
+        ]);
+        self::assertSame('http://www.foo.com:8000', (string) $r2->getUri());
+        self::assertSame('www.foo.com:8000', (string) $r2->getHeaderLine('host'));
+    }
+
+    public function testCanModifyRequestWithUriAndZeroPort(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, [
+            'uri' => (new Psr7\Uri('http://www.foo.com'))->withPort(0),
+        ]);
+        self::assertSame('http://www.foo.com:0', (string) $r2->getUri());
+        self::assertSame('www.foo.com:0', (string) $r2->getHeaderLine('host'));
+    }
+
+    public function testCanModifyRequestWithUriAndNonHttpSchemePort(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, [
+            'uri' => new Psr7\Uri('ws://www.foo.com:8080'),
+        ]);
+        self::assertSame('ws://www.foo.com:8080', (string) $r2->getUri());
+        self::assertSame('www.foo.com:8080', (string) $r2->getHeaderLine('host'));
+    }
+
+    public function testModifyRequestRejectsInvalidUriHostFromCustomUri(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getHost')->willReturn("foo\nbar");
+        $uri->method('getPort')->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        Psr7\Message::modifyRequest(new Psr7\Request('GET', '/'), ['uri' => $uri]);
+    }
+
+    public function testModifyRequestOmitsDefaultPortFromCustomUri(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getHost')->willReturn('www.foo.com');
+        $uri->method('getPort')->willReturn(80);
+        $uri->method('getScheme')->willReturn('http');
+
+        $r2 = Psr7\Message::modifyRequest(new Psr7\Request('GET', '/'), ['uri' => $uri]);
+
+        self::assertSame('www.foo.com', $r2->getHeaderLine('host'));
+    }
+
+    public function testCanModifyRequestWithFalseyUriHost(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, [
+            'uri' => new Psr7\Uri('http://0'),
+        ]);
+        self::assertSame('http://0', (string) $r2->getUri());
+        self::assertSame('0', (string) $r2->getHeaderLine('host'));
+    }
+
+    public function testCanModifyRequestWithCaseInsensitiveHeader(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com', ['User-Agent' => 'foo']);
+        $r2 = Psr7\Message::modifyRequest($r1, ['set_headers' => ['User-agent' => 'bar']]);
+        self::assertSame('bar', $r2->getHeaderLine('User-Agent'));
+        self::assertSame('bar', $r2->getHeaderLine('User-agent'));
+    }
+
+    public function testReturnsAsIsWhenNoChanges(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, []);
+        self::assertSame($r1, $r2);
+
+        $r1 = new Psr7\ServerRequest('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, []);
+        self::assertSame($r1, $r2);
+    }
+
+    public function testReturnsUriAsIsWhenNoChanges(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, ['set_headers' => ['foo' => 'bar']]);
+        self::assertNotSame($r1, $r2);
+        self::assertSame('bar', $r2->getHeaderLine('foo'));
+    }
+
+    public function testRemovesHeadersFromMessage(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com', ['foo' => 'bar']);
+        $r2 = Psr7\Message::modifyRequest($r1, ['remove_headers' => ['foo']]);
+        self::assertNotSame($r1, $r2);
+        self::assertFalse($r2->hasHeader('foo'));
+    }
+
+    public function testAddsQueryToUri(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, ['query' => 'foo=bar']);
+        self::assertNotSame($r1, $r2);
+        self::assertSame('foo=bar', $r2->getUri()->getQuery());
+    }
+
+    public function testModifyRequestKeepInstanceOfRequest(): void
+    {
+        $r1 = new Psr7\Request('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, ['remove_headers' => ['non-existent']]);
+        self::assertInstanceOf('GuzzleHttp\Psr7\Request', $r2);
+
+        $r1 = new Psr7\ServerRequest('GET', 'http://foo.com');
+        $r2 = Psr7\Message::modifyRequest($r1, ['remove_headers' => ['non-existent']]);
+        self::assertInstanceOf('Psr\Http\Message\ServerRequestInterface', $r2);
+    }
+
+    public function testModifyRequestPreservesConcreteRequestSubclass(): void
+    {
+        $request = new class('GET', 'http://example.com', 'user-123') extends Psr7\Request {
+            private string $userId;
+
+            public function __construct(string $method, $uri, string $userId)
+            {
+                $this->userId = $userId;
+
+                parent::__construct($method, $uri);
+            }
+
+            public function userId(): string
+            {
+                return $this->userId;
+            }
+        };
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'method' => 'POST',
+            'uri' => new Psr7\Uri('http://www.example.com/path'),
+            'query' => 'a=b',
+            'set_headers' => ['X-Test' => '1'],
+            'body' => 'payload',
+            'version' => '2',
+        ]);
+
+        self::assertSame(get_class($request), get_class($modified));
+        self::assertSame('user-123', $modified->userId());
+        self::assertSame('POST', $modified->getMethod());
+        self::assertSame('http://www.example.com/path?a=b', (string) $modified->getUri());
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+        self::assertSame('payload', (string) $modified->getBody());
+        self::assertSame('2', $modified->getProtocolVersion());
+
+        self::assertSame('GET', $request->getMethod());
+        self::assertFalse($request->hasHeader('X-Test'));
+    }
+
+    public function testModifyRequestPreservesConcreteServerRequestSubclass(): void
+    {
+        $request = new class('GET', 'http://example.com', [], null, '1.1', ['server' => 'value'], 'ctx') extends Psr7\ServerRequest {
+            private string $context;
+
+            public function __construct(
+                string $method,
+                $uri,
+                array $headers,
+                $body,
+                string $version,
+                array $serverParams,
+                string $context
+            ) {
+                $this->context = $context;
+
+                parent::__construct($method, $uri, $headers, $body, $version, $serverParams);
+            }
+
+            public function context(): string
+            {
+                return $this->context;
+            }
+        };
+
+        $file = new Psr7\UploadedFile('Test', 100, \UPLOAD_ERR_OK);
+        $request = $request
+            ->withCookieParams(['cookie' => 'value'])
+            ->withQueryParams(['query' => 'value'])
+            ->withParsedBody(['body' => 'value'])
+            ->withUploadedFiles([$file])
+            ->withAttribute('attribute', 'value');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'set_headers' => ['X-Test' => '1'],
+        ]);
+
+        self::assertSame(get_class($request), get_class($modified));
+        self::assertSame('ctx', $modified->context());
+        self::assertSame(['server' => 'value'], $modified->getServerParams());
+        self::assertSame(['cookie' => 'value'], $modified->getCookieParams());
+        self::assertSame(['query' => 'value'], $modified->getQueryParams());
+        self::assertSame(['body' => 'value'], $modified->getParsedBody());
+        self::assertSame([$file], $modified->getUploadedFiles());
+        self::assertSame(['attribute' => 'value'], $modified->getAttributes());
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+    }
+
+    public function testModifyRequestPreservesProvidedUriImplementation(): void
+    {
+        $uri = self::customUri('http://www.example.com/path');
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'uri' => $uri,
+        ]);
+
+        self::assertSame($uri, $modified->getUri());
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('http://www.example.com/path', (string) $modified->getUri());
+    }
+
+    public function testModifyRequestPreservesProvidedUriImplementationWhenChangingQuery(): void
+    {
+        $uri = self::customUri('http://www.example.com/path');
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'uri' => $uri,
+            'query' => 'a=b',
+        ]);
+
+        self::assertSame(get_class($uri), get_class($modified->getUri()));
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('http://www.example.com/path?a=b', (string) $modified->getUri());
+    }
+
+    public function testModifyRequestPreservesExistingUriImplementationWhenChangingQuery(): void
+    {
+        $uri = self::customUri('http://example.com/path');
+        $request = new Psr7\Request('GET', $uri);
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'query' => 'a=b',
+        ]);
+
+        self::assertSame(get_class($uri), get_class($modified->getUri()));
+        self::assertSame('http://example.com/path?a=b', (string) $modified->getUri());
+        self::assertSame('', $uri->getQuery());
+    }
+
+    public function testModifyRequestPreservesProvidedStreamImplementationForBody(): void
+    {
+        $body = self::customStream('payload');
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'body' => $body,
+        ]);
+
+        self::assertSame($body, $modified->getBody());
+        self::assertSame('payload', (string) $modified->getBody());
+    }
+
+    public function testModifyRequestPreservesRequestUriAndBodyImplementationsTogether(): void
+    {
+        $request = self::customRequest('GET', self::customUri('http://example.com/original'));
+        $uri = self::customUri('http://www.example.com/path');
+        $body = self::customStream('payload');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'method' => 'POST',
+            'uri' => $uri,
+            'query' => 'a=b',
+            'set_headers' => ['X-Test' => '1'],
+            'body' => $body,
+            'version' => '2',
+        ]);
+
+        self::assertSame(get_class($request), get_class($modified));
+        self::assertSame(get_class($uri), get_class($modified->getUri()));
+        self::assertSame('POST', $modified->getMethod());
+        self::assertSame('http://www.example.com/path?a=b', (string) $modified->getUri());
+        self::assertSame('www.example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+        self::assertSame($body, $modified->getBody());
+        self::assertSame('payload', (string) $modified->getBody());
+        self::assertSame('2', $modified->getProtocolVersion());
+
+        self::assertSame('GET', $request->getMethod());
+        self::assertSame('http://example.com/original', (string) $request->getUri());
+        self::assertFalse($request->hasHeader('X-Test'));
+    }
+
+    public function testModifyRequestConvertsBodyWithStreamFor(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'body' => 'payload',
+        ]);
+
+        self::assertInstanceOf(StreamInterface::class, $modified->getBody());
+        self::assertSame('payload', (string) $modified->getBody());
+    }
+
+    public function testModifyRequestConvertsCallableArrayBodyWithStreamFor(): void
+    {
+        $source = new class {
+            /** @var list<string|false> */
+            private array $chunks = ['payload', false];
+
+            /**
+             * @return string|false
+             */
+            public function read(int $length)
+            {
+                if ($this->chunks === []) {
+                    return false;
+                }
+
+                return array_shift($this->chunks);
+            }
+        };
+
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'body' => [$source, 'read'],
+        ]);
+
+        self::assertInstanceOf(Psr7\PumpStream::class, $modified->getBody());
+        self::assertSame('payload', $modified->getBody()->getContents());
+    }
+
+    public function testModifyRequestConvertsStringableBodyWithStreamFor(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'body' => new HasToString(),
+        ]);
+
+        self::assertSame('foo', $modified->getBody()->getContents());
+    }
+
+    public function testModifyRequestTreatsCallableStringBodyAsString(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'body' => 'strlen',
+        ]);
+
+        self::assertNotInstanceOf(Psr7\PumpStream::class, $modified->getBody());
+        self::assertSame('strlen', $modified->getBody()->getContents());
+    }
+
+    public function testModifyRequestReaddsHostHeaderWhenFinalHeadersDoNotContainHost(): void
+    {
+        $request = (new Psr7\Request('GET', 'http://example.com'))->withoutHeader('Host');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'set_headers' => ['X-Test' => '1'],
+        ]);
+
+        self::assertSame('example.com', $modified->getHeaderLine('Host'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+    }
+
+    public function testModifyRequestValidatesReaddedHostFromCustomUri(): void
+    {
+        $uri = new class('http://safe.example/') extends Psr7\Uri {
+            public function getHost(): string
+            {
+                return 'ex%2Fample.com';
+            }
+        };
+        $request = (new Psr7\Request('GET', 'http://safe.example/', ['Host' => 'safe.example']))
+            ->withUri($uri, true)
+            ->withoutHeader('Host');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid host');
+
+        Psr7\Message::modifyRequest($request, ['set_headers' => ['X-Test' => '1']]);
+    }
+
+    /**
+     * @dataProvider hostHeaderCaseProvider
+     */
+    public function testModifyRequestRejectsUriAndExplicitHostHeader(string $hostHeader): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot modify request with both a URI containing a host and an explicit Host header.');
+
+        Psr7\Message::modifyRequest($request, [
+            'uri' => new Psr7\Uri('http://bar.com'),
+            'set_headers' => [$hostHeader => 'custom'],
+        ]);
+    }
+
+    public function testModifyRequestRejectsFalseyUriHostAndExplicitHostHeader(): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot modify request with both a URI containing a host and an explicit Host header.');
+
+        Psr7\Message::modifyRequest($request, [
+            'uri' => new Psr7\Uri('http://0'),
+            'set_headers' => ['host' => 'custom'],
+        ]);
+    }
+
+    public function testModifyRequestCanSetExplicitHostHeaderWithoutUriChange(): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'set_headers' => ['host' => 'custom'],
+        ]);
+
+        self::assertSame('custom', $modified->getHeaderLine('Host'));
+    }
+
+    public function testModifyRequestCanSetExplicitHostHeaderWithRelativeUriChange(): void
+    {
+        $request = new Psr7\Request('GET', 'http://foo.com');
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'uri' => new Psr7\Uri('/relative'),
+            'set_headers' => ['host' => 'custom'],
+        ]);
+
+        self::assertSame('custom', $modified->getHeaderLine('Host'));
+        self::assertSame('/relative', (string) $modified->getUri());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function hostHeaderCaseProvider(): iterable
+    {
+        yield 'canonical' => ['Host'];
+        yield 'lowercase' => ['host'];
+        yield 'uppercase' => ['HOST'];
+        yield 'mixed case' => ['HoSt'];
+    }
+
+    public function testModifyRequestPreservesNumericHeaderNames(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com', ['123' => 'old']);
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'set_headers' => ['X-Test' => '1'],
+        ]);
+
+        self::assertSame('old', $modified->getHeaderLine('123'));
+        self::assertSame('1', $modified->getHeaderLine('X-Test'));
+    }
+
+    public function testModifyRequestReplacesNumericHeaderNames(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com', ['123' => 'old']);
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'set_headers' => ['123' => 'new'],
+        ]);
+
+        self::assertSame('new', $modified->getHeaderLine('123'));
+    }
+
+    public function testModifyRequestRemovesNumericHeaderNames(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com', ['123' => 'old']);
+
+        $modified = Psr7\Message::modifyRequest($request, [
+            'remove_headers' => ['123'],
+        ]);
+
+        self::assertFalse($modified->hasHeader('123'));
+    }
+
+    /**
+     * @dataProvider providesInvalidModifyRequestChanges
+     */
+    public function testModifyRequestRejectsInvalidChangeValues(array $changes, string $expectedMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        Psr7\Message::modifyRequest(new Psr7\Request('GET', 'http://example.com'), $changes);
+    }
+
+    public function testModifyRequestIgnoresUnknownChangeKeys(): void
+    {
+        $request = new Psr7\Request('GET', 'http://example.com');
+
+        self::assertSame($request, Psr7\Message::modifyRequest($request, ['unknown' => new \stdClass()]));
+    }
+
+    public function testModifyServerRequestWithUploadedFiles(): void
+    {
+        $request = new Psr7\ServerRequest('GET', 'http://example.com/bla');
+        $file = new Psr7\UploadedFile('Test', 100, \UPLOAD_ERR_OK);
+        $request = $request->withUploadedFiles([$file]);
+
+        /** @var Psr7\ServerRequest $modifiedRequest */
+        $modifiedRequest = Psr7\Message::modifyRequest($request, ['set_headers' => ['foo' => 'bar']]);
+
+        self::assertCount(1, $modifiedRequest->getUploadedFiles());
+
+        $files = $modifiedRequest->getUploadedFiles();
+        self::assertInstanceOf('GuzzleHttp\Psr7\UploadedFile', $files[0]);
+    }
+
+    public function testModifyServerRequestWithCookies(): void
+    {
+        $request = (new Psr7\ServerRequest('GET', 'http://example.com/bla'))
+            ->withCookieParams(['name' => 'value']);
+
+        /** @var Psr7\ServerRequest $modifiedRequest */
+        $modifiedRequest = Psr7\Message::modifyRequest($request, ['set_headers' => ['foo' => 'bar']]);
+
+        self::assertSame(['name' => 'value'], $modifiedRequest->getCookieParams());
+    }
+
+    public function testModifyServerRequestParsedBody(): void
+    {
+        $request = (new Psr7\ServerRequest('GET', 'http://example.com/bla'))
+            ->withParsedBody(['name' => 'value']);
+
+        /** @var Psr7\ServerRequest $modifiedRequest */
+        $modifiedRequest = Psr7\Message::modifyRequest($request, ['set_headers' => ['foo' => 'bar']]);
+
+        self::assertSame(['name' => 'value'], $modifiedRequest->getParsedBody());
+    }
+
+    public function testModifyServerRequestQueryParams(): void
+    {
+        $request = (new Psr7\ServerRequest('GET', 'http://example.com/bla'))
+            ->withQueryParams(['name' => 'value']);
+
+        /** @var Psr7\ServerRequest $modifiedRequest */
+        $modifiedRequest = Psr7\Message::modifyRequest($request, ['set_headers' => ['foo' => 'bar']]);
+
+        self::assertSame(['name' => 'value'], $modifiedRequest->getQueryParams());
+    }
+
+    public function testModifyServerRequestRetainsAttributes(): void
+    {
+        $request = (new Psr7\ServerRequest('GET', 'http://example.com/bla'))
+            ->withAttribute('foo', 'bar');
+
+        /** @var Psr7\ServerRequest $modifiedRequest */
+        $modifiedRequest = Psr7\Message::modifyRequest($request, ['set_headers' => ['baz' => 'qux']]);
+
+        self::assertSame(['foo' => 'bar'], $modifiedRequest->getAttributes());
+    }
+
+    /**
+     * @return array<string, array{0: array, 1: string}>
+     */
+    public static function providesInvalidModifyRequestChanges(): array
+    {
+        return [
+            'method null' => [
+                ['method' => null],
+                'Message::modifyRequest() change "method" must be string; null provided.',
+            ],
+            'method int' => [
+                ['method' => 123],
+                'Message::modifyRequest() change "method" must be string; int provided.',
+            ],
+            'uri null' => [
+                ['uri' => null],
+                'Message::modifyRequest() change "uri" must be UriInterface; null provided.',
+            ],
+            'uri string' => [
+                ['uri' => 'http://example.com'],
+                'Message::modifyRequest() change "uri" must be UriInterface; string provided.',
+            ],
+            'query null' => [
+                ['query' => null],
+                'Message::modifyRequest() change "query" must be string; null provided.',
+            ],
+            'query int' => [
+                ['query' => 123],
+                'Message::modifyRequest() change "query" must be string; int provided.',
+            ],
+            'version null' => [
+                ['version' => null],
+                'Message::modifyRequest() change "version" must be string; null provided.',
+            ],
+            'version int' => [
+                ['version' => 2],
+                'Message::modifyRequest() change "version" must be string; int provided.',
+            ],
+            'body null' => [
+                ['body' => null],
+                'Message::modifyRequest() change "body" must be resource|string|StreamInterface|callable|\Iterator|\Stringable; null provided.',
+            ],
+            'set_headers null' => [
+                ['set_headers' => null],
+                'Message::modifyRequest() change "set_headers" must be array<array-key, string|non-empty-array<array-key, string>>; null provided.',
+            ],
+            'set_headers string' => [
+                ['set_headers' => 'X-Test: value'],
+                'Message::modifyRequest() change "set_headers" must be array<array-key, string|non-empty-array<array-key, string>>; string provided.',
+            ],
+            'set_headers value bool' => [
+                ['set_headers' => ['X-Test' => false]],
+                'Message::modifyRequest() change "set_headers.X-Test" must be string|non-empty-array<array-key, string>; bool provided.',
+            ],
+            'set_headers control in key' => [
+                ['set_headers' => ["X\nTest" => false]],
+                'Message::modifyRequest() change "set_headers.X\\x0ATest" must be string|non-empty-array<array-key, string>; bool provided.',
+            ],
+            'set_headers value empty array' => [
+                ['set_headers' => ['X-Test' => []]],
+                'Message::modifyRequest() change "set_headers.X-Test" must be string|non-empty-array<array-key, string>; array provided.',
+            ],
+            'set_headers value array non-string item' => [
+                ['set_headers' => ['X-Test' => [false]]],
+                'Message::modifyRequest() change "set_headers.X-Test.0" must be string; bool provided.',
+            ],
+            'remove_headers null' => [
+                ['remove_headers' => null],
+                'Message::modifyRequest() change "remove_headers" must be array<array-key, string|int>; null provided.',
+            ],
+            'remove_headers string' => [
+                ['remove_headers' => 'Host'],
+                'Message::modifyRequest() change "remove_headers" must be array<array-key, string|int>; string provided.',
+            ],
+            'remove_headers bool value' => [
+                ['remove_headers' => [false]],
+                'Message::modifyRequest() change "remove_headers.0" must be string|int; bool provided.',
+            ],
+        ];
+    }
+
+    private static function customRequest(string $method, UriInterface $uri): Psr7\Request
+    {
+        return new class($method, $uri) extends Psr7\Request {
+        };
+    }
+
+    private static function customUri(string $uri): UriInterface
+    {
+        return new class($uri) extends Psr7\Uri {
+        };
+    }
+
+    private static function customStream(string $contents): StreamInterface
+    {
+        $resource = Psr7\Utils::tryFopen('php://temp', 'r+');
+        \fwrite($resource, $contents);
+        \rewind($resource);
+
+        return new class($resource) extends Psr7\Stream {
+        };
     }
 
     public function testMessageBodySummaryWithSmallBody(): void

@@ -77,7 +77,7 @@ the returned request via `withRequestTarget()`.
 
 Parses a response message string into a response object.
 
-## `GuzzleHttp\Psr7\Utils::modifyRequest`
+## `GuzzleHttp\Psr7\Message::modifyRequest`
 
 `public static function modifyRequest(RequestInterface $request, array $changes): RequestInterface`
 
