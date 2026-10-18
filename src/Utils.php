@@ -296,202 +296,21 @@ final class Utils
      *     query?: string,
      *     version?: string
      * } $changes Changes to apply.
+     *
+     * @deprecated Utils::modifyRequest() will be removed in
+     *             guzzlehttp/psr7:4.0. Use Message::modifyRequest() instead.
      */
     public static function modifyRequest(RequestInterface $request, array $changes): RequestInterface
     {
-        if (!$changes) {
-            return $request;
-        }
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.3',
+            '%s() is deprecated and will be removed in 4.0. Use %s::modifyRequest() instead.',
+            __METHOD__,
+            Message::class
+        );
 
-        self::assertValidModifyRequestChanges($changes);
-
-        $headers = $request->getHeaders();
-
-        if (!isset($changes['uri'])) {
-            $uri = $request->getUri();
-        } else {
-            /** @var UriInterface */
-            $uri = $changes['uri'];
-
-            $host = $uri->getHost();
-            if ($host !== '') {
-                Uri::assertValidHost($host);
-
-                if (isset($changes['set_headers']) && is_array($changes['set_headers'])) {
-                    foreach (array_keys($changes['set_headers']) as $header) {
-                        if (self::asciiToLower((string) $header) === 'host') {
-                            throw new \InvalidArgumentException(
-                                'Cannot modify request with both a URI containing a host and an explicit Host header.'
-                            );
-                        }
-                    }
-                }
-
-                $changes['set_headers']['Host'] = $host;
-
-                $port = $uri->getPort();
-                if ($port !== null) {
-                    $standardPorts = ['http' => 80, 'https' => 443];
-                    $scheme = $uri->getScheme();
-                    if (!isset($standardPorts[$scheme]) || $port != $standardPorts[$scheme]) {
-                        $changes['set_headers']['Host'] .= ':'.$port;
-                    }
-                }
-            }
-        }
-
-        if (!empty($changes['remove_headers'])) {
-            $headers = self::caselessRemove($changes['remove_headers'], $headers);
-        }
-
-        if (!empty($changes['set_headers'])) {
-            $headers = self::caselessRemove(array_keys($changes['set_headers']), $headers);
-            $headers = $changes['set_headers'] + $headers;
-        }
-
-        if (isset($changes['query'])) {
-            $uri = $uri->withQuery($changes['query']);
-        }
-
-        $hasHost = false;
-        foreach (array_keys($headers) as $header) {
-            if (self::asciiToLower((string) $header) === 'host') {
-                $hasHost = true;
-                break;
-            }
-        }
-
-        // Match Request::__construct() by adding a Host header when one is not provided.
-        if (!$hasHost && $uri->getHost() !== '') {
-            $host = $uri->getHost();
-            Uri::assertValidHost($host);
-
-            if (($port = $uri->getPort()) !== null) {
-                $host .= ':'.$port;
-            }
-
-            $headers = ['Host' => [$host]] + $headers;
-        }
-
-        $new = $request;
-
-        if (isset($changes['method'])) {
-            $new = $new->withMethod($changes['method']);
-        }
-
-        if (isset($changes['uri']) || isset($changes['query'])) {
-            $new = $new->withUri($uri, true);
-        }
-
-        if ($headers !== $new->getHeaders()) {
-            foreach (array_keys($new->getHeaders()) as $header) {
-                /** @var RequestInterface */
-                $new = $new->withoutHeader((string) $header);
-            }
-
-            $addedHeaders = [];
-            foreach ($headers as $header => $value) {
-                $header = (string) $header;
-                $normalized = self::asciiToLower($header);
-
-                if (isset($addedHeaders[$normalized])) {
-                    /** @var RequestInterface */
-                    $new = $new->withAddedHeader($addedHeaders[$normalized], $value);
-                } else {
-                    /** @var RequestInterface */
-                    $new = $new->withHeader($header, $value);
-                    $addedHeaders[$normalized] = $header;
-                }
-            }
-        }
-
-        if (isset($changes['body'])) {
-            /** @var RequestInterface */
-            $new = $new->withBody(self::streamFor($changes['body']));
-        }
-
-        if (isset($changes['version'])) {
-            /** @var RequestInterface */
-            $new = $new->withProtocolVersion($changes['version']);
-        }
-
-        return $new;
-    }
-
-    /**
-     * @param array<array-key, mixed> $changes
-     */
-    private static function assertValidModifyRequestChanges(array $changes): void
-    {
-        foreach (['method', 'query', 'version'] as $key) {
-            if (\array_key_exists($key, $changes) && !\is_string($changes[$key])) {
-                self::assertValidModifyRequestChange($key, 'string', $changes[$key]);
-            }
-        }
-
-        if (\array_key_exists('uri', $changes) && !$changes['uri'] instanceof UriInterface) {
-            self::assertValidModifyRequestChange('uri', 'UriInterface', $changes['uri']);
-        }
-
-        if (\array_key_exists('body', $changes) && $changes['body'] === null) {
-            self::assertValidModifyRequestChange('body', 'resource|string|StreamInterface|callable|\Iterator|\Stringable', $changes['body']);
-        }
-
-        if (\array_key_exists('set_headers', $changes)) {
-            if (!\is_array($changes['set_headers'])) {
-                self::assertValidModifyRequestChange('set_headers', 'array<array-key, string|non-empty-array<array-key, string>>', $changes['set_headers']);
-            } else {
-                foreach ($changes['set_headers'] as $header => $value) {
-                    $headerPath = \sprintf('set_headers.%s', (string) $header);
-
-                    if (\is_array($value)) {
-                        if ($value === []) {
-                            self::assertValidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
-
-                            break;
-                        }
-
-                        foreach ($value as $index => $item) {
-                            if (!\is_string($item)) {
-                                self::assertValidModifyRequestChange(\sprintf('%s.%s', $headerPath, (string) $index), 'string', $item);
-
-                                break 2;
-                            }
-                        }
-                    } elseif (!\is_string($value)) {
-                        self::assertValidModifyRequestChange($headerPath, 'string|non-empty-array<array-key, string>', $value);
-
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (!\array_key_exists('remove_headers', $changes)) {
-            return;
-        }
-
-        if (!\is_array($changes['remove_headers'])) {
-            self::assertValidModifyRequestChange('remove_headers', 'array<array-key, string|int>', $changes['remove_headers']);
-
-            return;
-        }
-
-        foreach ($changes['remove_headers'] as $index => $header) {
-            if (!\is_string($header) && !\is_int($header)) {
-                self::assertValidModifyRequestChange(\sprintf('remove_headers.%s', (string) $index), 'string|int', $header);
-
-                return;
-            }
-        }
-    }
-
-    /**
-     * @param mixed $value
-     */
-    private static function assertValidModifyRequestChange(string $key, string $expected, $value): void
-    {
-        throw new \InvalidArgumentException(\sprintf('Utils::modifyRequest() change "%s" must be %s; %s provided.', DiagnosticValue::escape($key), $expected, \get_debug_type($value)));
+        return Message::modifyRequest($request, $changes);
     }
 
     /**
@@ -532,12 +351,24 @@ final class Utils
      * when one is present, so neither the username nor the password survives
      * into logs and diagnostics. A URI without userinfo is returned
      * unchanged.
+     *
+     * @deprecated Utils::redactUserInfo() will be removed in
+     *             guzzlehttp/psr7:4.0. Use UriRedactor::redactUserInfo()
+     *             instead.
      */
     public static function redactUserInfo(
         #[\SensitiveParameter]
         UriInterface $uri
     ): UriInterface {
-        return $uri->getUserInfo() === '' ? $uri : $uri->withUserInfo('***');
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.3',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUserInfo() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
+
+        return UriRedactor::redactUserInfo($uri);
     }
 
     /**
@@ -557,39 +388,22 @@ final class Utils
      *
      * @param string $subject Text that may embed the URI
      * @param string $uri     Raw URI whose userinfo is redacted in the text
+     *
+     * @deprecated Utils::redactUserInfoInString() will be removed in
+     *             guzzlehttp/psr7:4.0. Use
+     *             UriRedactor::redactUserInfoInString() instead.
      */
     public static function redactUserInfoInString(string $subject, string $uri): string
     {
-        if (\strpos($uri, '@') === false) {
-            return $subject;
-        }
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.3',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUserInfoInString() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
 
-        $schemePosition = \strpos($uri, '://');
-        $remainder = $schemePosition === false ? $uri : \substr($uri, $schemePosition + 3);
-
-        if (\parse_url($schemePosition === false ? 'http://'.$uri : $uri) === false) {
-            // Raw '/', '?', or '#' separators may sit inside the credentials
-            // of a URI that defeats parse_url(), so the redaction cannot stop
-            // at the apparent authority.
-            $atPosition = \strrpos($remainder, '@');
-
-            if ($atPosition === false || $atPosition === 0) {
-                return $subject;
-            }
-
-            return \str_replace(\substr($remainder, 0, $atPosition).'@', '***@', $subject);
-        }
-
-        $authority = \substr($remainder, 0, \strcspn($remainder, '/?#'));
-        $atPosition = \strrpos($authority, '@');
-
-        if ($atPosition === false || $atPosition === 0) {
-            // A parseable URI with '@' only past its authority, or with an
-            // empty userinfo, carries no credentials to redact.
-            return $subject;
-        }
-
-        return \str_replace(\substr($authority, 0, $atPosition).'@', '***@', $subject);
+        return UriRedactor::redactUserInfoInString($subject, $uri);
     }
 
     /**
@@ -599,26 +413,24 @@ final class Utils
      * fragment are removed. The scheme, host, port, and path are preserved.
      * The returned string is diagnostic-escaped and the formatter never
      * throws.
+     *
+     * @deprecated Utils::redactUriForMessage() will be removed in
+     *             guzzlehttp/psr7:4.0. Use UriRedactor::redactUriForMessage()
+     *             instead.
      */
     public static function redactUriForMessage(
         #[\SensitiveParameter]
         UriInterface $uri
     ): string {
-        try {
-            $raw = (string) $uri;
-        } catch (\Throwable $e) {
-            return '[unavailable URI]';
-        }
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.3',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUriForMessage() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
 
-        try {
-            if ($uri->getUserInfo() !== '') {
-                $uri = $uri->withUserInfo('***');
-            }
-
-            return DiagnosticValue::escape((string) $uri->withQuery('')->withFragment(''));
-        } catch (\Throwable $e) {
-            return self::redactUriStringForMessage($raw);
-        }
+        return UriRedactor::redactUriForMessage($uri);
     }
 
     /**
@@ -628,18 +440,24 @@ final class Utils
      * fragment are removed. The scheme, host, port, and path are preserved
      * where their boundaries can be determined safely. The returned string is
      * diagnostic-escaped and the formatter never throws.
+     *
+     * @deprecated Utils::redactUriStringForMessage() will be removed in
+     *             guzzlehttp/psr7:4.0. Use
+     *             UriRedactor::redactUriStringForMessage() instead.
      */
     public static function redactUriStringForMessage(
         #[\SensitiveParameter]
         string $uri
     ): string {
-        try {
-            $uri = self::redactUserInfoInString($uri, $uri);
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.3',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUriStringForMessage() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
 
-            return DiagnosticValue::escape(\substr($uri, 0, \strcspn($uri, '?#')));
-        } catch (\Throwable $e) {
-            return '[unavailable URI]';
-        }
+        return UriRedactor::redactUriStringForMessage($uri);
     }
 
     /**

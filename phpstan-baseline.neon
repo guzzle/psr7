@@ -109,6 +109,12 @@ parameters:
 			path: src/LimitStream.php
 
 		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: src/Message.php
+
+		-
 			message: '#^Call to function is_object\(\) with object will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -147,12 +153,6 @@ parameters:
 		-
 			message: '#^Method GuzzleHttp\\Psr7\\Utils\:\:tryGetContents\(\) should return string but returns string\|false\.$#'
 			identifier: return.type
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Right side of && is always true\.$#'
-			identifier: booleanAnd.rightAlwaysTrue
 			count: 1
 			path: src/Utils.php
 
