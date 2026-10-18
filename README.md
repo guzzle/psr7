@@ -19,7 +19,7 @@ composer require guzzlehttp/psr7
 
 | Version | Status       | PHP Version  |
 |---------|--------------|--------------|
-| 3.2     | Latest       | >=7.4,<8.7   |
+| 3.3     | Latest       | >=7.4,<8.7   |
 | 2.13    | Maintenance  | >=7.2.5,<8.7 |
 | 1.9     | End of Life  | >=5.4,<8.2   |
 
