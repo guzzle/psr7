@@ -28,6 +28,8 @@ class Request implements RequestInterface
      * @param (string|string[])[]                  $headers Request headers
      * @param string|resource|StreamInterface|null $body    Request body
      * @param string                               $version Protocol version
+     *
+     * @psalm-taint-sink ssrf $uri
      */
     public function __construct(
         string $method,

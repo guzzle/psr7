@@ -62,6 +62,10 @@ class Uri implements UriInterface, \JsonSerializable
     /** @var string Uri fragment. */
     private string $fragment = '';
 
+    /**
+     * @psalm-taint-specialize
+     * @psalm-flow ($uri) -> return
+     */
     public function __construct(
         #[\SensitiveParameter]
         string $uri = ''
