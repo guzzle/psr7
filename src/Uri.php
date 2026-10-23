@@ -64,6 +64,7 @@ class Uri implements UriInterface, \JsonSerializable
 
     /**
      * @psalm-taint-specialize
+     *
      * @psalm-flow ($uri) -> return
      */
     public function __construct(
