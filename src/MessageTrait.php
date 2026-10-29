@@ -102,7 +102,7 @@ trait MessageTrait
                 break;
             }
         }
-        $value = $this->normalizeHeaderValue($value);
+        $value = $this->normalizeHeaderValue($header, $value);
         $normalized = Utils::asciiToLower($header);
 
         $new = clone $this;
@@ -134,7 +134,7 @@ trait MessageTrait
                 break;
             }
         }
-        $value = $this->normalizeHeaderValue($value);
+        $value = $this->normalizeHeaderValue($header, $value);
         $normalized = Utils::asciiToLower($header);
 
         $new = clone $this;
@@ -217,7 +217,7 @@ trait MessageTrait
                     break;
                 }
             }
-            $value = $this->normalizeHeaderValue($value);
+            $value = $this->normalizeHeaderValue($header, $value);
             $normalized = Utils::asciiToLower($header);
             if (isset($this->headerNames[$normalized])) {
                 $header = $this->headerNames[$normalized];
@@ -234,7 +234,7 @@ trait MessageTrait
      *
      * @return string[]
      */
-    private function normalizeHeaderValue($value): array
+    private function normalizeHeaderValue(string $header, $value): array
     {
         if (is_array($value) && $value === []) {
             \trigger_deprecation(
@@ -245,10 +245,10 @@ trait MessageTrait
         }
 
         if (!is_array($value)) {
-            return $this->trimAndValidateHeaderValues([$value]);
+            return $this->trimAndValidateHeaderValues($header, [$value]);
         }
 
-        return $this->trimAndValidateHeaderValues($value);
+        return $this->trimAndValidateHeaderValues($header, $value);
     }
 
     /**
@@ -265,9 +265,9 @@ trait MessageTrait
      *
      * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.4
      */
-    private function trimAndValidateHeaderValues(array $values): array
+    private function trimAndValidateHeaderValues(string $header, array $values): array
     {
-        return array_map(function ($value) {
+        return array_map(function ($value) use ($header) {
             if (!is_scalar($value) && null !== $value) {
                 throw new \InvalidArgumentException(sprintf(
                     'Header value must be scalar or null but %s provided.',
@@ -282,7 +282,7 @@ trait MessageTrait
             }
 
             $trimmed = trim((string) $value, " \t");
-            $this->assertValue($trimmed);
+            $this->assertValue($header, $trimmed);
 
             return $trimmed;
         }, array_values($values));
@@ -336,7 +336,7 @@ trait MessageTrait
      * obs-text       = %x80-FF
      * obs-fold       = CRLF 1*( SP / HTAB )
      */
-    private function assertValue(string $value): void
+    private function assertValue(string $header, string $value): void
     {
         // The regular expression intentionally does not support the obs-fold production, because as
         // per RFC 7230#3.2.4:
@@ -350,9 +350,13 @@ trait MessageTrait
         // likely very rare. Line folding is a fairly obscure feature of HTTP/1.1 and thus not accepting
         // folding is not likely to break any legitimate use case.
         if (!preg_match('/^[\x20\x09\x21-\x7E\x80-\xFF]*$/D', $value)) {
-            throw new \InvalidArgumentException(
-                sprintf('"%s" is not valid header value.', $value)
-            );
+            // The value is left out: header values often carry credentials,
+            // and exception messages end up in logs.
+            $reason = strpbrk($value, "\r\n") !== false
+                ? 'must not contain CR or LF characters'
+                : 'contains an invalid control character';
+
+            throw new \InvalidArgumentException(sprintf('Header "%s" %s.', $header, $reason));
         }
     }
 }

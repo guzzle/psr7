@@ -408,16 +408,41 @@ class RequestTest extends TestCase
      */
     public function testContainsNotAllowedCharsOnHeaderValue(string $value): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(sprintf('"%s" is not valid header value', $value));
+        $reason = strpbrk($value, "\r\n") !== false
+            ? 'must not contain CR or LF characters'
+            : 'contains an invalid control character';
 
-        $r = new Request(
-            'GET',
-            'http://foo.com/baz?bar=bam',
-            [
-                'testing' => $value,
-            ]
-        );
+        try {
+            new Request(
+                'GET',
+                'http://foo.com/baz?bar=bam',
+                [
+                    'testing' => $value,
+                ]
+            );
+            self::fail('Expected an invalid header value exception.');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame(sprintf('Header "testing" %s.', $reason), $e->getMessage());
+        }
+    }
+
+    public function testInvalidHeaderValueIsOmittedFromTheExceptionMessage(): void
+    {
+        $secret = 'Bearer secret-token-1234';
+
+        foreach ([
+            static function () use ($secret): void { new Request('GET', 'http://foo.com', ['Authorization' => $secret."\n"]); },
+            static function () use ($secret): void { (new Request('GET', 'http://foo.com'))->withHeader('Authorization', $secret."\n"); },
+            static function () use ($secret): void { (new Request('GET', 'http://foo.com'))->withAddedHeader('Authorization', [$secret."\r\n"]); },
+        ] as $build) {
+            try {
+                $build();
+                self::fail('Expected an invalid header value exception.');
+            } catch (\InvalidArgumentException $e) {
+                self::assertSame('Header "Authorization" must not contain CR or LF characters.', $e->getMessage());
+                self::assertStringNotContainsString('secret-token-1234', $e->getMessage());
+            }
+        }
     }
 
     public static function provideHeaderValuesContainingNotAllowedChars(): iterable
