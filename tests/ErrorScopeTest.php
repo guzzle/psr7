@@ -43,6 +43,19 @@ class ErrorScopeTest extends TestCase
         self::assertSame([], $passedOn);
     }
 
+    public function testReturnsTheCapturedErrorsInOrder(): void
+    {
+        $scope = new ErrorScope();
+        $scope->run(static function (): void {
+            trigger_error('first', E_USER_WARNING);
+            trigger_error('second', E_USER_NOTICE);
+        });
+
+        self::assertSame(['first', 'second'], array_column($scope->getErrors(), 'message'));
+        self::assertSame([__FILE__, __FILE__], array_column($scope->getErrors(), 'file'));
+        self::assertSame([__LINE__ - 6, __LINE__ - 5], array_column($scope->getErrors(), 'line'));
+    }
+
     public function testPassesOnErrorsOutsideItsLevels(): void
     {
         $passedOn = [];
@@ -147,21 +160,53 @@ class ErrorScopeTest extends TestCase
         self::assertSame('silenced', $scope->getError());
     }
 
-    public function testRestoresTheErrorHandlerWhenTheOperationThrows(): void
+    public function testCleansUpWhenTheOperationThrows(): void
     {
+        $scope = new ErrorScope();
         $handler = static fn (): bool => true;
         set_error_handler($handler);
 
         try {
-            (new ErrorScope())->run(static function (): void {
-                throw new \LogicException('failed');
+            $scope->run(static function (): void {
+                throw new \RuntimeException('failed');
             });
             self::fail('Expected the operation exception.');
-        } catch (\LogicException $e) {
+        } catch (\RuntimeException $e) {
             self::assertSame($handler, self::currentErrorHandler());
         } finally {
             restore_error_handler();
         }
+
+        self::assertSame('result', $scope->run(static fn (): string => 'result'));
+    }
+
+    public function testRejectsASecondOperationWhileRunning(): void
+    {
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $scope = new ErrorScope(E_ALL, false);
+            $scope->run(static function () use ($scope): void {
+                try {
+                    @$scope->run(static fn () => null);
+                    self::fail('Expected the second operation to be rejected.');
+                } catch (\LogicException $e) {
+                    self::assertSame(ErrorScope::class.' is already running an operation', $e->getMessage());
+                }
+
+                @trigger_error('silenced', E_USER_WARNING);
+            });
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertNull($scope->getError());
+        self::assertSame(['silenced'], $passedOn);
     }
 
     /**

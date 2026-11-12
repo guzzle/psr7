@@ -11,8 +11,6 @@ namespace GuzzleHttp\Psr7;
  * fiber, so an error raised on another call stack is passed on to the
  * previously installed handler instead of being captured. That handler is
  * called directly, so it also receives error levels it was not registered for.
- *
- * @internal
  */
 final class ErrorScope
 {
@@ -22,9 +20,22 @@ final class ErrorScope
 
     private int $reporting = 0;
 
-    private ?string $error = null;
+    private bool $running = false;
 
     /**
+     * @var list<array{message: string, file: string, line: int}>
+     */
+    private array $errors = [];
+
+    /**
+     * Creates a scope that captures errors of the given levels.
+     *
+     * Errors of other levels are passed on to the previously installed handler,
+     * which may be an enclosing scope. When `$silenced` is false, so are errors
+     * silenced inside the call with the `@` operator, which are those whose
+     * level was reported as the call started and is not reported when they are
+     * raised.
+     *
      * @param int  $levels   Error levels to capture
      * @param bool $silenced Whether to capture errors silenced inside the call
      */
@@ -35,17 +46,29 @@ final class ErrorScope
     }
 
     /**
+     * Runs the operation and returns its result, capturing the errors raised
+     * beneath it.
+     *
+     * A scope runs one operation at a time, so calling this again before it
+     * returns throws a `LogicException`.
+     *
      * @template T
      *
      * @param callable(): T $operation
      *
      * @return T
+     *
+     * @throws \LogicException if the scope is already running an operation
      */
     public function run(callable $operation)
     {
+        if ($this->running) {
+            throw new \LogicException(static::class.' is already running an operation');
+        }
+
         $owner = $this;
         $previous = null;
-        $previous = set_error_handler(static function (int $errno, string $errstr, ...$rest) use ($owner, &$previous): bool {
+        $previous = set_error_handler(static function (int $errno, string $errstr, string $errfile = '', int $errline = 0, ...$rest) use ($owner, &$previous): bool {
             foreach (debug_backtrace(\DEBUG_BACKTRACE_PROVIDE_OBJECT | \DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
                 $scope = $frame['object'] ?? null;
                 if (!$scope instanceof self) {
@@ -53,7 +76,11 @@ final class ErrorScope
                 }
 
                 if ($scope->captures($errno)) {
-                    $scope->error = $errstr;
+                    $scope->errors[] = [
+                        'message' => $errstr,
+                        'file' => $errfile,
+                        'line' => $errline,
+                    ];
 
                     return true;
                 }
@@ -64,14 +91,16 @@ final class ErrorScope
                 }
             }
 
-            return $previous !== null && $previous($errno, $errstr, ...$rest) !== false;
+            return $previous !== null && $previous($errno, $errstr, $errfile, $errline, ...$rest) !== false;
         });
 
         $this->reporting = error_reporting();
+        $this->running = true;
 
         try {
             return $operation();
         } finally {
+            $this->running = false;
             restore_error_handler();
         }
     }
@@ -81,7 +110,19 @@ final class ErrorScope
      */
     public function getError(): ?string
     {
-        return $this->error;
+        $error = end($this->errors);
+
+        return $error === false ? null : $error['message'];
+    }
+
+    /**
+     * Returns the errors captured, in the order they were raised.
+     *
+     * @return list<array{message: string, file: string, line: int}>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 
     private function captures(int $errno): bool
