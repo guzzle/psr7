@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix stream helpers capturing errors raised in other coroutines and fibers
 
-## 3.2.1 - Unreleased
+## 3.2.1 - 2026-11-12
 
 ### Fixed
 
