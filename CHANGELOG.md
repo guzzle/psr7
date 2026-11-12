@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 3.3.0 - Upcoming
 
+### Changed
+
+- Stop `Utils::tryFopen()` and `Utils::tryGetContents()` failing on deprecations and on errors silenced during the call
+
 ### Fixed
 
 - Fix stream helpers capturing errors raised in other coroutines and fibers

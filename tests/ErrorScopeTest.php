@@ -43,6 +43,71 @@ class ErrorScopeTest extends TestCase
         self::assertSame([], $passedOn);
     }
 
+    public function testPassesOnErrorsOutsideItsLevels(): void
+    {
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $scope = new ErrorScope(E_ALL & ~E_USER_DEPRECATED);
+            $scope->run(static function (): void {
+                trigger_error('deprecated', E_USER_DEPRECATED);
+                trigger_error('warning', E_USER_WARNING);
+            });
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame('warning', $scope->getError());
+        self::assertSame(['deprecated'], $passedOn);
+    }
+
+    public function testCapturesErrorsSilencedInsideTheCallByDefault(): void
+    {
+        $scope = new ErrorScope();
+        $scope->run(static function (): void {
+            @trigger_error('silenced', E_USER_WARNING);
+        });
+
+        self::assertSame('silenced', $scope->getError());
+    }
+
+    public function testPassesOnErrorsSilencedInsideTheCallOnRequest(): void
+    {
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $scope = new ErrorScope(E_ALL, false);
+            $scope->run(static function (): void {
+                @trigger_error('silenced', E_USER_WARNING);
+            });
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertNull($scope->getError());
+        self::assertSame(['silenced'], $passedOn);
+    }
+
+    public function testCapturesErrorsSilencedBeforeTheCall(): void
+    {
+        $scope = new ErrorScope(E_ALL, false);
+        @$scope->run(static function (): void {
+            trigger_error('silenced', E_USER_WARNING);
+        });
+
+        self::assertSame('silenced', $scope->getError());
+    }
+
     public function testRestoresTheErrorHandlerWhenTheOperationThrows(): void
     {
         $handler = static fn (): bool => true;

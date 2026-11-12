@@ -861,6 +861,127 @@ class UtilsTest extends TestCase
         Psr7\Utils::tryGetContents($r);
     }
 
+    public function testTryFopenPassesOnDeprecationsRaisedWhileOpening(): void
+    {
+        $wrapper = new class {
+            /** @var resource|null */
+            public $context;
+
+            public function stream_open(): bool
+            {
+                trigger_error('deprecated', E_USER_DEPRECATED);
+
+                return true;
+            }
+        };
+        stream_wrapper_register('psr7-deprecated', get_class($wrapper));
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $resource = Psr7\Utils::tryFopen('psr7-deprecated://stream', 'r');
+        } finally {
+            restore_error_handler();
+            stream_wrapper_unregister('psr7-deprecated');
+        }
+
+        self::assertIsResource($resource);
+        self::assertSame(['deprecated'], $passedOn);
+    }
+
+    /**
+     * @dataProvider passedOnReadErrorProvider
+     */
+    public function testTryGetContentsPassesOnErrorsThatAreNotFailures(callable $raise): void
+    {
+        $resource = self::resourceRaisingOnRead($raise);
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $contents = Psr7\Utils::tryGetContents($resource);
+        } finally {
+            restore_error_handler();
+            fclose($resource);
+        }
+
+        self::assertSame('contents', $contents);
+        self::assertSame(['raised'], $passedOn);
+    }
+
+    /**
+     * @return iterable<string, array{callable(): void}>
+     */
+    public static function passedOnReadErrorProvider(): iterable
+    {
+        yield 'deprecation' => [static function (): void {
+            trigger_error('raised', E_USER_DEPRECATED);
+        }];
+        yield 'silenced warning' => [static function (): void {
+            @trigger_error('raised', E_USER_WARNING);
+        }];
+    }
+
+    public function testTryGetContentsThrowsOnWarningsRaisedWhileReading(): void
+    {
+        $resource = self::resourceRaisingOnRead(static function (): void {
+            trigger_error('raised', E_USER_WARNING);
+        });
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to read stream contents: raised');
+
+        try {
+            Psr7\Utils::tryGetContents($resource);
+        } finally {
+            fclose($resource);
+        }
+    }
+
+    public function testTryGetContentsThrowsWhenTheCallItselfIsSilenced(): void
+    {
+        $r = fopen(tempnam(sys_get_temp_dir(), 'guzzle-psr7-'), 'w');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to read stream contents');
+
+        try {
+            @Psr7\Utils::tryGetContents($r);
+        } finally {
+            fclose($r);
+        }
+    }
+
+    /**
+     * @param callable(): void $raise
+     *
+     * @return resource
+     */
+    private static function resourceRaisingOnRead(callable $raise)
+    {
+        $source = Psr7\Utils::streamFor('contents');
+        $raised = false;
+
+        return Psr7\StreamWrapper::getResource(FnStream::decorate($source, [
+            'read' => static function (int $length) use ($source, $raise, &$raised): string {
+                if (!$raised) {
+                    $raised = true;
+                    $raise();
+                }
+
+                return $source->read($length);
+            },
+        ]));
+    }
+
     /**
      * @requires PHP 8.1
      */
