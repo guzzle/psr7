@@ -770,6 +770,9 @@ final class Utils
      *
      * When `fopen()` fails, PHP normally raises a warning. This function adds
      * an error handler that checks for errors and throws an exception instead.
+     * Deprecations, and errors silenced inside the call with the `@` operator,
+     * are not failures and are passed on to the previously installed error
+     * handler.
      *
      * @param string $filename File to open
      * @param string $mode     Mode used to open the file
@@ -781,7 +784,7 @@ final class Utils
     public static function tryFopen(string $filename, string $mode)
     {
         $ex = null;
-        $scope = new ErrorScope();
+        $scope = new ErrorScope(\E_ALL & ~\E_DEPRECATED & ~\E_USER_DEPRECATED, false);
         $handle = $scope->run(static function () use ($filename, $mode, &$ex) {
             try {
                 return fopen($filename, $mode);
@@ -809,7 +812,9 @@ final class Utils
      *
      * When `stream_get_contents()` fails, PHP normally raises a warning. This
      * function adds an error handler that checks for errors and throws an
-     * exception instead.
+     * exception instead. Deprecations, and errors silenced inside the call with
+     * the `@` operator, are not failures and are passed on to the previously
+     * installed error handler.
      *
      * Throws `TimeoutException` when PHP-style timeout metadata can be detected
      * after a stream read cannot make progress.
@@ -824,7 +829,7 @@ final class Utils
     public static function tryGetContents($stream): string
     {
         $ex = null;
-        $scope = new ErrorScope();
+        $scope = new ErrorScope(\E_ALL & ~\E_DEPRECATED & ~\E_USER_DEPRECATED, false);
         $contents = $scope->run(static function () use ($stream, &$ex) {
             try {
                 /** @var string|false $contents */

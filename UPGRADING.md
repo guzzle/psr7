@@ -592,6 +592,15 @@ type so read failures can return `false`. The `StreamWrapper::stream_tell()`
 callback no longer declares a native return type so post-seek position lookup
 failures can make `fseek()` fail.
 
+`Utils::tryFopen()` and `Utils::tryGetContents()` no longer fail when a
+deprecation is raised during the call, or when code inside the call silences an
+error with the `@` operator. Those errors are passed on to the previously
+installed error handler instead. In 2.x, any PHP error raised while the file was
+opened or the stream was read made the call throw, even when a userland stream
+wrapper or stream filter raised it and the operation itself succeeded. This also
+applies to `Stream::getContents()`, `Stream::__toString()`, and
+`LazyOpenStream`, which use these helpers.
+
 #### Stream Mode Capabilities
 
 `Stream::isReadable()` and `Stream::isWritable()` now follow PHP stream mode

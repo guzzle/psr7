@@ -16,7 +16,23 @@ namespace GuzzleHttp\Psr7;
  */
 final class ErrorScope
 {
+    private int $levels;
+
+    private bool $silenced;
+
+    private int $reporting = 0;
+
     private ?string $error = null;
+
+    /**
+     * @param int  $levels   Error levels to capture
+     * @param bool $silenced Whether to capture errors silenced inside the call
+     */
+    public function __construct(int $levels = \E_ALL, bool $silenced = true)
+    {
+        $this->levels = $levels;
+        $this->silenced = $silenced;
+    }
 
     /**
      * @template T
@@ -27,19 +43,31 @@ final class ErrorScope
      */
     public function run(callable $operation)
     {
+        $owner = $this;
         $previous = null;
-        $previous = set_error_handler(static function (int $errno, string $errstr, ...$rest) use (&$previous): bool {
+        $previous = set_error_handler(static function (int $errno, string $errstr, ...$rest) use ($owner, &$previous): bool {
             foreach (debug_backtrace(\DEBUG_BACKTRACE_PROVIDE_OBJECT | \DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
                 $scope = $frame['object'] ?? null;
-                if ($scope instanceof self) {
+                if (!$scope instanceof self) {
+                    continue;
+                }
+
+                if ($scope->captures($errno)) {
                     $scope->error = $errstr;
 
                     return true;
+                }
+
+                // Outer scopes are reached through the previous handler.
+                if ($scope === $owner) {
+                    break;
                 }
             }
 
             return $previous !== null && $previous($errno, $errstr, ...$rest) !== false;
         });
+
+        $this->reporting = error_reporting();
 
         try {
             return $operation();
@@ -54,5 +82,16 @@ final class ErrorScope
     public function getError(): ?string
     {
         return $this->error;
+    }
+
+    private function captures(int $errno): bool
+    {
+        if (($this->levels & $errno) === 0) {
+            return false;
+        }
+
+        // An error is silenced inside the call when its level was reported as
+        // the call started and is not reported now.
+        return $this->silenced || (error_reporting() & $errno) !== 0 || ($this->reporting & $errno) === 0;
     }
 }

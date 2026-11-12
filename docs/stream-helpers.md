@@ -122,7 +122,9 @@ $stream = GuzzleHttp\Psr7\Utils::streamFor($generator(100));
 Safely opens a PHP stream resource using a filename.
 
 When `fopen()` fails, PHP normally raises a warning. This function adds an error
-handler that checks for errors and throws an exception instead.
+handler that checks for errors and throws an exception instead. Deprecations,
+and errors silenced inside the call with the `@` operator, are not failures and
+are passed on to the previously installed error handler.
 
 ## `GuzzleHttp\Psr7\Utils::tryGetContents`
 
@@ -132,6 +134,8 @@ Safely gets the contents of a given stream.
 
 When `stream_get_contents()` fails, PHP normally raises a warning. This function
 adds an error handler that checks for errors and throws an exception instead.
+Deprecations, and errors silenced inside the call with the `@` operator, are not
+failures and are passed on to the previously installed error handler.
 
 Throws `GuzzleHttp\Psr7\Exception\TimeoutException` when PHP-style timeout
 metadata can be detected after a stream read cannot make progress.
