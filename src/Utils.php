@@ -302,14 +302,6 @@ final class Utils
      */
     public static function modifyRequest(RequestInterface $request, array $changes): RequestInterface
     {
-        \trigger_deprecation(
-            'guzzlehttp/psr7',
-            '3.4',
-            '%s() is deprecated and will be removed in 4.0. Use %s::modifyRequest() instead.',
-            __METHOD__,
-            Message::class
-        );
-
         return Message::modifyRequest($request, $changes);
     }
 
@@ -360,14 +352,6 @@ final class Utils
         #[\SensitiveParameter]
         UriInterface $uri
     ): UriInterface {
-        \trigger_deprecation(
-            'guzzlehttp/psr7',
-            '3.4',
-            '%s() is deprecated and will be removed in 4.0. Use %s::redactUserInfo() instead.',
-            __METHOD__,
-            UriRedactor::class
-        );
-
         return UriRedactor::redactUserInfo($uri);
     }
 
@@ -395,14 +379,6 @@ final class Utils
      */
     public static function redactUserInfoInString(string $subject, string $uri): string
     {
-        \trigger_deprecation(
-            'guzzlehttp/psr7',
-            '3.4',
-            '%s() is deprecated and will be removed in 4.0. Use %s::redactUserInfoInString() instead.',
-            __METHOD__,
-            UriRedactor::class
-        );
-
         return UriRedactor::redactUserInfoInString($subject, $uri);
     }
 
@@ -422,14 +398,6 @@ final class Utils
         #[\SensitiveParameter]
         UriInterface $uri
     ): string {
-        \trigger_deprecation(
-            'guzzlehttp/psr7',
-            '3.4',
-            '%s() is deprecated and will be removed in 4.0. Use %s::redactUriForMessage() instead.',
-            __METHOD__,
-            UriRedactor::class
-        );
-
         return UriRedactor::redactUriForMessage($uri);
     }
 
@@ -449,14 +417,6 @@ final class Utils
         #[\SensitiveParameter]
         string $uri
     ): string {
-        \trigger_deprecation(
-            'guzzlehttp/psr7',
-            '3.4',
-            '%s() is deprecated and will be removed in 4.0. Use %s::redactUriStringForMessage() instead.',
-            __METHOD__,
-            UriRedactor::class
-        );
-
         return UriRedactor::redactUriStringForMessage($uri);
     }
 
