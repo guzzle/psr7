@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fix `Utils::tryFopen()` and `Utils::tryGetContents()` capturing errors raised in other coroutines and fibers
+- Fix stream helpers capturing errors raised in other coroutines and fibers
 
 ## 3.2.1 - Unreleased
 
