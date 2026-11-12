@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Stop `Utils::tryFopen()` and `Utils::tryGetContents()` failing on deprecations and on errors silenced during the call
+- Stop stream helpers failing on deprecations and silenced errors
 
 ### Fixed
 
