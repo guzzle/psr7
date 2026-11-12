@@ -145,12 +145,6 @@ parameters:
 			path: src/Utils.php
 
 		-
-			message: '#^Method GuzzleHttp\\Psr7\\Utils\:\:tryGetContents\(\) should return string but returns string\|false\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Utils.php
-
-		-
 			message: '#^Right side of && is always true\.$#'
 			identifier: booleanAnd.rightAlwaysTrue
 			count: 1
@@ -159,17 +153,5 @@ parameters:
 		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Variable \$contents might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Utils.php
-
-		-
-			message: '#^Variable \$handle might not be defined\.$#'
-			identifier: variable.undefined
 			count: 1
 			path: src/Utils.php

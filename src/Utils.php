@@ -781,26 +781,26 @@ final class Utils
     public static function tryFopen(string $filename, string $mode)
     {
         $ex = null;
-        set_error_handler(static function (int $errno, string $errstr) use ($filename, $mode, &$ex): bool {
-            $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), DiagnosticValue::escape($errstr)));
+        $scope = new ErrorScope();
+        $handle = $scope->run(static function () use ($filename, $mode, &$ex) {
+            try {
+                return fopen($filename, $mode);
+            } catch (\Throwable $e) {
+                $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), $e->getMessage()), 0, $e);
+            }
 
-            return true;
+            return false;
         });
 
-        try {
-            /** @var resource $handle */
-            $handle = fopen($filename, $mode);
-        } catch (\Throwable $e) {
-            $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), $e->getMessage()), 0, $e);
+        if ($ex === null && $scope->getError() !== null) {
+            $ex = new \RuntimeException(sprintf('Unable to open %s using mode %s: %s', DiagnosticValue::escape($filename), DiagnosticValue::escape($mode), DiagnosticValue::escape($scope->getError())));
         }
 
-        restore_error_handler();
-
         if ($ex) {
-            /** @var \RuntimeException $ex */
             throw $ex;
         }
 
+        /** @var resource $handle */
         return $handle;
     }
 
@@ -824,38 +824,42 @@ final class Utils
     public static function tryGetContents($stream): string
     {
         $ex = null;
-        set_error_handler(static function (int $errno, string $errstr) use (&$ex): bool {
-            $ex = new \RuntimeException(sprintf('Unable to read stream contents: %s', DiagnosticValue::escape($errstr)));
+        $scope = new ErrorScope();
+        $contents = $scope->run(static function () use ($stream, &$ex) {
+            try {
+                /** @var string|false $contents */
+                $contents = stream_get_contents($stream);
 
-            return true;
+                if ($contents === false) {
+                    $ex = StreamTimeout::isResourceReadTimedOut($stream)
+                        ? new TimeoutException('Unable to read stream contents: timed out')
+                        : new \RuntimeException('Unable to read stream contents');
+                } elseif (StreamTimeout::isResourceReadTimedOut($stream)) {
+                    $ex = new TimeoutException('Unable to read stream contents: timed out');
+                }
+
+                return $contents;
+            } catch (TimeoutException $e) {
+                $ex = $e;
+            } catch (\Throwable $e) {
+                $ex = StreamTimeout::isResourceReadTimedOut($stream)
+                    ? new TimeoutException('Unable to read stream contents: timed out', 0, $e)
+                    : new \RuntimeException(sprintf('Unable to read stream contents: %s', $e->getMessage()), 0, $e);
+            }
+
+            return false;
         });
 
-        try {
-            /** @var string|false $contents */
-            $contents = stream_get_contents($stream);
-
-            if ($contents === false) {
-                $ex = StreamTimeout::isResourceReadTimedOut($stream)
-                    ? new TimeoutException('Unable to read stream contents: timed out')
-                    : new \RuntimeException('Unable to read stream contents');
-            } elseif (StreamTimeout::isResourceReadTimedOut($stream)) {
-                $ex = new TimeoutException('Unable to read stream contents: timed out');
-            }
-        } catch (TimeoutException $e) {
-            $ex = $e;
-        } catch (\Throwable $e) {
-            $ex = StreamTimeout::isResourceReadTimedOut($stream)
-                ? new TimeoutException('Unable to read stream contents: timed out', 0, $e)
-                : new \RuntimeException(sprintf('Unable to read stream contents: %s', $e->getMessage()), 0, $e);
+        if ($ex === null && $scope->getError() !== null) {
+            $ex = new \RuntimeException(sprintf('Unable to read stream contents: %s', DiagnosticValue::escape($scope->getError())));
         }
-
-        restore_error_handler();
 
         if ($ex) {
             /** @var \RuntimeException $ex */
             throw $ex;
         }
 
+        /** @var string $contents */
         return $contents;
     }
 

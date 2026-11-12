@@ -861,6 +861,42 @@ class UtilsTest extends TestCase
         Psr7\Utils::tryGetContents($r);
     }
 
+    /**
+     * @requires PHP 8.1
+     */
+    public function testTryGetContentsPassesOnErrorsRaisedInOtherFibers(): void
+    {
+        $source = Psr7\Utils::streamFor('contents');
+        $resource = Psr7\StreamWrapper::getResource(FnStream::decorate($source, [
+            'read' => static function (int $length) use ($source): string {
+                \Fiber::suspend();
+
+                return $source->read($length);
+            },
+        ]));
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $fiber = new \Fiber(static fn (): string => Psr7\Utils::tryGetContents($resource));
+            $fiber->start();
+            trigger_error('unrelated', E_USER_WARNING);
+            while ($fiber->isSuspended()) {
+                $fiber->resume();
+            }
+        } finally {
+            restore_error_handler();
+            fclose($resource);
+        }
+
+        self::assertSame('contents', $fiber->getReturn());
+        self::assertSame(['unrelated'], $passedOn);
+    }
+
     public function testTryGetContentsThrowsTimeoutWhenReadReturnsFalseAndResourceTimedOut(): void
     {
         PhpStreamMock::$streamGetContentsReturnsFalse = true;

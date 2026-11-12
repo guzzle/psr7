@@ -1,0 +1,151 @@
+<?php
+
+declare(strict_types=1);
+
+namespace GuzzleHttp\Tests\Psr7;
+
+use GuzzleHttp\Psr7\ErrorScope;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * @covers \GuzzleHttp\Psr7\ErrorScope
+ */
+class ErrorScopeTest extends TestCase
+{
+    public function testReturnsTheOperationResult(): void
+    {
+        $scope = new ErrorScope();
+
+        self::assertSame('result', $scope->run(static fn (): string => 'result'));
+        self::assertNull($scope->getError());
+    }
+
+    public function testCapturesErrorsRaisedBeneathTheCall(): void
+    {
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $scope = new ErrorScope();
+            $scope->run(static function (): void {
+                trigger_error('first', E_USER_WARNING);
+                trigger_error('second', E_USER_NOTICE);
+            });
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame('second', $scope->getError());
+        self::assertSame([], $passedOn);
+    }
+
+    public function testRestoresTheErrorHandlerWhenTheOperationThrows(): void
+    {
+        $handler = static fn (): bool => true;
+        set_error_handler($handler);
+
+        try {
+            (new ErrorScope())->run(static function (): void {
+                throw new \LogicException('failed');
+            });
+            self::fail('Expected the operation exception.');
+        } catch (\LogicException $e) {
+            self::assertSame($handler, self::currentErrorHandler());
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * @requires PHP 8.1
+     */
+    public function testPassesOnErrorsRaisedOnAnotherCallStack(): void
+    {
+        $passedOn = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+            $passedOn[] = $errstr;
+
+            return true;
+        });
+
+        try {
+            $scope = new ErrorScope();
+            $fiber = new \Fiber(static function () use ($scope): void {
+                $scope->run(static function (): void {
+                    \Fiber::suspend();
+                });
+            });
+            $fiber->start();
+            trigger_error('unrelated', E_USER_WARNING);
+            $fiber->resume();
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertNull($scope->getError());
+        self::assertSame(['unrelated'], $passedOn);
+    }
+
+    /**
+     * @requires PHP 8.1
+     */
+    public function testCapturesErrorsForOverlappingScopesThatFinishOutOfOrder(): void
+    {
+        $first = new ErrorScope();
+        $second = new ErrorScope();
+        $start = static function (ErrorScope $scope, string $message): \Fiber {
+            $fiber = new \Fiber(static function () use ($scope, $message): void {
+                $scope->run(static function () use ($message): void {
+                    \Fiber::suspend();
+                    trigger_error($message, E_USER_WARNING);
+                });
+            });
+            $fiber->start();
+
+            return $fiber;
+        };
+
+        $firstFiber = $start($first, 'first');
+        $secondFiber = $start($second, 'second');
+        $firstFiber->resume();
+        $secondFiber->resume();
+
+        self::assertSame('first', $first->getError());
+        self::assertSame('second', $second->getError());
+    }
+
+    /**
+     * @requires PHP 8.1
+     */
+    public function testRestoresTheErrorHandlerWhenItsFiberIsDestroyed(): void
+    {
+        $handler = static fn (): bool => true;
+        set_error_handler($handler);
+
+        try {
+            $fiber = new \Fiber(static function (): void {
+                (new ErrorScope())->run(static function (): void {
+                    \Fiber::suspend();
+                });
+            });
+            $fiber->start();
+            unset($fiber);
+
+            self::assertSame($handler, self::currentErrorHandler());
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    private static function currentErrorHandler(): ?callable
+    {
+        $handler = set_error_handler(null);
+        restore_error_handler();
+
+        return $handler;
+    }
+}
