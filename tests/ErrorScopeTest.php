@@ -66,6 +66,45 @@ class ErrorScopeTest extends TestCase
         self::assertSame(['deprecated'], $passedOn);
     }
 
+    public function testPassesOnErrorsToAnEnclosingScope(): void
+    {
+        $outer = new ErrorScope(E_USER_NOTICE);
+        $inner = new ErrorScope(E_USER_WARNING);
+        $outer->run(static function () use ($inner): void {
+            $inner->run(static function (): void {
+                trigger_error('notice', E_USER_NOTICE);
+            });
+        });
+
+        self::assertNull($inner->getError());
+        self::assertSame('notice', $outer->getError());
+    }
+
+    public function testPassesOnErrorsToAHandlerInstalledInsideAnEnclosingScope(): void
+    {
+        $passedOn = [];
+        $outer = new ErrorScope(E_USER_NOTICE);
+        $inner = new ErrorScope(E_USER_WARNING);
+        $outer->run(static function () use ($inner, &$passedOn): void {
+            set_error_handler(static function (int $errno, string $errstr) use (&$passedOn): bool {
+                $passedOn[] = $errstr;
+
+                return true;
+            });
+
+            try {
+                $inner->run(static function (): void {
+                    trigger_error('notice', E_USER_NOTICE);
+                });
+            } finally {
+                restore_error_handler();
+            }
+        });
+
+        self::assertNull($outer->getError());
+        self::assertSame(['notice'], $passedOn);
+    }
+
     public function testCapturesErrorsSilencedInsideTheCallByDefault(): void
     {
         $scope = new ErrorScope();

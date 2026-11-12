@@ -43,18 +43,24 @@ final class ErrorScope
      */
     public function run(callable $operation)
     {
+        $owner = $this;
         $previous = null;
-        $previous = set_error_handler(static function (int $errno, string $errstr, ...$rest) use (&$previous): bool {
+        $previous = set_error_handler(static function (int $errno, string $errstr, ...$rest) use ($owner, &$previous): bool {
             foreach (debug_backtrace(\DEBUG_BACKTRACE_PROVIDE_OBJECT | \DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
                 $scope = $frame['object'] ?? null;
-                if ($scope instanceof self) {
-                    if (!$scope->captures($errno)) {
-                        break;
-                    }
+                if (!$scope instanceof self) {
+                    continue;
+                }
 
+                if ($scope->captures($errno)) {
                     $scope->error = $errstr;
 
                     return true;
+                }
+
+                // Outer scopes are reached through the previous handler.
+                if ($scope === $owner) {
+                    break;
                 }
             }
 
