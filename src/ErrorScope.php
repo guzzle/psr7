@@ -9,7 +9,8 @@ namespace GuzzleHttp\Psr7;
  *
  * PHP keeps one error handler stack per process, shared by every coroutine and
  * fiber, so an error raised on another call stack is passed on to the
- * previously installed handler instead of being captured.
+ * previously installed handler instead of being captured. That handler is
+ * called directly, so it also receives error levels it was not registered for.
  *
  * @internal
  */
