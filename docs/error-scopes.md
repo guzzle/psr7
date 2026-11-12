@@ -37,6 +37,9 @@ not reported when they are raised.
 Runs the operation and returns its result, capturing the errors raised beneath
 it.
 
+A scope runs one operation at a time, so calling this again before it returns
+throws a `LogicException`.
+
 ## `GuzzleHttp\Psr7\ErrorScope::getError`
 
 `public function getError(): ?string`

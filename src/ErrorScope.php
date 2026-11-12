@@ -20,6 +20,8 @@ final class ErrorScope
 
     private int $reporting = 0;
 
+    private bool $running = false;
+
     /**
      * @var list<array{message: string, file: string, line: int}>
      */
@@ -46,14 +48,23 @@ final class ErrorScope
      * Runs the operation and returns its result, capturing the errors raised
      * beneath it.
      *
+     * A scope runs one operation at a time, so calling this again before it
+     * returns throws a `LogicException`.
+     *
      * @template T
      *
      * @param callable(): T $operation
      *
      * @return T
+     *
+     * @throws \LogicException if the scope is already running an operation
      */
     public function run(callable $operation)
     {
+        if ($this->running) {
+            throw new \LogicException(static::class.' is already running an operation');
+        }
+
         $owner = $this;
         $previous = null;
         $previous = set_error_handler(static function (int $errno, string $errstr, string $errfile = '', int $errline = 0, ...$rest) use ($owner, &$previous): bool {
@@ -83,10 +94,12 @@ final class ErrorScope
         });
 
         $this->reporting = error_reporting();
+        $this->running = true;
 
         try {
             return $operation();
         } finally {
+            $this->running = false;
             restore_error_handler();
         }
     }
