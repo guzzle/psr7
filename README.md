@@ -56,6 +56,7 @@ $request = $request->withHeader('Accept', 'application/json');
 - [PSR-17 Factories](docs/psr-17-factories.md)
 - [Message Helpers](docs/message-helpers.md)
 - [Diagnostic Values](docs/diagnostic-values.md)
+- [Error Scopes](docs/error-scopes.md)
 - [Header and Query Helpers](docs/header-and-query-helpers.md)
 - [Stream Helpers](docs/stream-helpers.md)
 - [URI and MIME Helpers](docs/uri-and-mime-helpers.md)

@@ -43,6 +43,19 @@ class ErrorScopeTest extends TestCase
         self::assertSame([], $passedOn);
     }
 
+    public function testReturnsTheCapturedErrorsInOrder(): void
+    {
+        $scope = new ErrorScope();
+        $scope->run(static function (): void {
+            trigger_error('first', E_USER_WARNING);
+            trigger_error('second', E_USER_NOTICE);
+        });
+
+        self::assertSame(['first', 'second'], array_column($scope->getErrors(), 'message'));
+        self::assertSame([__FILE__, __FILE__], array_column($scope->getErrors(), 'file'));
+        self::assertSame([__LINE__ - 6, __LINE__ - 5], array_column($scope->getErrors(), 'line'));
+    }
+
     public function testPassesOnErrorsOutsideItsLevels(): void
     {
         $passedOn = [];

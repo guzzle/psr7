@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 3.3.0 - Upcoming
 
+### Added
+
+- Add `ErrorScope` to capture the PHP errors raised beneath a call
+
 ### Changed
 
 - Stop stream helpers failing on deprecations and silenced errors
