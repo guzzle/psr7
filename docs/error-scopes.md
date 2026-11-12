@@ -10,13 +10,16 @@ installed handler instead of being captured. That handler is called directly, so
 it also receives error levels it was not registered for.
 
 ```php
+use GuzzleHttp\Psr7\DiagnosticValue;
 use GuzzleHttp\Psr7\ErrorScope;
 
 $scope = new ErrorScope();
 $handle = $scope->run(static fn () => fopen('/path/to/file', 'r'));
 
 if ($handle === false) {
-    throw new RuntimeException((string) $scope->getError());
+    throw new RuntimeException(
+        DiagnosticValue::escape((string) $scope->getError())
+    );
 }
 ```
 
