@@ -30,10 +30,11 @@ final class ErrorScope
     /**
      * Creates a scope that captures errors of the given levels.
      *
-     * Errors of other levels are passed on to the previously installed handler.
-     * When `$silenced` is false, so are errors silenced inside the call with
-     * the `@` operator, which are those whose level was reported as the call
-     * started and is not reported when they are raised.
+     * Errors of other levels are passed on to the previously installed handler,
+     * which may be an enclosing scope. When `$silenced` is false, so are errors
+     * silenced inside the call with the `@` operator, which are those whose
+     * level was reported as the call started and is not reported when they are
+     * raised.
      *
      * @param int  $levels   Error levels to capture
      * @param bool $silenced Whether to capture errors silenced inside the call

@@ -6,7 +6,8 @@ Captures the PHP errors raised beneath a call.
 
 PHP keeps one error handler stack per process, shared by every coroutine and
 fiber, so an error raised on another call stack is passed on to the previously
-installed handler instead of being captured.
+installed handler instead of being captured. That handler is called directly, so
+it also receives error levels it was not registered for.
 
 ```php
 use GuzzleHttp\Psr7\ErrorScope;
@@ -25,10 +26,10 @@ if ($handle === false) {
 
 Creates a scope that captures errors of the given levels.
 
-Errors of other levels are passed on to the previously installed handler. When
-`$silenced` is false, so are errors silenced inside the call with the `@`
-operator, which are those whose level was reported as the call started and is
-not reported when they are raised.
+Errors of other levels are passed on to the previously installed handler, which
+may be an enclosing scope. When `$silenced` is false, so are errors silenced
+inside the call with the `@` operator, which are those whose level was reported
+as the call started and is not reported when they are raised.
 
 ## `GuzzleHttp\Psr7\ErrorScope::run`
 
