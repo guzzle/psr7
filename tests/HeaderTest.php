@@ -84,6 +84,24 @@ class HeaderTest extends TestCase
                 ],
             ],
             [
+                'foo="a=b"; bar=baz',
+                [
+                    ['foo' => 'a=b', 'bar' => 'baz'],
+                ],
+            ],
+            [
+                'foo="="; bar=baz',
+                [
+                    ['foo' => '=', 'bar' => 'baz'],
+                ],
+            ],
+            [
+                'foo=a=b==; bar=baz',
+                [
+                    ['foo' => 'a=b==', 'bar' => 'baz'],
+                ],
+            ],
+            [
                 'foo=bar;;baz=qux',
                 [
                     ['foo' => 'bar', 'baz' => 'qux'],
