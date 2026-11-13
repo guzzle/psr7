@@ -532,12 +532,24 @@ final class Utils
      * when one is present, so neither the username nor the password survives
      * into logs and diagnostics. A URI without userinfo is returned
      * unchanged.
+     *
+     * @deprecated Utils::redactUserInfo() will be removed in
+     *             guzzlehttp/psr7:4.0. Use UriRedactor::redactUserInfo()
+     *             instead.
      */
     public static function redactUserInfo(
         #[\SensitiveParameter]
         UriInterface $uri
     ): UriInterface {
-        return $uri->getUserInfo() === '' ? $uri : $uri->withUserInfo('***');
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.4',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUserInfo() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
+
+        return UriRedactor::redactUserInfo($uri);
     }
 
     /**
@@ -557,39 +569,22 @@ final class Utils
      *
      * @param string $subject Text that may embed the URI
      * @param string $uri     Raw URI whose userinfo is redacted in the text
+     *
+     * @deprecated Utils::redactUserInfoInString() will be removed in
+     *             guzzlehttp/psr7:4.0. Use
+     *             UriRedactor::redactUserInfoInString() instead.
      */
     public static function redactUserInfoInString(string $subject, string $uri): string
     {
-        if (\strpos($uri, '@') === false) {
-            return $subject;
-        }
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.4',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUserInfoInString() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
 
-        $schemePosition = \strpos($uri, '://');
-        $remainder = $schemePosition === false ? $uri : \substr($uri, $schemePosition + 3);
-
-        if (\parse_url($schemePosition === false ? 'http://'.$uri : $uri) === false) {
-            // Raw '/', '?', or '#' separators may sit inside the credentials
-            // of a URI that defeats parse_url(), so the redaction cannot stop
-            // at the apparent authority.
-            $atPosition = \strrpos($remainder, '@');
-
-            if ($atPosition === false || $atPosition === 0) {
-                return $subject;
-            }
-
-            return \str_replace(\substr($remainder, 0, $atPosition).'@', '***@', $subject);
-        }
-
-        $authority = \substr($remainder, 0, \strcspn($remainder, '/?#'));
-        $atPosition = \strrpos($authority, '@');
-
-        if ($atPosition === false || $atPosition === 0) {
-            // A parseable URI with '@' only past its authority, or with an
-            // empty userinfo, carries no credentials to redact.
-            return $subject;
-        }
-
-        return \str_replace(\substr($authority, 0, $atPosition).'@', '***@', $subject);
+        return UriRedactor::redactUserInfoInString($subject, $uri);
     }
 
     /**
@@ -599,26 +594,24 @@ final class Utils
      * fragment are removed. The scheme, host, port, and path are preserved.
      * The returned string is diagnostic-escaped and the formatter never
      * throws.
+     *
+     * @deprecated Utils::redactUriForMessage() will be removed in
+     *             guzzlehttp/psr7:4.0. Use UriRedactor::redactUriForMessage()
+     *             instead.
      */
     public static function redactUriForMessage(
         #[\SensitiveParameter]
         UriInterface $uri
     ): string {
-        try {
-            $raw = (string) $uri;
-        } catch (\Throwable $e) {
-            return '[unavailable URI]';
-        }
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.4',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUriForMessage() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
 
-        try {
-            if ($uri->getUserInfo() !== '') {
-                $uri = $uri->withUserInfo('***');
-            }
-
-            return DiagnosticValue::escape((string) $uri->withQuery('')->withFragment(''));
-        } catch (\Throwable $e) {
-            return self::redactUriStringForMessage($raw);
-        }
+        return UriRedactor::redactUriForMessage($uri);
     }
 
     /**
@@ -628,18 +621,24 @@ final class Utils
      * fragment are removed. The scheme, host, port, and path are preserved
      * where their boundaries can be determined safely. The returned string is
      * diagnostic-escaped and the formatter never throws.
+     *
+     * @deprecated Utils::redactUriStringForMessage() will be removed in
+     *             guzzlehttp/psr7:4.0. Use
+     *             UriRedactor::redactUriStringForMessage() instead.
      */
     public static function redactUriStringForMessage(
         #[\SensitiveParameter]
         string $uri
     ): string {
-        try {
-            $uri = self::redactUserInfoInString($uri, $uri);
+        \trigger_deprecation(
+            'guzzlehttp/psr7',
+            '3.4',
+            '%s() is deprecated and will be removed in 4.0. Use %s::redactUriStringForMessage() instead.',
+            __METHOD__,
+            UriRedactor::class
+        );
 
-            return DiagnosticValue::escape(\substr($uri, 0, \strcspn($uri, '?#')));
-        } catch (\Throwable $e) {
-            return '[unavailable URI]';
-        }
+        return UriRedactor::redactUriStringForMessage($uri);
     }
 
     /**
