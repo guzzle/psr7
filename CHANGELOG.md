@@ -9,15 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add `UriRedactor` and `Message::modifyRequest()`
-
-### Changed
-
-- Change the `modifyRequest()` validation messages to name `Message::modifyRequest()`
+- Add `UriRedactor`
 
 ### Deprecated
 
-- Deprecated `Utils::modifyRequest()`, `Utils::redactUserInfo()`, `Utils::redactUserInfoInString()`, `Utils::redactUriForMessage()`, and `Utils::redactUriStringForMessage()` in favor of `Message::modifyRequest()` and `UriRedactor`
+- Deprecated `Utils::redactUserInfo()`, `Utils::redactUserInfoInString()`, `Utils::redactUriForMessage()`, and `Utils::redactUriStringForMessage()` in favor of `UriRedactor`
 
 ## 3.3.0 - 2026-11-12
 
