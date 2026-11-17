@@ -467,7 +467,7 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         if (strpos($host, '[') !== false || strpos($host, ']') !== false) {
-            if ($host[0] !== '[' || substr($host, -1) !== ']') {
+            if ($host[0] !== '[' || strpos($host, ']') !== strlen($host) - 1) {
                 throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
             }
 
