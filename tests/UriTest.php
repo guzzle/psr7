@@ -171,6 +171,9 @@ class UriTest extends TestCase
         yield 'userinfo after port' => ['http://[::1]:80@evil/'];
         yield 'userinfo after empty port' => ['http://[::1]:@evil/'];
         yield 'non-numeric port' => ['http://[::1]:80x/'];
+        yield 'encoded closing bracket before port' => ['http://[::1%5D:8080]:9090/'];
+        yield 'closing bracket after port with userinfo' => ['http://user@[::1]:8080]:9090/'];
+        yield 'closing bracket after port in network-path reference' => ['//[::1]:8080]:9090/'];
         yield 'trailing bytes' => ['http://[::1]foo/'];
     }
 
@@ -364,8 +367,11 @@ class UriTest extends TestCase
         yield ['a#b'];
         yield ['example.com:8080'];
         yield ['a\\b'];
+        yield ['['];
         yield ['[::1'];
         yield ['::1]'];
+        yield ['[::1]:8080]'];
+        yield ['[a]b]'];
         yield ["a\x01b"];
     }
 
@@ -1105,7 +1111,6 @@ class UriTest extends TestCase
         self::assertSame('[::1]', (new Uri())->withHost('[::1]')->getHost());
         self::assertSame('127.0.0.1', (new Uri())->withHost('127.0.0.1')->getHost());
         self::assertSame('[a:b]', (new Uri())->withHost('[a:b]')->getHost());
-        self::assertSame('[a]b]', (new Uri())->withHost('[a]b]')->getHost());
         self::assertSame('[]', (new Uri())->withHost('[]')->getHost());
         self::assertSame('яндекс.рф', (new Uri())->withHost('яндекс.рф')->getHost());
     }

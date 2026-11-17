@@ -388,6 +388,7 @@ class RequestTest extends TestCase
         yield ['good.com@evil.com'];
         yield ['example.com/path'];
         yield ['example.com:8080'];
+        yield ['[::1]:8080]'];
         yield ['[::1'];
         yield ['::1]'];
     }
