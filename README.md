@@ -6,7 +6,7 @@ and any other library using the PSR-7 interfaces.
 
 Use this package directly when you need to create or inspect PSR-7 messages
 without sending HTTP requests. If you only want to make HTTP requests, install
-[`guzzlehttp/guzzle`](https://github.com/guzzle/guzzle/blob/8.0/README.md)
+[`guzzlehttp/guzzle`](https://github.com/guzzle/guzzle/blob/9.0/README.md)
 instead; it already depends on this package.
 
 ## Installation
@@ -19,6 +19,7 @@ composer require guzzlehttp/psr7
 
 | Version | Status       | PHP Version  |
 |---------|--------------|--------------|
+| 4.0     | Experimental | >=8.0,<8.7   |
 | 3.6     | Latest       | >=7.4,<8.7   |
 | 2.13    | Maintenance  | >=7.2.5,<8.7 |
 | 1.9     | End of Life  | >=5.4,<8.2   |
