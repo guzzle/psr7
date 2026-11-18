@@ -20,7 +20,7 @@ jobs:
           php-version: '7.4'
           ini-values: error_reporting=E_ALL
           coverage: 'none'
-          extensions: mbstring
+          extensions: mbstring, intl
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -47,7 +47,7 @@ jobs:
           php-version: ${{ matrix.php }}
           ini-values: error_reporting=E_ALL
           coverage: 'none'
-          extensions: mbstring
+          extensions: mbstring, intl
 
       - name: Checkout code
         uses: actions/checkout@v6

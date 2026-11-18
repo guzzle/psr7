@@ -98,9 +98,8 @@ policy used throughout the library. RFC 6874 IPv6 zone identifiers (for example
 Registered names are otherwise intentionally permissive: single-label hosts such
 as `localhost`, underscores, sub-delims, and raw or percent-encoded non-ASCII
 (IDN) data are accepted and preserved as given, with no punycode conversion.
-IDNA is treated as a client concern. Consumers that need DNS IDNs must perform
-the conversion themselves, for example via Guzzle's `idn_conversion` request
-option.
+Consumers that need DNS IDNs must perform the conversion themselves, with
+`GuzzleHttp\Psr7\Idna`.
 
 Validity here is a statement about URI syntax only. It does not imply that the
 host resolves or that a client will interpret it exactly as written. A PSR-7 URI
@@ -152,6 +151,53 @@ limit that category to these layouts; RFC 6052, for example, defines
 `64:ff9b::/96` as a Well-Known Prefix, which this implementation renders in
 pure hexadecimal. The WHATWG URL Standard always emits pure hexadecimal
 fields.
+
+## Internationalized Hosts
+
+`GuzzleHttp\Psr7\Idna` converts internationalized hosts to their ASCII form, the
+A-labels that DNS, TLS, and HTTP `Host` fields carry. `GuzzleHttp\Psr7\Uri` does
+not apply this conversion itself.
+
+```php
+use GuzzleHttp\Psr7\Idna;
+
+echo Idna::uriFor('https://яндекс.рф/'); // https://xn--d1acpjx3f.xn--p1ai/
+```
+
+### `GuzzleHttp\Psr7\Idna::toAscii`
+
+`public static function toAscii(string $host, ?int $options = null): string`
+
+Returns the ASCII form of a URI host.
+
+A host with no non-ASCII data, raw or percent-encoded, is returned unchanged.
+Any other host is converted to A-labels with the
+[UTS #46 ToASCII](https://www.unicode.org/reports/tr46/#ToASCII) operation, by
+default non-transitionally and with the STD3 ASCII rules and the bidi and joiner
+checks. `$options` replaces that default with `IDNA_*` constants. Whatever the
+options, a converted host must be a valid ASCII host that is neither bracketed
+nor percent-encoded.
+
+Conversion maps characters, so fullwidth digits can become an IPv4 address.
+Apply any destination policy to the returned host, not to the input.
+
+An `\InvalidArgumentException` is thrown if the host cannot be converted or
+decodes to more than 1024 characters, and a `\RuntimeException` if the intl
+extension is not available.
+
+### `GuzzleHttp\Psr7\Idna::uriFor`
+
+`public static function uriFor(string $uri, ?int $options = null): UriInterface`
+
+Returns a URI for a string whose host may be internationalized.
+
+The string is parsed exactly as `new Uri($uri)` parses it, except that a host
+containing non-ASCII data is converted with `toAscii()` and the given
+`$options`.
+
+A `GuzzleHttp\Psr7\Exception\MalformedUriException` is thrown if the URI cannot
+be parsed or its host cannot be converted, and a `\RuntimeException` if the intl
+extension is not available.
 
 ## URI Components
 
