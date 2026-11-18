@@ -317,6 +317,11 @@ final class Utils
             if ($host !== '') {
                 Uri::assertValidHost($host);
 
+                // A Uri has already raised the deprecation for its own host.
+                if (!$uri instanceof Uri) {
+                    Uri::deprecateNonAsciiHost($host);
+                }
+
                 if (isset($changes['set_headers']) && is_array($changes['set_headers'])) {
                     foreach (array_keys($changes['set_headers']) as $header) {
                         if (self::asciiToLower((string) $header) === 'host') {
@@ -365,6 +370,11 @@ final class Utils
         if (!$hasHost && $uri->getHost() !== '') {
             $host = $uri->getHost();
             Uri::assertValidHost($host);
+
+            // A Uri has already raised the deprecation for its own host.
+            if (!$uri instanceof Uri) {
+                Uri::deprecateNonAsciiHost($host);
+            }
 
             if (($port = $uri->getPort()) !== null) {
                 $host .= ':'.$port;
