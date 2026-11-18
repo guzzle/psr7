@@ -69,6 +69,7 @@
         "psr/http-message-implementation": "2.0"
     },
     "suggest": {
+        "ext-intl": "Convert internationalized hosts with Idna",
         "laminas/laminas-httphandlerrunner": "Emit PSR-7 responses"
     },
     "repositories": [
