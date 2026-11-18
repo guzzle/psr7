@@ -28,10 +28,6 @@ class ServerRequestFromGlobalsTest extends TestCase
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($curl);
 
-        if (PHP_VERSION_ID < 80000) {
-            curl_close($curl);
-        }
-
         self::assertNotFalse($response);
         $data = json_decode($response, true);
         self::assertIsArray($data);
