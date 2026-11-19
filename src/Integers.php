@@ -46,10 +46,7 @@ final class Integers
         return $value;
     }
 
-    /**
-     * @param mixed $value
-     */
-    public static function assertEngineInteger($value, string $what): ?int
+    public static function assertEngineInteger(mixed $value, string $what): ?int
     {
         if ($value === false || $value === null) {
             return null;
@@ -62,10 +59,7 @@ final class Integers
         return $value;
     }
 
-    /**
-     * @param mixed $value
-     */
-    public static function assertOptionalNonNegativeSize($value, string $name): ?int
+    public static function assertOptionalNonNegativeSize(mixed $value, string $name): ?int
     {
         if ($value === null) {
             return null;
@@ -78,10 +72,7 @@ final class Integers
         return $value;
     }
 
-    /**
-     * @param mixed $value
-     */
-    public static function assertNonNegativeInteger($value, string $name): int
+    public static function assertNonNegativeInteger(mixed $value, string $name): int
     {
         if (!\is_int($value) || $value < 0) {
             throw new \InvalidArgumentException($name.' must be a non-negative integer');
@@ -90,10 +81,7 @@ final class Integers
         return $value;
     }
 
-    /**
-     * @param mixed $value
-     */
-    public static function assertLimitInteger($value, string $name): int
+    public static function assertLimitInteger(mixed $value, string $name): int
     {
         if (!\is_int($value) || $value < -1) {
             throw new \InvalidArgumentException($name.' must be -1 or a non-negative integer');

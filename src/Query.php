@@ -126,10 +126,7 @@ final class Query
         return $qs ? (string) substr($qs, 0, -1) : '';
     }
 
-    /**
-     * @param mixed $value
-     */
-    private static function normalizeValue($value, bool $treatBoolsAsInts): ?string
+    private static function normalizeValue(mixed $value, bool $treatBoolsAsInts): ?string
     {
         if ($value === null) {
             return null;

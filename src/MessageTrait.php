@@ -179,11 +179,9 @@ trait MessageTrait
     }
 
     /**
-     * @param mixed $value
-     *
      * @return string[]
      */
-    private function normalizeHeaderValue(string $header, $value): array
+    private function normalizeHeaderValue(string $header, mixed $value): array
     {
         if (is_array($value) && $value === []) {
             throw new \InvalidArgumentException('Header value must be a non-empty array or string.');
