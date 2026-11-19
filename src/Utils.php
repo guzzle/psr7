@@ -486,10 +486,7 @@ final class Utils
         }
     }
 
-    /**
-     * @param mixed $value
-     */
-    private static function assertValidModifyRequestChange(string $key, string $expected, $value): void
+    private static function assertValidModifyRequestChange(string $key, string $expected, mixed $value): void
     {
         throw new \InvalidArgumentException(\sprintf('Utils::modifyRequest() change "%s" must be %s; %s provided.', DiagnosticValue::escape($key), $expected, \get_debug_type($value)));
     }

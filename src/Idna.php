@@ -134,10 +134,7 @@ final class Idna
             && Rfc3986::isValidHost($host);
     }
 
-    /**
-     * @param mixed $errors
-     */
-    private static function describeErrors($errors): string
+    private static function describeErrors(mixed $errors): string
     {
         $names = [];
 

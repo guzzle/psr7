@@ -307,10 +307,7 @@ class Uri implements UriInterface, \JsonSerializable
         return $uri->withQuery(implode('&', $result));
     }
 
-    /**
-     * @param mixed $value
-     */
-    private static function assertStringOrNullQueryValue($value): void
+    private static function assertStringOrNullQueryValue(mixed $value): void
     {
         if ($value !== null && !is_string($value)) {
             throw new \InvalidArgumentException(\sprintf(
@@ -682,11 +679,9 @@ class Uri implements UriInterface, \JsonSerializable
     }
 
     /**
-     * @param mixed $port
-     *
      * @throws \InvalidArgumentException If the port is invalid.
      */
-    private function filterPortPart($port): ?int
+    private function filterPortPart(mixed $port): ?int
     {
         if (\is_int($port)) {
             return $this->filterPort($port);
@@ -711,10 +706,7 @@ class Uri implements UriInterface, \JsonSerializable
         ));
     }
 
-    /**
-     * @param mixed $port
-     */
-    private static function describeInvalidPort($port): string
+    private static function describeInvalidPort(mixed $port): string
     {
         if (\is_string($port)) {
             return DiagnosticValue::escape($port);

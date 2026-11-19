@@ -25,10 +25,8 @@ final class UriParser
      * @see https://bugs.php.net/bug.php?id=52923
      * @see https://www.php.net/manual/en/function.parse-url.php#114817
      * @see https://curl.se/libcurl/c/CURLOPT_URL.html#ENCODING
-     *
-     * @return array|false
      */
-    public static function parse(string $url)
+    public static function parse(string $url): array|false
     {
         if (self::isPathNoSchemeReference($url)) {
             return self::parsePathNoSchemeReference($url);

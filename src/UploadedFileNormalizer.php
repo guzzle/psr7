@@ -57,7 +57,7 @@ final class UploadedFileNormalizer
      *
      * @return UploadedFileInterface|UploadedFileTree
      */
-    private static function createUploadedFileFromSpec(array $value)
+    private static function createUploadedFileFromSpec(array $value): UploadedFileInterface|array
     {
         self::assertFileSpec($value);
 
