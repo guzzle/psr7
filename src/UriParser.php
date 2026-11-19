@@ -86,6 +86,18 @@ final class UriParser
 
             $prefix .= $matches[4];
             $url = $suffix;
+        } else {
+            // A "+" in a scheme, unlike in a "host:port", must not be encoded.
+            $schemePrefix = preg_match('%\A[A-Za-z][A-Za-z0-9+.-]*+:(?![0-9]{1,5}(?:/|\z))%', $url, $matches);
+
+            if ($schemePrefix === false) {
+                return false;
+            }
+
+            if ($schemePrefix === 1) {
+                $prefix = $matches[0];
+                $url = substr($url, strlen($prefix));
+            }
         }
 
         /** @var string|null */
@@ -116,7 +128,14 @@ final class UriParser
             unset($result['scheme']);
         }
 
-        return array_map('urldecode', $result);
+        $parts = array_map('urldecode', $result);
+
+        // A scheme that was not encoded must not be decoded.
+        if (isset($result['scheme']) && str_starts_with($prefix, $result['scheme'].':')) {
+            $parts['scheme'] = $result['scheme'];
+        }
+
+        return $parts;
     }
 
     private static function isPathNoSchemeReference(string $url): bool

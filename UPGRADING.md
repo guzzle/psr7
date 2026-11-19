@@ -252,6 +252,14 @@ $uri = (new Uri())->withScheme('0');
 $uri = (new Uri())->withScheme('https');
 ```
 
+A URI string whose scheme contains a plus sign, such as
+`svn+ssh://example.com/path`, is now parsed with that scheme, including one with
+no authority such as `C++:intro`, which now has the scheme `c++`. In 2.x, both
+were parsed as relative paths with no scheme and no host. The rest of the string
+is held to the rules that apply after any other scheme, so a string whose
+authority is empty or is not a valid host, such as `git+file:///srv/repo.git` or
+`http+unix://%2Fvar%2Frun%2Fdocker.sock/info`, is now rejected.
+
 The stricter validation also applies when a request is created or modified from
 a custom `UriInterface` implementation and its host is used to generate or
 update a `Host` header.
