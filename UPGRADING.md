@@ -4,7 +4,8 @@ Guzzle PSR-7 Upgrade Guide
 3.x to 4.0
 ----------
 
-Guzzle PSR-7 4.0 is a major release that raises the minimum PHP version.
+Guzzle PSR-7 4.0 is a major release that raises the minimum PHP version and
+removes the deprecated `Utils` redaction methods.
 
 #### PHP Version and Dependencies
 
@@ -14,7 +15,16 @@ Guzzle PSR-7 4.0 requires PHP `^8.0`. Guzzle PSR-7 3.x supported PHP
 If your application still supports PHP 7.4, continue using Guzzle PSR-7 3.x
 until your minimum PHP version is raised.
 
-Guzzle PSR-7 4.0 no longer requires `symfony/polyfill-php80`.
+Guzzle PSR-7 4.0 no longer requires `symfony/polyfill-php80` or
+`symfony/deprecation-contracts`; require the latter directly if your application
+uses it.
+
+#### Removed Utils Redaction Methods
+
+The deprecated `Utils::redactUserInfo()`, `Utils::redactUserInfoInString()`,
+`Utils::redactUriForMessage()`, and `Utils::redactUriStringForMessage()` methods
+were removed. Use the methods of the same names on `GuzzleHttp\Psr7\UriRedactor`
+instead.
 
 2.x to 3.0
 ----------
