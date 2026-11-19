@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped support for PHP 7
 - Removed `Utils::redact` methods in favor of `UriRedactor`
 
+## 3.5.1 - Upcoming
+
+### Fixed
+
+- Fix parsing of absolute-path references containing a colon followed by digits in a path segment
+- Fix network-path references taking a port from a colon followed by digits in a path segment
+
 ## 3.5.0 - 2026-11-18
 
 ### Added

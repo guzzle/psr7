@@ -256,7 +256,7 @@ class UriTest extends TestCase
     /**
      * @dataProvider getNonPathNoSchemeReferencesWithColon
      */
-    public function testNonPathNoSchemeReferencesWithColonKeepExistingParsing(string $input, string $scheme, string $authority, string $host, ?int $port, string $path, string $query, string $fragment): void
+    public function testParsesNonPathNoSchemeReferencesWithColon(string $input, string $scheme, string $authority, string $host, ?int $port, string $path, string $query, string $fragment, ?string $expectedString = null): void
     {
         $uri = new Uri($input);
 
@@ -267,14 +267,18 @@ class UriTest extends TestCase
         self::assertSame($path, $uri->getPath());
         self::assertSame($query, $uri->getQuery());
         self::assertSame($fragment, $uri->getFragment());
-        self::assertSame($input, (string) $uri);
+        self::assertSame($expectedString ?? $input, (string) $uri);
     }
 
     public static function getNonPathNoSchemeReferencesWithColon(): iterable
     {
         return [
             ['foo:bar/baz', 'foo', '', '', null, 'bar/baz', '', ''],
+            ['host:123/foo:0', '', 'host:123', 'host', 123, '/foo:0', '', '', '//host:123/foo:0'],
             ['//host:123/foo:0', '', 'host:123', 'host', 123, '/foo:0', '', ''],
+            ['//host/foo:0', '', 'host', 'host', null, '/foo:0', '', ''],
+            ['/foo:0', '', '', '', null, '/foo:0', '', ''],
+            ['/foo:0/bar', '', '', '', null, '/foo:0/bar', '', ''],
             ['?q=foo:0', '', '', '', null, '', 'q=foo:0', ''],
             ['#foo:0', '', '', '', null, '', '', 'foo:0'],
             ['https://example.com/foo:0', 'https', 'example.com', 'example.com', null, '/foo:0', '', ''],
