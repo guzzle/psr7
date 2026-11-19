@@ -19,7 +19,7 @@ $config = (new PhpCsFixer\Config())
         'single_line_throw' => false,
         'trailing_comma_in_multiline' => [
             'after_heredoc' => true,
-            'elements' => ['array_destructuring', 'arrays'],
+            'elements' => ['array_destructuring', 'arrays', 'match'],
         ],
         'yoda_style' => false,
     ])
