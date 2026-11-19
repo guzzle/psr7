@@ -14,9 +14,7 @@ Guzzle PSR-7 4.0 requires PHP `^8.0`. Guzzle PSR-7 3.x supported PHP
 If your application still supports PHP 7.4, continue using Guzzle PSR-7 3.x
 until your minimum PHP version is raised.
 
-Guzzle PSR-7 no longer depends on `symfony/polyfill-php80`, so that package is
-no longer installed transitively. Applications that rely on it should require
-it directly.
+Guzzle PSR-7 4.0 no longer requires `symfony/polyfill-php80`.
 
 2.x to 3.0
 ----------
