@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped support for PHP 7
 - Removed `Utils::redact` methods in favor of `UriRedactor`
 
+## 3.6.0 - Upcoming
+
+### Changed
+
+- Recognize a plus sign in the scheme of a URI string instead of parsing the string as a relative path
+
 ## 3.5.1 - 2026-11-19
 
 ### Fixed

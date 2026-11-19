@@ -430,6 +430,7 @@ class MessageTest extends TestCase
 
     public static function validAbsoluteFormTargetProvider(): iterable
     {
+        yield 'plus sign in scheme' => ['svn+ssh://up.example/admin', 'up.example', 'svn+ssh://up.example/admin'];
         yield 'non-default port' => ['http://up.example:8080/admin', 'up.example:8080', 'http://up.example:8080/admin'];
         yield 'ipv6 non-default port' => ['http://[::1]:8080/admin?x=1', '[::1]:8080', 'http://[::1]:8080/admin?x=1'];
         yield 'path at-sign' => ['http://up.example/admin@v1', 'up.example', 'http://up.example/admin@v1'];

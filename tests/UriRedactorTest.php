@@ -28,6 +28,7 @@ class UriRedactorTest extends TestCase
         yield 'empty password' => ['http://***@localhost/', 'http://user:@localhost/'];
         yield 'percent-encoded userinfo' => ['http://***@localhost/', 'http://us%40er:p%23ss@localhost/'];
         yield 'rest of the uri preserved' => ['https://***@example.com:8443/path?q=1#frag', 'https://user:pass@example.com:8443/path?q=1#frag'];
+        yield 'plus sign in scheme' => ['svn+ssh://***@example.com/path', 'svn+ssh://user:secret@example.com/path'];
         yield 'ipv6 host' => ['http://***@[::1]:8080/', 'http://user:pass@[::1]:8080/'];
         yield 'already redacted' => ['http://***@localhost/', 'http://***@localhost/'];
         yield 'no userinfo' => ['http://localhost/', 'http://localhost/'];

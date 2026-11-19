@@ -999,6 +999,12 @@ class ServerRequestTest extends TestCase
             'http://up.example:8080/admin?x=1',
         ];
 
+        yield 'absolute-form plus sign scheme target is preserved' => [
+            ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'svn+ssh://up.example/admin', 'HTTP_HOST' => 'good.example'],
+            'svn+ssh://up.example/admin',
+            'svn+ssh://up.example/admin',
+        ];
+
         yield 'absolute-form empty port target is normalized before malformed SERVER_PORT' => [
             ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => 'http://up.example:/admin', 'HTTP_HOST' => 'good.example', 'SERVER_PORT' => '+443'],
             'http://up.example/admin',

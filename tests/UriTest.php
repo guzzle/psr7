@@ -274,7 +274,14 @@ class UriTest extends TestCase
     {
         return [
             ['foo:bar/baz', 'foo', '', '', null, 'bar/baz', '', ''],
+            ['svn+ssh://host/foo', 'svn+ssh', 'host', 'host', null, '/foo', '', ''],
+            ['svn+ssh://[::1]/foo', 'svn+ssh', '[::1]', '[::1]', null, '/foo', '', ''],
+            ['C++:intro', 'c++', '', '', null, 'intro', '', '', 'c++:intro'],
+            ['a+b:123?x', 'a+b', '', '', null, '123', 'x', ''],
+            ['a+b:123456', 'a+b', '', '', null, '123456', '', ''],
             ['host:123/foo:0', '', 'host:123', 'host', 123, '/foo:0', '', '', '//host:123/foo:0'],
+            ['a+b:123', '', 'a+b:123', 'a+b', 123, '', '', '', '//a+b:123'],
+            ['a+b:12345/path', '', 'a+b:12345', 'a+b', 12345, '/path', '', '', '//a+b:12345/path'],
             ['//host:123/foo:0', '', 'host:123', 'host', 123, '/foo:0', '', ''],
             ['//host/foo:0', '', 'host', 'host', null, '/foo:0', '', ''],
             ['/foo:0', '', '', '', null, '/foo:0', '', ''],
