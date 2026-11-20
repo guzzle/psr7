@@ -78,14 +78,6 @@ class Uri implements UriInterface, \JsonSerializable
             } catch (\InvalidArgumentException $e) {
                 throw new MalformedUriException($e->getMessage(), 0, $e);
             }
-
-            if ($this->scheme === '' && $this->host !== '' && !str_starts_with($uri, '//')) {
-                \trigger_deprecation(
-                    'guzzlehttp/psr7',
-                    '3.6',
-                    'Passing a URI string that starts with a host and port, such as "example.com:8080", is deprecated; guzzlehttp/psr7 4.0 rejects it. Start the string with a scheme or with "//".'
-                );
-            }
         }
     }
 

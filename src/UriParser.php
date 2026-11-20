@@ -32,6 +32,11 @@ final class UriParser
             return self::parsePathNoSchemeReference($url);
         }
 
+        // parse_url() reads "name:digits" as a host and a port.
+        if (preg_match('%\A[^:/?#]++:[0-9]{1,5}+(?:/|\z)%', $url) !== 0) {
+            return false;
+        }
+
         // Preserve bracketed IP-literals (IPv6 or IPvFuture) in scheme, userinfo,
         // and network-path authorities before encoding. Userinfo is encoded
         // separately so raw bytes cannot reach parse_url(), which mutates
@@ -85,8 +90,8 @@ final class UriParser
             $prefix .= $matches[4];
             $url = $suffix;
         } else {
-            // A "+" in a scheme, unlike in a "host:port", must not be encoded.
-            $schemePrefix = preg_match('%\A[A-Za-z][A-Za-z0-9+.-]*+:(?![0-9]{1,5}(?:/|\z))%', $url, $matches);
+            // A "+" in a scheme must not be encoded.
+            $schemePrefix = preg_match('%\A[A-Za-z][A-Za-z0-9+.-]*+:%', $url, $matches);
 
             if ($schemePrefix === false) {
                 return false;
