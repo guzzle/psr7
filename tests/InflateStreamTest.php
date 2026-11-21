@@ -66,6 +66,13 @@ class InflateStreamTest extends TestCase
         self::assertSame('test', (string) $b);
     }
 
+    public function testSizeIsUnknown(): void
+    {
+        $stream = new InflateStream(Psr7\Utils::streamFor(gzencode('test')));
+
+        self::assertNull($stream->getSize());
+    }
+
     public function testInflatesStreamsPreserveSeekable(): void
     {
         $content = gzencode('test');

@@ -19,6 +19,12 @@ Guzzle PSR-7 4.0 no longer requires `symfony/polyfill-php80` or
 `symfony/deprecation-contracts`; require the latter directly if your application
 uses it.
 
+#### InflateStream Size
+
+`InflateStream::getSize()` now returns `null`, because the size of the inflated
+data is not known until the source has been read. In 3.x, it returned the size
+of the compressed source.
+
 #### Removed Utils Redaction Methods
 
 The deprecated `Utils::redactUserInfo()`, `Utils::redactUserInfoInString()`,

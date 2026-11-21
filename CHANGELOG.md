@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 4.0.0 - Upcoming
 
+### Changed
+
+- Return `null` from `InflateStream::getSize()` instead of the size of the compressed source
+
 ### Removed
 
 - Dropped support for PHP 7
