@@ -923,6 +923,30 @@ class MessageTest extends TestCase
         );
     }
 
+    public function testMessageBodySummaryWithLargeBodyOfUnknownSize(): void
+    {
+        $body = FnStream::decorate(Psr7\Utils::streamFor('必填性规则校验失败，此字段为必填项'), [
+            'getSize' => static function (): ?int {
+                return null;
+            },
+        ]);
+        $message = new Psr7\Response(200, [], $body);
+
+        self::assertSame('必填性规则校验失 (truncated...)', Psr7\Message::bodySummary($message, 25));
+    }
+
+    public function testMessageBodySummaryWithSmallBodyOfUnknownSize(): void
+    {
+        $body = FnStream::decorate(Psr7\Utils::streamFor('Lorem ipsu'), [
+            'getSize' => static function (): ?int {
+                return null;
+            },
+        ]);
+        $message = new Psr7\Response(200, [], $body);
+
+        self::assertSame('Lorem ipsu', Psr7\Message::bodySummary($message, 10));
+    }
+
     public function testMessageBodySummaryRejectsBinaryBody(): void
     {
         $message = new Psr7\Response(200, [], "abc\0def");
