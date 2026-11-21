@@ -10,7 +10,10 @@ use PHPUnit\Framework\TestCase;
 
 class HttpFactoryTest extends TestCase
 {
-    public function testCreateServerRequestDoesNotTriggerTheHostDeprecation(): void
+    /**
+     * @dataProvider deprecatedUriStringProvider
+     */
+    public function testCreateServerRequestDoesNotTriggerDeprecations(string $uri, string $expectedHost): void
     {
         $deprecations = [];
         set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
@@ -20,13 +23,19 @@ class HttpFactoryTest extends TestCase
         }, E_USER_DEPRECATED);
 
         try {
-            $request = (new HttpFactory())->createServerRequest('GET', 'https://яндекс.рф/');
+            $request = (new HttpFactory())->createServerRequest('GET', $uri);
         } finally {
             restore_error_handler();
         }
 
-        self::assertSame('яндекс.рф', $request->getUri()->getHost());
+        self::assertSame($expectedHost, $request->getUri()->getHost());
         self::assertSame([], $deprecations);
+    }
+
+    public static function deprecatedUriStringProvider(): iterable
+    {
+        yield 'non-ASCII host' => ['https://яндекс.рф/', 'яндекс.рф'];
+        yield 'host and port' => ['example.com:8080/path', 'example.com'];
     }
 
     public function testCreateStreamFromFileEscapesInvalidMode(): void

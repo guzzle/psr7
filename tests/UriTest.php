@@ -1640,6 +1640,8 @@ class UriTest extends TestCase
         yield 'percent-encoded ASCII octet' => ['https://ex%61mple.com/'];
         yield 'IPv6 literal' => ['https://[::1]/'];
         yield 'non-ASCII path' => ['https://example.com/путь'];
+        yield 'network-path reference' => ['//example.com:8080/path'];
+        yield 'absolute-path reference' => ['/path:8080'];
     }
 
     public function testIPv6Host(): void

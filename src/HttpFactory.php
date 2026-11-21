@@ -85,7 +85,7 @@ final class HttpFactory implements RequestFactoryInterface, ResponseFactoryInter
         }
 
         if (is_string($uri)) {
-            // A peer must not be able to raise the host deprecation.
+            // A peer must not be able to raise the URI deprecations.
             $uri = (new ErrorScope(\E_USER_DEPRECATED))->run(static function () use ($uri): Uri {
                 return new Uri($uri);
             });

@@ -252,6 +252,7 @@ class IdnaTest extends TestCase
 
         try {
             Idna::uriFor('https://яндекс.рф/');
+            Idna::uriFor('//яндекс.рф:8080/');
         } finally {
             restore_error_handler();
         }
