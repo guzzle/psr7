@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Deprecated URI hosts with non-ASCII data that guzzlehttp/psr7 4.0 rejects
 
+## 3.5.2 - Upcoming
+
+### Fixed
+
+- Fix `AppendStream` rewinding when seeking to a negative offset
+- Fix `InflateStream` returning no data after a rewind
+
 ## 3.5.1 - 2026-11-19
 
 ### Fixed
