@@ -26,8 +26,9 @@ The needle is taken verbatim from the raw URI rather than from parsed
 components, so credentials that URI normalization would rewrite, such as raw
 control bytes or unencoded reserved characters, are still found in text that
 embeds the URI exactly as given, for example transport error messages. A URI
-without `://` is treated as authority-form: a host and port with optional
-userinfo.
+that does not start with a scheme and `://` is treated as authority-form, a host
+and port with optional userinfo, after any leading `//`. One that starts with
+`?`, `#`, or a single `/` has no userinfo.
 
 A URI that does not parse has no trustworthy authority boundary, so everything
 between any scheme and its last `@` is redacted as a safe-side fallback.

@@ -35,8 +35,10 @@ final class UriRedactor
      * components, so credentials that URI normalization would rewrite, such
      * as raw control bytes or unencoded reserved characters, are still found
      * in text that embeds the URI exactly as given, for example transport
-     * error messages. A URI without "://" is treated as authority-form: a
-     * host and port with optional userinfo.
+     * error messages. A URI that does not start with a scheme and "://" is
+     * treated as authority-form, a host and port with optional userinfo, after
+     * any leading "//". One that starts with "?", "#", or a single "/" has no
+     * userinfo.
      *
      * A URI that does not parse has no trustworthy authority boundary, so
      * everything between any scheme and its last "@" is redacted as a safe-side
@@ -47,36 +49,49 @@ final class UriRedactor
      */
     public static function redactUserInfoInString(string $subject, string $uri): string
     {
+        $needle = self::needle($uri);
+
+        return $needle === null ? $subject : \str_replace($needle, '***@', $subject);
+    }
+
+    /**
+     * Returns the userinfo of a raw URI string with its "@", or null.
+     */
+    private static function needle(string $uri): ?string
+    {
         if (\strpos($uri, '@') === false) {
-            return $subject;
+            return null;
         }
 
         $schemePosition = \strpos($uri, '://');
-        $remainder = $schemePosition === false ? $uri : \substr($uri, $schemePosition + 3);
 
-        if (\parse_url($schemePosition === false ? 'http://'.$uri : $uri) === false) {
+        // A scheme cannot contain '/', '?', or '#'.
+        if ($schemePosition !== false && \strcspn($uri, '/?#') < $schemePosition) {
+            $schemePosition = false;
+        }
+
+        if ($schemePosition !== false) {
+            $remainder = \substr($uri, $schemePosition + 3);
+        } elseif (\str_starts_with($uri, '//')) {
+            $remainder = \substr($uri, 2);
+        } elseif (\strcspn($uri, '/?#') === 0) {
+            return null;
+        } else {
+            $remainder = $uri;
+        }
+
+        if (\parse_url($schemePosition === false ? 'http://'.$remainder : $uri) === false) {
             // Raw '/', '?', or '#' separators may sit inside the credentials
             // of a URI that defeats parse_url(), so the redaction cannot stop
             // at the apparent authority.
             $atPosition = \strrpos($remainder, '@');
-
-            if ($atPosition === false || $atPosition === 0) {
-                return $subject;
-            }
-
-            return \str_replace(\substr($remainder, 0, $atPosition).'@', '***@', $subject);
+        } else {
+            $atPosition = \strrpos(\substr($remainder, 0, \strcspn($remainder, '/?#')), '@');
         }
 
-        $authority = \substr($remainder, 0, \strcspn($remainder, '/?#'));
-        $atPosition = \strrpos($authority, '@');
-
-        if ($atPosition === false || $atPosition === 0) {
-            // A parseable URI with '@' only past its authority, or with an
-            // empty userinfo, carries no credentials to redact.
-            return $subject;
-        }
-
-        return \str_replace(\substr($authority, 0, $atPosition).'@', '***@', $subject);
+        // An '@' only past the authority, or an empty userinfo, carries no
+        // credentials to redact.
+        return $atPosition === false || $atPosition === 0 ? null : \substr($remainder, 0, $atPosition).'@';
     }
 
     /**
@@ -121,7 +136,14 @@ final class UriRedactor
         string $uri
     ): string {
         try {
-            $uri = self::redactUserInfoInString($uri, $uri);
+            $needle = self::needle($uri);
+
+            if ($needle !== null && \strpbrk($needle, '?#') !== false) {
+                // The last '@' may sit in the query or fragment.
+                $uri = \substr($uri, 0, (int) \strpos($uri, $needle)).'***@';
+            } else {
+                $uri = self::redactUserInfoInString($uri, $uri);
+            }
 
             return DiagnosticValue::escape(\substr($uri, 0, \strcspn($uri, '?#')));
         } catch (\Throwable $e) {
