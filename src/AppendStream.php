@@ -177,6 +177,8 @@ final class AppendStream implements StreamInterface
             throw new \RuntimeException('This AppendStream is not seekable');
         } elseif ($whence !== SEEK_SET) {
             throw new \RuntimeException('The AppendStream can only seek with SEEK_SET');
+        } elseif ($offset < 0) {
+            throw new \RuntimeException('The AppendStream cannot seek to a negative offset');
         }
 
         $this->pos = $this->current = 0;

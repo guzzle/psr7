@@ -31,6 +31,22 @@ class AppendStreamTest extends TestCase
         $a->seek(100, SEEK_CUR);
     }
 
+    public function testValidatesSeekOffset(): void
+    {
+        $a = new AppendStream([Psr7\Utils::streamFor('foo')]);
+        self::assertSame('f', $a->read(1));
+
+        try {
+            $a->seek(-1);
+            self::fail('Expected seek to fail');
+        } catch (\RuntimeException $e) {
+            self::assertSame('The AppendStream cannot seek to a negative offset', $e->getMessage());
+        }
+
+        self::assertSame(1, $a->tell());
+        self::assertSame('oo', $a->read(2));
+    }
+
     public function testTriesToRewindOnSeek(): void
     {
         $a = new AppendStream();
