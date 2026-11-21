@@ -1696,6 +1696,42 @@ class ServerRequestTest extends TestCase
         self::assertSame('www.example.org:8324', $request->getHeaderLine('Host'));
     }
 
+    public function testFromGlobalsDoesNotTriggerTheHostDeprecation(): void
+    {
+        if (\function_exists('apache_request_headers')) {
+            self::markTestSkipped('apache_request_headers() is available.');
+        }
+
+        $_SERVER = [
+            'REQUEST_URI' => '/',
+            'HTTP_HOST' => 'яндекс.рф',
+            'SERVER_NAME' => 'good.example',
+            'SERVER_PORT' => '443',
+            'HTTPS' => 'on',
+        ];
+
+        $_COOKIE = $_POST = $_GET = $_FILES = [];
+
+        $deprecations = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
+            $deprecations[] = $errstr;
+
+            return true;
+        }, E_USER_DEPRECATED);
+
+        try {
+            $request = ServerRequest::fromGlobals();
+            $request->withUri($request->getUri()->withPath('/other'));
+            $uri = ServerRequest::getUriFromGlobals();
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame('яндекс.рф', $request->getUri()->getHost());
+        self::assertSame('яндекс.рф', $uri->getHost());
+        self::assertSame([], $deprecations);
+    }
+
     public function testFromGlobalsPreservesLeadingZeroHostHeaderPort(): void
     {
         if (\function_exists('apache_request_headers')) {

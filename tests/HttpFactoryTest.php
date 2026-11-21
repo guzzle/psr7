@@ -10,6 +10,25 @@ use PHPUnit\Framework\TestCase;
 
 class HttpFactoryTest extends TestCase
 {
+    public function testCreateServerRequestDoesNotTriggerTheHostDeprecation(): void
+    {
+        $deprecations = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
+            $deprecations[] = $errstr;
+
+            return true;
+        }, E_USER_DEPRECATED);
+
+        try {
+            $request = (new HttpFactory())->createServerRequest('GET', 'https://яндекс.рф/');
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame('яндекс.рф', $request->getUri()->getHost());
+        self::assertSame([], $deprecations);
+    }
+
     public function testCreateStreamFromFileEscapesInvalidMode(): void
     {
         $factory = new HttpFactory();
