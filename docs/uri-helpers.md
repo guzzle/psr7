@@ -20,10 +20,6 @@ be divided into several forms according to
 - absolute-path references, e.g. `/path`
 - relative-path references, e.g. `subpath`
 
-Passing a string that starts with a host and port, such as
-`example.com:8080/path`, to `GuzzleHttp\Psr7\Uri` is deprecated and will be
-rejected in 4.0. Start it with a scheme or with `//`.
-
 The following methods can be used to identify the type of the URI.
 
 ### `GuzzleHttp\Psr7\Uri::isAbsolute`

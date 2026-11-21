@@ -4,8 +4,9 @@ Guzzle PSR-7 Upgrade Guide
 3.x to 4.0
 ----------
 
-Guzzle PSR-7 4.0 is a major release that raises the minimum PHP version and
-removes the deprecated `Utils` redaction methods.
+Guzzle PSR-7 4.0 is a major release that raises the minimum PHP version, rejects
+URI strings that start with a host and port, and removes the deprecated `Utils`
+redaction methods.
 
 #### PHP Version and Dependencies
 
@@ -18,6 +19,29 @@ until your minimum PHP version is raised.
 Guzzle PSR-7 4.0 no longer requires `symfony/polyfill-php80` or
 `symfony/deprecation-contracts`; require the latter directly if your application
 uses it.
+
+#### URI Strings That Start With a Host and Port
+
+A URI string that starts with a name, a colon, and one to five digits, followed
+by a slash or the end of the string, such as `example.com:8080/path`, is now
+rejected with a `MalformedUriException`. Guzzle PSR-7 3.x parsed such a string
+as a host and a port with no scheme, including one whose name is a scheme, such
+as `tel:911`.
+
+Start the string with a scheme or with two slashes instead.
+
+```php
+// 3.x, no longer accepted in 4.0
+$uri = new Uri('example.com:8080/path');
+
+// 4.0
+$uri = new Uri('//example.com:8080/path');
+$uri = new Uri('https://example.com:8080/path');
+```
+
+This applies wherever a string is parsed as a URI, such as `Utils::uriFor()`,
+`Idna::uriFor()`, and `new Request('CONNECT', 'example.com:443')`, which becomes
+`new Request('CONNECT', '//example.com:443')`.
 
 #### InflateStream Size
 
@@ -270,8 +294,7 @@ a host, such as `ex%zz` and `%2fhost`, are rejected.
 other port values are no longer cast.
 
 Common host forms such as `localhost`, single-label hosts, underscores, Unicode
-hosts, valid IPv6 literals, and normal host and port URI strings remain
-supported.
+hosts, valid IPv6 literals, and normal URI strings with ports remain supported.
 
 URI schemes must now match RFC 3986 syntax and begin with a letter.
 
