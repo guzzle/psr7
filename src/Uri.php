@@ -353,22 +353,6 @@ class Uri implements UriInterface, \JsonSerializable
         }
     }
 
-    /**
-     * @internal
-     */
-    public static function deprecateNonAsciiHost(string $host): void
-    {
-        if (preg_match('/[\x80-\xFF]|%[89A-Fa-f][0-9A-Fa-f]/', $host) === 1) {
-            \trigger_deprecation(
-                'guzzlehttp/psr7',
-                '3.6',
-                'Passing a URI host with non-ASCII data, raw or percent-encoded, is deprecated; guzzlehttp/psr7 4.0 requires URI hosts to be ASCII. Convert internationalized hosts with %s::toAscii() or %s::uriFor() first.',
-                Idna::class,
-                Idna::class
-            );
-        }
-    }
-
     public function getScheme(): string
     {
         return $this->scheme;
@@ -661,7 +645,6 @@ class Uri implements UriInterface, \JsonSerializable
             throw new \RuntimeException('Unable to normalize URI host percent-encoding: '.\preg_last_error_msg());
         }
         self::assertValidHost($filtered);
-        self::deprecateNonAsciiHost($filtered);
 
         if (str_starts_with($filtered, '[') && !str_starts_with($filtered, '[v')) {
             // assertValidHost() accepted this bracketed value with the same

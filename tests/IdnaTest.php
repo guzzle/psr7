@@ -238,27 +238,6 @@ class IdnaTest extends TestCase
         yield 'IPv6 literal' => ['http://[::1]/путь'];
     }
 
-    /**
-     * @requires extension intl
-     */
-    public function testUriForDoesNotTriggerTheHostDeprecation(): void
-    {
-        $deprecations = [];
-        set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
-            $deprecations[] = $errstr;
-
-            return true;
-        }, E_USER_DEPRECATED);
-
-        try {
-            Idna::uriFor('https://яндекс.рф/');
-        } finally {
-            restore_error_handler();
-        }
-
-        self::assertSame([], $deprecations);
-    }
-
     public function testUriForRejectsAUriThatCannotBeParsed(): void
     {
         $this->expectException(MalformedUriException::class);
