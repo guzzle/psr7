@@ -24,7 +24,57 @@ final class InflateStream implements StreamInterface
     /** @var StreamInterface */
     private $stream;
 
+    /** @var StreamInterface|null */
+    private $source;
+
     public function __construct(StreamInterface $stream)
+    {
+        $this->source = $stream;
+        $inflated = self::inflate($stream);
+        $this->stream = $stream->isSeekable() ? $inflated : new NoSeekStream($inflated);
+    }
+
+    public function close(): void
+    {
+        $this->source = null;
+        $this->stream->close();
+    }
+
+    public function detach()
+    {
+        $this->source = null;
+
+        return $this->stream->detach();
+    }
+
+    public function seek($offset, $whence = SEEK_SET): void
+    {
+        if (!\is_int($offset)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to StreamInterface::seek() is deprecated; guzzlehttp/psr7 3.0 requires int for $offset.',
+                \get_debug_type($offset)
+            );
+        }
+
+        if (!\is_int($whence)) {
+            \trigger_deprecation(
+                'guzzlehttp/psr7',
+                '2.11',
+                'Passing %s to StreamInterface::seek() is deprecated; guzzlehttp/psr7 3.0 requires int for $whence.',
+                \get_debug_type($whence)
+            );
+        }
+
+        $this->stream->seek($offset, $whence);
+
+        if ($offset === 0 && $whence === SEEK_SET && $this->source !== null) {
+            $this->stream = self::inflate($this->source);
+        }
+    }
+
+    private static function inflate(StreamInterface $stream): Stream
     {
         $resource = StreamWrapper::getResource($stream);
         // Specify window=15+32, so zlib will use header detection to both gzip (with header) and zlib data
@@ -32,6 +82,7 @@ final class InflateStream implements StreamInterface
         // "Add 32 to windowBits to enable zlib and gzip decoding with automatic header detection"
         // Default window size is 15.
         stream_filter_append($resource, 'zlib.inflate', STREAM_FILTER_READ, ['window' => 15 + 32]);
-        $this->stream = $stream->isSeekable() ? new Stream($resource) : new NoSeekStream(new Stream($resource));
+
+        return new Stream($resource);
     }
 }
