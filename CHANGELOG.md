@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Recognize a plus sign in the scheme of a URI string instead of parsing the string as a relative path
+- Return `null` from `InflateStream::getSize()` instead of the size of the compressed source
 
 ### Deprecated
 

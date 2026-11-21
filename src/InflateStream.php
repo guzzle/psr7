@@ -42,6 +42,11 @@ final class InflateStream implements StreamInterface
         $this->stream = $stream->isSeekable() ? new Stream($resource) : new NoSeekStream(new Stream($resource));
     }
 
+    public function getSize(): ?int
+    {
+        return null;
+    }
+
     public function eof(): bool
     {
         return ($this->capturingSource === null || !$this->capturingSource->hasReadFailure()) && $this->stream->eof();
