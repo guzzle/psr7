@@ -81,6 +81,58 @@ class InflateStreamTest extends TestCase
         self::assertSame('test', (string) $nonSeekableInflate);
     }
 
+    public function testRewindRestartsInflation(): void
+    {
+        $stream = new InflateStream(Psr7\Utils::streamFor(gzencode('test')));
+        self::assertSame('te', $stream->read(2));
+
+        $stream->rewind();
+
+        self::assertSame(0, $stream->tell());
+        self::assertSame('test', $stream->getContents());
+        self::assertSame('test', (string) $stream);
+    }
+
+    public function testRewindDropsSourceReadFailure(): void
+    {
+        $chunk = gzencode('foo');
+        $reads = 0;
+        $fail = true;
+
+        $source = new Psr7\FnStream([
+            'isReadable' => static fn (): bool => true,
+            'isWritable' => static fn (): bool => false,
+            'isSeekable' => static fn (): bool => true,
+            'eof' => static function () use (&$reads): bool {
+                return $reads > 1;
+            },
+            'tell' => static fn (): int => 0,
+            'seek' => static function (int $offset, int $whence = SEEK_SET) use (&$reads, &$fail): void {
+                $reads = 0;
+                $fail = false;
+            },
+            'read' => static function (int $length) use ($chunk, &$reads, &$fail): string {
+                if (++$reads === 1) {
+                    return $chunk;
+                }
+
+                if ($fail) {
+                    throw new \RuntimeException('Connection reset');
+                }
+
+                return '';
+            },
+        ]);
+
+        $stream = new InflateStream($source);
+
+        self::assertSame('foo', $stream->read(1024));
+
+        $stream->rewind();
+
+        self::assertSame('foo', $stream->getContents());
+    }
+
     public function testReadRejectsNegativeLength(): void
     {
         $stream = new InflateStream(Psr7\Utils::streamFor(gzencode('test')));
