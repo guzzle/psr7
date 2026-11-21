@@ -146,6 +146,11 @@ class Request implements RequestInterface
 
         Uri::assertValidHost($host);
 
+        // A Uri has already raised the deprecation for its own host.
+        if (!$uri instanceof Uri) {
+            Uri::deprecateNonAsciiHost($host);
+        }
+
         if (($port = $uri->getPort()) !== null) {
             $host .= ':'.$port;
         }

@@ -239,10 +239,25 @@ final class ServerRequestGlobalsFactory
         }
 
         try {
-            return $uri->withHost($host);
+            return self::withoutHostDeprecation(static function () use ($uri, $host): UriInterface {
+                return $uri->withHost($host);
+            });
         } catch (InvalidArgumentException $e) {
             return null;
         }
+    }
+
+    /**
+     * @template T
+     *
+     * @param callable(): T $operation
+     *
+     * @return T
+     */
+    private static function withoutHostDeprecation(callable $operation)
+    {
+        // A peer must not be able to raise the host deprecation.
+        return (new ErrorScope(\E_USER_DEPRECATED))->run($operation);
     }
 
     /**
@@ -322,10 +337,12 @@ final class ServerRequestGlobalsFactory
             $connectAuthority = self::parseConnectAuthorityFormRequestTarget($method, $requestUri);
             if ($connectAuthority !== null) {
                 [$host, $port] = $connectAuthority;
-                $uri = self::getUriWithSchemeFromServer($server);
+                $uri = self::withoutHostDeprecation(static function () use ($server, $host): UriInterface {
+                    return self::getUriWithSchemeFromServer($server)->withHost($host);
+                });
 
                 return [
-                    $uri->withHost($host)->withPort($port)->withPath('')->withQuery(''),
+                    $uri->withPort($port)->withPath('')->withQuery(''),
                     $requestUri,
                 ];
             }
@@ -375,7 +392,9 @@ final class ServerRequestGlobalsFactory
         }
 
         try {
-            $targetUri = (new Uri($requestUri))->withFragment('');
+            $targetUri = self::withoutHostDeprecation(static function () use ($requestUri): UriInterface {
+                return new Uri($requestUri);
+            })->withFragment('');
         } catch (InvalidArgumentException $e) {
             return null;
         }

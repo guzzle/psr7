@@ -1612,6 +1612,36 @@ class UriTest extends TestCase
         self::assertSame('яндекaс.рф', $uri->getHost());
     }
 
+    /**
+     * @dataProvider getUrisWithoutNonAsciiHostData
+     */
+    public function testHostWithoutNonAsciiDataIsNotDeprecated(string $uri): void
+    {
+        $deprecations = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
+            $deprecations[] = $errstr;
+
+            return true;
+        }, E_USER_DEPRECATED);
+
+        try {
+            new Uri($uri);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame([], $deprecations);
+    }
+
+    public static function getUrisWithoutNonAsciiHostData(): iterable
+    {
+        yield 'reg-name' => ['https://example.com/'];
+        yield 'A-labels' => ['https://xn--d1acpjx3f.xn--p1ai/'];
+        yield 'percent-encoded ASCII octet' => ['https://ex%61mple.com/'];
+        yield 'IPv6 literal' => ['https://[::1]/'];
+        yield 'non-ASCII path' => ['https://example.com/путь'];
+    }
+
     public function testIPv6Host(): void
     {
         $uri = new Uri('https://[2a00:f48:1008::212:183:10]');

@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Recognize a plus sign in the scheme of a URI string instead of parsing the string as a relative path
 
+### Deprecated
+
+- Deprecated URI hosts with non-ASCII data that guzzlehttp/psr7 4.0 rejects
+
 ## 3.5.1 - 2026-11-19
 
 ### Fixed
