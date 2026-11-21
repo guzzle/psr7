@@ -31,6 +31,21 @@ class AppendStreamTest extends TestCase
         $a->seek(100, SEEK_CUR);
     }
 
+    public function testNegativeSeekLeavesPositionUnchanged(): void
+    {
+        $stream = new AppendStream([Psr7\Utils::streamFor('abc')]);
+        self::assertSame('a', $stream->read(1));
+
+        $this->expectException(\RuntimeException::class);
+
+        try {
+            $stream->seek(-1);
+        } finally {
+            self::assertSame(1, $stream->tell());
+            self::assertSame('b', $stream->read(1));
+        }
+    }
+
     public function testTriesToRewindOnSeek(): void
     {
         $a = new AppendStream();
