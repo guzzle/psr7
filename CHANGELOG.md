@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix `AppendStream` rewinding when seeking to a negative offset
+- Fix `InflateStream` returning no data after a rewind
 
 ## 3.5.1 - 2026-11-19
 

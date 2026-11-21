@@ -33,18 +33,23 @@ final class InflateStream implements StreamInterface
     {
         $this->source = $stream;
         $this->capturingSource = new ReadFailureCapturingStream($stream);
-        $resource = StreamWrapper::getResource($this->capturingSource);
-        // Specify window=15+32, so zlib will use header detection to both gzip (with header) and zlib data
-        // See https://www.zlib.net/manual.html#Advanced definition of inflateInit2
-        // "Add 32 to windowBits to enable zlib and gzip decoding with automatic header detection"
-        // Default window size is 15.
-        stream_filter_append($resource, 'zlib.inflate', STREAM_FILTER_READ, ['window' => 15 + 32]);
-        $this->stream = $stream->isSeekable() ? new Stream($resource) : new NoSeekStream(new Stream($resource));
+        $inflated = self::inflate($this->capturingSource);
+        $this->stream = $stream->isSeekable() ? $inflated : new NoSeekStream($inflated);
     }
 
     public function eof(): bool
     {
         return ($this->capturingSource === null || !$this->capturingSource->hasReadFailure()) && $this->stream->eof();
+    }
+
+    public function seek(int $offset, int $whence = SEEK_SET): void
+    {
+        $this->stream->seek($offset, $whence);
+
+        if ($offset === 0 && $whence === SEEK_SET && $this->capturingSource !== null) {
+            $this->capturingSource->takeReadFailure();
+            $this->stream = self::inflate($this->capturingSource);
+        }
     }
 
     public function read(int $length): string
@@ -125,5 +130,17 @@ final class InflateStream implements StreamInterface
         }
 
         return $this->stream->detach();
+    }
+
+    private static function inflate(StreamInterface $stream): Stream
+    {
+        $resource = StreamWrapper::getResource($stream);
+        // Specify window=15+32, so zlib will use header detection to both gzip (with header) and zlib data
+        // See https://www.zlib.net/manual.html#Advanced definition of inflateInit2
+        // "Add 32 to windowBits to enable zlib and gzip decoding with automatic header detection"
+        // Default window size is 15.
+        stream_filter_append($resource, 'zlib.inflate', STREAM_FILTER_READ, ['window' => 15 + 32]);
+
+        return new Stream($resource);
     }
 }
