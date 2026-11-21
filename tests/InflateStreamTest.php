@@ -80,6 +80,42 @@ class InflateStreamTest extends TestCase
         self::assertSame('test', (string) $nonSeekableInflate);
     }
 
+    public function testRewindRestartsInflation(): void
+    {
+        $stream = new InflateStream(Psr7\Utils::streamFor(gzencode('test')));
+        self::assertSame('te', $stream->read(2));
+
+        $stream->rewind();
+
+        self::assertSame(0, $stream->tell());
+        self::assertSame('test', $stream->getContents());
+        self::assertSame('test', (string) $stream);
+    }
+
+    public function testCloseReleasesSourceStream(): void
+    {
+        $handle = Psr7\Utils::tryFopen('php://temp', 'r+');
+        fwrite($handle, gzencode('test'));
+        rewind($handle);
+        $stream = new InflateStream(new Psr7\Stream($handle));
+
+        $stream->close();
+
+        self::assertFalse(is_resource($handle));
+    }
+
+    public function testClosingDetachedResourceReleasesTheSourceStream(): void
+    {
+        $handle = Psr7\Utils::tryFopen('php://temp', 'r+');
+        fwrite($handle, gzencode('test'));
+        rewind($handle);
+        $stream = new InflateStream(new Psr7\Stream($handle));
+
+        fclose($stream->detach());
+
+        self::assertFalse(is_resource($handle));
+    }
+
     private function getGzipStringWithFilename($original_string)
     {
         $gzipped = bin2hex(gzencode($original_string));
