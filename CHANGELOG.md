@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix `AppendStream` rewinding when seeking to a negative offset
 - Fix `InflateStream` returning no data after a rewind
+- Fix `Message::bodySummary()` for truncated bodies of unknown size
 
 ## 3.5.1 - 2026-11-19
 
