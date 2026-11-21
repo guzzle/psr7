@@ -232,7 +232,7 @@ final class MessageParser
         if (str_starts_with($matches['target'], '/')) {
             return new Request(
                 $matches['method'],
-                self::createUri(self::parseRequestUri($matches['target'], $data['headers'])),
+                self::parseRequestUri($matches['target'], $data['headers']),
                 $data['headers'],
                 $data['body'],
                 $matches['version']
@@ -253,7 +253,7 @@ final class MessageParser
         if (Rfc9112::isAsteriskFormRequestTarget($matches['method'], $matches['target'])) {
             return (new Request(
                 $matches['method'],
-                self::createUri(self::parseRequestAuthorityUri($data['headers'])),
+                self::parseRequestAuthorityUri($data['headers']),
                 $data['headers'],
                 $data['body'],
                 $matches['version']
@@ -291,7 +291,7 @@ final class MessageParser
         }
 
         try {
-            $uri = self::createUri($target);
+            $uri = new Uri($target);
         } catch (\InvalidArgumentException $e) {
             return null;
         }
@@ -326,18 +326,10 @@ final class MessageParser
         }
 
         try {
-            return self::createUri('//'.self::composeAuthority($host, $port));
+            return new Uri('//'.self::composeAuthority($host, $port));
         } catch (\InvalidArgumentException $e) {
             return null;
         }
-    }
-
-    private static function createUri(string $uri): Uri
-    {
-        // A peer must not be able to raise the host deprecation.
-        return (new ErrorScope(\E_USER_DEPRECATED))->run(static function () use ($uri): Uri {
-            return new Uri($uri);
-        });
     }
 
     public static function parseResponse(string $message): ResponseInterface
