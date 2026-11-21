@@ -84,22 +84,23 @@ Whether the string is a valid URI host. Per
 the host is an IP-literal, IPv4 address, or registered name. An empty host is
 accepted, since the authority, and thus the host, may be empty. Bracketed values
 are validated as IPv6 or IPvFuture literals; any other value is rejected if it
-contains control characters, whitespace, an authority or path delimiter (`/`,
-`?`, `#`, `@`, `\`), or an embedded colon denoting a port. Percent-encoding is
-validated the same way: malformed sequences (a `%` not followed by two hex
-digits) and percent-encoded octets that decode to one of the rejected bytes, to
-a bracket (`[`, `]`), or to `%` itself are invalid, while all other
-percent-encoded octets are accepted. Rejecting these percent-encoded octets is a
-deliberate guzzle host policy, stricter than the RFC 3986 `reg-name` grammar,
-which permits any well-formed `pct-encoded` octet; it matches the stricter
-policy used throughout the library. RFC 6874 IPv6 zone identifiers (for example
-`[fe80::1%25eth0]`) are not supported.
+contains control characters, whitespace, non-ASCII bytes, an authority or path
+delimiter (`/`, `?`, `#`, `@`, `\`), or an embedded colon denoting a port.
+Percent-encoding is validated the same way: malformed sequences (a `%` not
+followed by two hex digits) and percent-encoded octets that decode to one of the
+rejected bytes, to a bracket (`[`, `]`), or to `%` itself are invalid, while all
+other percent-encoded octets are accepted. Rejecting these percent-encoded
+octets is a deliberate guzzle host policy, stricter than the RFC 3986 `reg-name`
+grammar, which permits any well-formed `pct-encoded` octet; it matches the
+stricter policy used throughout the library. RFC 6874 IPv6 zone identifiers (for
+example `[fe80::1%25eth0]`) are not supported.
 
 Registered names are otherwise intentionally permissive: single-label hosts such
-as `localhost`, underscores, sub-delims, and raw or percent-encoded non-ASCII
-(IDN) data are accepted and preserved as given, with no punycode conversion.
-Consumers that need DNS IDNs must perform the conversion themselves, with
-`GuzzleHttp\Psr7\Idna`.
+as `localhost`, underscores, and sub-delims are accepted and preserved as given.
+Non-ASCII data is rejected in both its raw and percent-encoded forms, so an
+internationalized domain name must be given as A-labels, such as
+`xn--d1acpjx3f.xn--p1ai`. `GuzzleHttp\Psr7\Idna` converts a host or a URI string
+to that form.
 
 Validity here is a statement about URI syntax only. It does not imply that the
 host resolves or that a client will interpret it exactly as written. A PSR-7 URI

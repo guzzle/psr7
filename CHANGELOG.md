@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Return `null` from `InflateStream::getSize()` instead of the size of the compressed source
 - Reject URI strings that start with a host and port, such as `localhost:8080/path`
+- Reject URI hosts with non-ASCII data, raw or percent-encoded
 
 ### Removed
 

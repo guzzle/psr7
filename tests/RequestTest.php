@@ -344,6 +344,20 @@ class RequestTest extends TestCase
         yield 'tab' => ["/foo\tbar"];
     }
 
+    public function testConstructorRejectsUriHostWithNonAsciiData(): void
+    {
+        $uri = $this->createMock(UriInterface::class);
+        $uri->method('getPath')->willReturn('/');
+        $uri->method('getQuery')->willReturn('');
+        $uri->method('getHost')->willReturn('яндекс.рф');
+        $uri->method('getPort')->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid host: яндекс.рф');
+
+        new Request('GET', $uri);
+    }
+
     public function testConstructorRejectsInvalidRequestTargetFromUriPath(): void
     {
         $uri = $this->createMock(UriInterface::class);
