@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated URI hosts with non-ASCII data that guzzlehttp/psr7 4.0 rejects
 - Deprecated URI strings that start with a host and port, which guzzlehttp/psr7 4.0 rejects
 
-## 3.5.2 - Upcoming
+## 3.5.2 - 2026-11-21
 
 ### Fixed
 
