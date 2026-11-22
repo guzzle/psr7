@@ -71,6 +71,21 @@ class UriRedactorTest extends TestCase
             "Unsupported proxy syntax in 'user:pass@localhost:8125'",
             'user:pass@localhost:8125',
         ];
+        yield 'network-path reference' => [
+            'via //***@localhost:8125/path',
+            'via //user:pass@localhost:8125/path',
+            '//user:pass@localhost:8125/path',
+        ];
+        yield 'query-only reference' => [
+            'via ?mail=user@example.com',
+            'via ?mail=user@example.com',
+            '?mail=user@example.com',
+        ];
+        yield 'fragment-only reference' => [
+            'via #user@example.com',
+            'via #user@example.com',
+            '#user@example.com',
+        ];
         yield 'non-http scheme' => [
             'via socks5h://***@localhost:1080',
             'via socks5h://user:pass@localhost:1080',
@@ -146,6 +161,21 @@ class UriRedactorTest extends TestCase
             'via we@ird://host',
             'we@ird://host',
         ];
+        yield 'scheme separator only in path' => [
+            "Unsupported proxy syntax in '***@localhost:8125/a://b'",
+            "Unsupported proxy syntax in 'user:pass@localhost:8125/a://b'",
+            'user:pass@localhost:8125/a://b',
+        ];
+        yield 'scheme separator only in query' => [
+            "Unsupported proxy syntax in '***@localhost:8125?next=http://example.com'",
+            "Unsupported proxy syntax in 'user:pass@localhost:8125?next=http://example.com'",
+            'user:pass@localhost:8125?next=http://example.com',
+        ];
+        yield 'scheme separator only in fragment' => [
+            "Unsupported proxy syntax in '***@localhost:8125#a://b'",
+            "Unsupported proxy syntax in 'user:pass@localhost:8125#a://b'",
+            'user:pass@localhost:8125#a://b',
+        ];
         yield 'uri not embedded in subject' => [
             'Connection refused',
             'Connection refused',
@@ -203,7 +233,31 @@ class UriRedactorTest extends TestCase
             'https://***@example.com:bad/path',
             'https://user:pass@example.com:bad/path?token=secret#private',
         ];
+        yield 'malformed port and an at sign in the path' => [
+            'https://***@example.org/path',
+            'https://example.com:bad/user@example.org/path?token=secret',
+        ];
+        yield 'malformed port and an at sign in the query' => [
+            'https://***@',
+            'https://example.com:bad/path?mail=user@example.org&token=secret',
+        ];
+        yield 'malformed port and an at sign in the fragment' => [
+            'https://***@',
+            'https://example.com:bad/path#token=secret&mail=user@example.org',
+        ];
+        yield 'network-path reference' => [
+            '//***@localhost/path',
+            '//user:pass@localhost/path?next=http://example.com/#private',
+        ];
         yield 'relative reference' => ['/path', '/path?token=secret#private'];
+        yield 'relative reference with an at sign in its path' => [
+            '/user@example.com/profile',
+            '/user@example.com/profile?token=secret',
+        ];
+        yield 'relative reference with an at sign in its query' => [
+            '/path',
+            '/path?mail=user@example.com&token=secret',
+        ];
         yield 'diagnostic control escaping' => ['http://[::1]\\x0A', "http://[::1]\n"];
     }
 }
