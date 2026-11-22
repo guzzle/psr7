@@ -4,9 +4,9 @@ Guzzle PSR-7 Upgrade Guide
 3.x to 4.0
 ----------
 
-Guzzle PSR-7 4.0 is a major release that raises the minimum PHP version, rejects
-URI strings that start with a host and port, and removes the deprecated `Utils`
-redaction methods.
+Guzzle PSR-7 4.0 is a major release that raises the minimum PHP version,
+requires URI hosts to be ASCII, rejects URI strings that start with a host and
+port, and removes the deprecated `Utils` redaction methods.
 
 #### PHP Version and Dependencies
 
@@ -19,6 +19,37 @@ until your minimum PHP version is raised.
 Guzzle PSR-7 4.0 no longer requires `symfony/polyfill-php80` or
 `symfony/deprecation-contracts`; require the latter directly if your application
 uses it.
+
+#### URI Hosts
+
+URI hosts must now be ASCII. A host that contains non-ASCII data, either as raw
+bytes or as percent-encoded octets, is rejected wherever hosts are validated.
+`Rfc3986::isValidHost()` returns `false`, `new Uri()` and `Uri::fromParts()`
+throw `MalformedUriException`, `Uri::withHost()` throws
+`InvalidArgumentException`, and a request can no longer derive a `Host` header
+from a custom `UriInterface` implementation that returns such a host. These
+hosts were deprecated in 3.6.
+
+Convert an internationalized domain name to A-labels before building the URI.
+`Idna::uriFor()` parses a URI string and converts its host, and
+`Idna::toAscii()` converts a host on its own. Both require the intl extension.
+
+```php
+// 3.x, no longer accepted in 4.0
+$uri = new Uri('https://яндекс.рф/');
+$uri = $uri->withHost('bücher.example');
+
+// 4.0
+$uri = Idna::uriFor('https://яндекс.рф/'); // https://xn--d1acpjx3f.xn--p1ai/
+$uri = $uri->withHost(Idna::toAscii('bücher.example'));
+```
+
+`Message::parseRequest()` and `Message::parseRequestUri()` now reject a `Host`
+header whose host contains non-ASCII data, and `Message::parseRequest()` also
+rejects a request target with such a host. `ServerRequest::fromGlobals()` and
+`ServerRequest::getUriFromGlobals()` treat such an `HTTP_HOST` like any other
+malformed value: it is ignored and, when `REQUEST_URI` supplies no valid
+authority, the URI host falls back to `SERVER_NAME`, then `SERVER_ADDR`.
 
 #### URI Strings That Start With a Host and Port
 

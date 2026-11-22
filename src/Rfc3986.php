@@ -61,10 +61,11 @@ final class Rfc3986
      * Per RFC 3986 the host is `IP-literal / IPv4address / reg-name`. An empty
      * host is accepted, since the authority (and thus the host) may be empty.
      * Bracketed values are validated as IPv6 / IPvFuture literals; any other
-     * value is rejected if it contains control characters, whitespace, an
-     * authority or path delimiter (`/ ? # @ \`), an embedded colon denoting
-     * a port, a malformed percent-sequence, or a percent-encoded octet that
-     * decodes to one of those rejected bytes, to a bracket, or to `%` itself.
+     * value is rejected if it contains control characters, whitespace,
+     * non-ASCII bytes, an authority or path delimiter (`/ ? # @ \`), an
+     * embedded colon denoting a port, a malformed percent-sequence, or a
+     * percent-encoded octet that decodes to one of those rejected bytes, to a
+     * bracket, or to `%` itself.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2
      */
@@ -74,7 +75,7 @@ final class Rfc3986
             return true;
         }
 
-        $invalidHost = preg_match('/[\x00-\x20\x7F\/\?#@\\\\]/', $host);
+        $invalidHost = preg_match('/[\x00-\x20\x7F-\xFF\/\?#@\\\\]/', $host);
 
         if ($invalidHost === false) {
             return false;
@@ -233,11 +234,11 @@ final class Rfc3986
         // Mirror of the raw reg-name policy above for percent-encoded octets:
         // reject malformed sequences (RFC 3986 requires "%" HEXDIG HEXDIG) and
         // octets that decode to bytes the raw grammar rejects - C0 controls,
-        // SP, DEL, the delimiters / ? # @ \ [ ], the port colon, and % itself.
-        // Octets decoding to any other byte (unreserved, sub-delims, and
-        // non-ASCII UTF-8 data) remain accepted.
+        // SP, DEL, non-ASCII bytes, the delimiters / ? # @ \ [ ], the port
+        // colon, and % itself. Octets decoding to any other byte (unreserved
+        // and sub-delims) remain accepted.
         $invalidEncoding = preg_match(
-            '/%(?!'.self::HEX_OCTET.')|%(?:[01][0-9A-Fa-f]|2[035F]|3[AF]|40|5[BCD]|7F)/i',
+            '/%(?!'.self::HEX_OCTET.')|%(?:[01][0-9A-Fa-f]|2[035F]|3[AF]|40|5[BCD]|7F|[89A-F][0-9A-Fa-f])/i',
             $host
         );
 

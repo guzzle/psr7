@@ -1630,6 +1630,8 @@ class ServerRequestTest extends TestCase
         yield 'backslash delimiter' => ['example.com\\evil'];
         yield 'space' => ['bad host'];
         yield 'newline' => ["bad.example\r\nX-Evil: yes"];
+        yield 'raw UTF-8' => ['яндекс.рф'];
+        yield 'percent-encoded UTF-8' => ['a%C3%A9b.example'];
         yield 'empty port' => ['bad.example:'];
         yield 'non numeric port' => ['bad.example:abc'];
         yield 'leading plus port' => ['bad.example:+443'];

@@ -48,13 +48,13 @@ class UriNormalizerTest extends TestCase
     {
         $uri = $this->createMock(UriInterface::class);
         $uri->expects(self::any())->method('getUserInfo')->willReturn('');
-        $uri->expects(self::any())->method('getHost')->willReturn('ex%c3%a9.example');
-        $uri->expects(self::once())->method('withHost')->with('ex%C3%A9.example')->willReturn(new Uri('http://ex%C3%A9.example'));
+        $uri->expects(self::any())->method('getHost')->willReturn('ex%2bample.example');
+        $uri->expects(self::once())->method('withHost')->with('ex%2Bample.example')->willReturn(new Uri('http://ex%2Bample.example'));
 
         $normalizedUri = UriNormalizer::normalize($uri, UriNormalizer::CAPITALIZE_PERCENT_ENCODING);
 
         self::assertInstanceOf(UriInterface::class, $normalizedUri);
-        self::assertSame('http://ex%C3%A9.example', (string) $normalizedUri);
+        self::assertSame('http://ex%2Bample.example', (string) $normalizedUri);
     }
 
     public function testCapitalizePercentEncodingSkipsUnchangedForeignHost(): void

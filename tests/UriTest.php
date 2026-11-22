@@ -590,6 +590,9 @@ class UriTest extends TestCase
         }
 
         yield 'ascii 0x7F' => ['example'.chr(0x7F).'com'];
+        yield 'byte 0x80' => ['example'.chr(0x80).'com'];
+        yield 'byte 0xFF' => ['example'.chr(0xFF).'com'];
+        yield 'raw UTF-8' => ['яндекс.рф'];
         yield 'colon' => ['example.com:80'];
         yield 'path delimiter' => ['example.com/path'];
         yield 'query delimiter' => ['example.com?query'];
@@ -972,12 +975,12 @@ class UriTest extends TestCase
 
     public function testHostPercentEncodingIsNormalizedToUppercaseHex(): void
     {
-        $uri = new Uri('http://a%c3%a9b/');
-        self::assertSame('a%C3%A9b', $uri->getHost());
-        self::assertSame('http://a%C3%A9b/', (string) $uri);
+        $uri = new Uri('http://a%2bb/');
+        self::assertSame('a%2Bb', $uri->getHost());
+        self::assertSame('http://a%2Bb/', (string) $uri);
 
-        $uri = (new Uri())->withHost('A%c3%a9B');
-        self::assertSame('a%C3%A9b', $uri->getHost());
+        $uri = (new Uri())->withHost('A%2bB');
+        self::assertSame('a%2Bb', $uri->getHost());
     }
 
     /**
@@ -1005,14 +1008,16 @@ class UriTest extends TestCase
         yield 'malformed percent-encoding' => ['ex%zz'];
         yield 'bare percent sign' => ['ex%ample.com'];
         yield 'percent-encoded NUL' => ['ex%00ample.com'];
+        yield 'percent-encoded UTF-8' => ['a%C3%A9b'];
+        yield 'percent-encoded lone high byte' => ['ex%FFample.com'];
         yield 'percent-encoded slash' => ['ex%2Fample.com'];
         yield 'percent-encoded percent' => ['ex%25ample.com'];
     }
 
     public function testPercentEncodedNonDelimiterOctetsInHostStayAccepted(): void
     {
-        $uri = new Uri('http://ex%61mple%FFcom/');
-        self::assertSame('ex%61mple%FFcom', $uri->getHost());
+        $uri = new Uri('http://ex%61mple%2Bcom/');
+        self::assertSame('ex%61mple%2Bcom', $uri->getHost());
     }
 
     public function testCommonNonDnsHostsStayValid(): void
@@ -1606,11 +1611,13 @@ class UriTest extends TestCase
 
     public function testInternationalizedDomainName(): void
     {
-        $uri = new Uri('https://яндекс.рф');
-        self::assertSame('яндекс.рф', $uri->getHost());
+        $uri = new Uri('https://XN--D1ACPJX3F.xn--p1ai');
+        self::assertSame('xn--d1acpjx3f.xn--p1ai', $uri->getHost());
 
-        $uri = new Uri('https://яндекAс.рф');
-        self::assertSame('яндекaс.рф', $uri->getHost());
+        $this->expectException(MalformedUriException::class);
+        $this->expectExceptionMessage('Invalid host: яндекс.рф');
+
+        new Uri('https://яндекс.рф');
     }
 
     public function testIPv6Host(): void

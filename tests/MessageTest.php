@@ -218,6 +218,8 @@ class MessageTest extends TestCase
         yield 'userinfo delimiter' => ['trusted.example@evil.example'];
         yield 'percent-encoded userinfo delimiters' => ['user%3Apass%40example.com'];
         yield 'percent-encoded slash' => ['ex%2Fample.com'];
+        yield 'percent-encoded UTF-8' => ['a%C3%A9b.example'];
+        yield 'raw UTF-8' => ['яндекс.рф'];
         yield 'path delimiter' => ['example.com/path'];
         yield 'query delimiter' => ['example.com?query'];
         yield 'fragment delimiter' => ['example.com#fragment'];
@@ -691,6 +693,7 @@ class MessageTest extends TestCase
         yield 'connect zero port' => ['CONNECT up.example:0 HTTP/1.1'];
         yield 'connect ipv6 zero port' => ['CONNECT [::1]:0 HTTP/1.1'];
         yield 'connect user info' => ['CONNECT user@up.example:443 HTTP/1.1'];
+        yield 'connect percent-encoded UTF-8 host' => ['CONNECT a%C3%A9b.example:443 HTTP/1.1'];
         yield 'connect path' => ['CONNECT up.example:443/ HTTP/1.1'];
         yield 'connect query' => ['CONNECT up.example:443?x=1 HTTP/1.1'];
         yield 'absolute-form zero port' => ['GET http://up.example:0/admin HTTP/1.1'];
@@ -705,6 +708,7 @@ class MessageTest extends TestCase
         yield 'absolute-form user info zero port' => ['GET http://u@up.example:0/admin HTTP/1.1'];
         yield 'absolute-form non-http user info' => ['GET ftp://u:p@files.example/x HTTP/1.1'];
         yield 'absolute-form percent-encoded host delimiters' => ['GET http://user%3Apass%40example.com/admin HTTP/1.1'];
+        yield 'absolute-form raw UTF-8 host' => ['GET http://яндекс.рф/admin HTTP/1.1'];
         yield 'invalid protocol text' => ['GET / HTTP/foo'];
         yield 'invalid protocol segments' => ['GET / HTTP/1.1.1'];
         yield 'bare carriage return after version' => ["GET / HTTP/1.1\rX-Injected: yes"];
